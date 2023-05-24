@@ -3,8 +3,9 @@
 
 ## Context
 
-Read the readme in: https://github.com/visualopsholdings/ringbuffer
-Read the readme in: https://github.com/visualopsholdings/cmd
+Read: https://github.com/visualopsholdings/ringbuffer
+
+Read: https://github.com/visualopsholdings/cmd
 
 Ok. So you've written all this code, you can send various commands to your Arduino to
 do interesting things, but how nice would it be to be able to SEND AND RUN ACTUAL CODE
