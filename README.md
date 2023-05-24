@@ -196,10 +196,10 @@ https://github.com/visualopsholdings/cmd
 
 To be a sibling of this repo. So they need to be in the same folder like this:
 
-+ folder
-++ cmd
-++ ringbuffer
-++ tinylogo
+- folder
+  - cmd
+  - ringbuffer
+  - tinylogo
 
 So on your Linux (or mac using Homebrew etc), get all you need:
 
