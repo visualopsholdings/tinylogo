@@ -58,12 +58,12 @@ LogoBuiltinWord Logo::core[] = {
   { "*", LogoWords::multiply, LogoWords::multiplyArity },
 };
 
-Logo::Logo(LogoBuiltinWord *builtins, short size, LogoTimeProvider *time, LogoBuiltinWord *core) : 
+Logo::Logo(LogoBuiltinWord *builtins, short size, LogoTimeProvider *time, LogoBuiltinWord *core, LogoString *strings) : 
   _inword(false), _inwordargs(false), _defining(-1), _defininglen(-1), _wordarity(-1),
   _jump(NO_JUMP), _nextcode(0), 
   _builtins(builtins), 
   _core(core), 
-  _nextstring(0), _wordcount(0), 
+  _nextstring(0), _fixedstrings(strings), _fixedcount(0), _wordcount(0), 
   _pc(0), _tos(0), _schedule(time) {
   
 #ifdef HAS_VARIABLES
@@ -73,10 +73,28 @@ Logo::Logo(LogoBuiltinWord *builtins, short size, LogoTimeProvider *time, LogoBu
   _sentencecount = 0;
   _builtincount = size / sizeof(LogoBuiltinWord);
   _corecount = _core ? sizeof(Logo::core) / sizeof(LogoBuiltinWord) : 0;
-  _startjcode = _nextjcode = MAX_CODE/2;
+  _nextjcode = START_JCODE;
 
   reset();
     
+  // count the number of fixed strings.
+  if (_fixedstrings) {
+    short len = _fixedstrings->length();
+    
+    // make sure it ends with a newline. simplifies a lot of code :-)
+    if ((*_fixedstrings)[len-1] != '\n') {
+      error(LG_FIXED_NO_NEWLINE);
+      return;
+    }
+    
+    // count the newlines
+    for (int i=0; i<len; i++) {
+      if ((*_fixedstrings)[i] == '\n') {
+        _fixedcount++;
+      }
+    }
+  }
+  
 }
 
 short Logo::run() {
@@ -116,10 +134,10 @@ void Logo::reset() {
   for (short i=0; i<MAX_CODE; i++) {
     _code[i]._optype = OPTYPE_NOOP;
   }
-  _code[_startjcode-1]._optype = OPTYPE_HALT;
+  _code[START_JCODE-1]._optype = OPTYPE_HALT;
   _nextstring = 0;
   _nextcode = 0;
-  _nextjcode = _startjcode;
+  _nextjcode = START_JCODE;
   _wordcount = 0;
   _sentencecount = 0;
   
@@ -143,7 +161,7 @@ void Logo::resetcode() {
   DEBUG_IN(Logo, "resetcode");
   
   // Just the code up to the words.
-  for (short i=0; i<_startjcode-1; i++) {
+  for (short i=0; i<START_JCODE-1; i++) {
     _code[i]._optype = OPTYPE_NOOP;
   }
   _nextcode = 0;
@@ -1020,10 +1038,68 @@ const LogoBuiltinWord *Logo::getbuiltin(const LogoInstruction &entry) const {
   
 }
 
+short Logo::findfixed(const char *s) {
+
+  DEBUG_IN_ARGS(Logo, "findfixed", "%s", s);
+  
+  if (_fixedstrings) {
+    short len = _fixedstrings->length();
+    short start = 0;
+    short index = 0;
+    for (int i=0; i<len; i++) {
+      if ((*_fixedstrings)[i] == '\n') {
+        _fixedstrings->ncpy(_tmpbuf, start, i-start);
+        _tmpbuf[i-start] = 0;
+        if (strcmp(_tmpbuf, s) == 0) {
+          DEBUG_RETURN(" %i", index);
+          return index;
+        }
+        start = i + 1;
+        index++;
+      }
+    }
+  }
+  
+  DEBUG_RETURN(" %i", -1);
+  return -1;
+}
+
+bool Logo::getfixed(char *buf, short buflen, tStrPool str) const {
+
+  DEBUG_IN_ARGS(Logo, "getfixed", "%i", str);
+  
+  if (_fixedstrings && str < _fixedcount) {
+    short start = 0;
+    short index = 0;
+    short len = _fixedstrings->length();
+    for (int i=0; i<len; i++) {
+      if ((*_fixedstrings)[i] == '\n') {
+        if (index == str) {
+          short l = min(buflen, i-start);
+          _fixedstrings->ncpy(buf, start, l);
+          buf[l] = 0;
+          return true;
+        }
+        start = i + 1;
+        index++;
+      }
+    }
+  }
+  
+  DEBUG_RETURN(" %i", false);
+  return false;
+}
+
 short Logo::addstring(const char *s, tStrPool len) {
 
   DEBUG_IN_ARGS(Logo, "addstring", "%s%i", s, len);
   
+  short fixed = findfixed(s);
+  if (fixed >= 0) {
+    DEBUG_RETURN(" %i", fixed);
+    return fixed;
+  }
+
   if ((_nextstring + len) >= STRING_POOL_SIZE) {
     DEBUG_RETURN(" %i", -1);
     return -1;
@@ -1033,14 +1109,19 @@ short Logo::addstring(const char *s, tStrPool len) {
   memmove(_strings + cur, s, len);
   _nextstring += len;
   
-  DEBUG_RETURN(" %i", _nextstring);
-  return cur;
+  short str = cur + _fixedcount;
+  DEBUG_RETURN(" %i", str);
+  return str;
 }
 
 void Logo::getstring(char *buf, short buflen, tStrPool str, tStrPool len) const {
 
+  if (getfixed(buf, buflen, str)) {
+    return;
+  }
+
   short l = min(buflen, len);
-  memmove(buf, _strings + str, l);
+  memmove(buf, _strings + (str - _fixedcount), l);
   buf[l] = 0;
   
 }
@@ -1131,7 +1212,8 @@ void Logo::dosentences(char *buf, short len, const char *start) {
     short jump = _nextjcode;
     
     // add all the words etc.
-    compilewords(_tmpbuf, strlen(_tmpbuf), false);
+    LogoSimpleString str(_tmpbuf);
+    compilewords(&str, str.length(), false);
     
     // and finish off the word
     finishword(word, wlen, jump, 0);
@@ -1153,13 +1235,14 @@ void Logo::dosentences(char *buf, short len, const char *start) {
   }
 }
 
-void Logo::compile(const char *code, short len) {
+void Logo::compile(LogoString *str) {
 
-  DEBUG_IN_ARGS(Logo, "compile", "%s%i", code, len);
+  DEBUG_IN(Logo, "compile");
   
+  short len = str->length();
   short nextline = 0;
   while (nextline >= 0) {
-    nextline = scanfor(_linebuf, sizeof(_linebuf), code, len, nextline, true);
+    nextline = scanfor(_linebuf, sizeof(_linebuf), str, len, nextline, true);
     
     if (nextline == -2) {
       error(LG_LINE_TOO_LONG);
@@ -1175,25 +1258,26 @@ void Logo::compile(const char *code, short len) {
       dosentences(_linebuf, strlen(_linebuf), s);
     }
     
-    compilewords( _linebuf, strlen(_linebuf), true);
+    LogoSimpleString str(_linebuf);
+    compilewords(&str, str.length(), true);
   }
 
 }
 
-void Logo::compilewords(const char *buf, short len, bool define) {
+void Logo::compilewords(LogoString *str, short len, bool define) {
 
-  DEBUG_IN_ARGS(Logo, "compilewords", "%s%i%b", buf, len, define);
+  DEBUG_IN_ARGS(Logo, "compilewords", "%i%b", len, define);
   
   short nextword = 0;
   while (nextword >= 0) {
-    nextword = scanfor(_wordbuf, sizeof(_wordbuf), buf, len, nextword, false);
+    nextword = scanfor(_wordbuf, sizeof(_wordbuf), str, len, nextword, false);
     if (nextword == -2) {
       error(LG_WORD_TOO_LONG);
       return;
     }
     if (define) {
       if (!dodefine(_wordbuf, nextword == -1)) {
-        if (_nextcode >= _startjcode) {
+        if (_nextcode >= START_JCODE) {
           error(LG_OUT_OF_CODE);
           return;
         }
@@ -1219,19 +1303,19 @@ bool Logo::istoken(char c, bool newline) {
   
 }
 
-short Logo::scanfor(char *s, short size, const char *str, short len, short start, bool newline) {
+short Logo::scanfor(char *s, short size, LogoString *str, short len, short start, bool newline) {
 
-  DEBUG_IN_ARGS(Logo, "scanfor", "%i%s%i%i%b", size, str, len, start, newline);
+  DEBUG_IN_ARGS(Logo, "scanfor", "%i%i%i%b", size, len, start, newline);
   
   // skip ws
-  while (start < len && (str[start] == ' ' || str[start] == '\t')) {
+  while (start < len && ((*str)[start] == ' ' || (*str)[start] == '\t')) {
     start++;
   }
   
   short end = start;
   
   // find end of line
-  for (short i=0; end < len && str[end] && !istoken(str[end], newline); i++) {
+  for (short i=0; end < len && (*str)[end] && !istoken((*str)[end], newline); i++) {
     end++;
   }
   
@@ -1241,9 +1325,9 @@ short Logo::scanfor(char *s, short size, const char *str, short len, short start
   }
   
   if (end < len) {
-    if (istoken(str[end], newline)) {
+    if (istoken((*str)[end], newline)) {
       end++;
-      strncpy(s, str + start, end-start-1);
+      str->ncpy(s, start, end-start-1);
       s[end-start-1] = 0;
     }
     else {
@@ -1252,7 +1336,7 @@ short Logo::scanfor(char *s, short size, const char *str, short len, short start
     }
   }
   else {
-    strncpy(s, str + start, end-start);
+    str->ncpy(s, start, end-start);
     s[end-start] = 0;
     DEBUG_RETURN(" end of string %i", -1);
     return -1;
@@ -1671,14 +1755,14 @@ void Logo::dumpcode(bool all) const {
     dump(1, _code[i]);
     mark(i,  _pc, "pc");
     if (all) {
-      mark(i, _startjcode, "startjcode");
+      mark(i, START_JCODE, "startjcode");
       mark(i, _nextjcode, "nextjcode");
     }
     cout << endl;
   }
   
   if (!all) {
-    if (_pc > _nextcode && _pc < _startjcode) {
+    if (_pc > _nextcode && _pc < START_JCODE) {
       for (short i=_nextcode; i<=_pc; i++) {
         dump(1, _code[i]);
         mark(i,  _pc, "pc");
@@ -1686,11 +1770,11 @@ void Logo::dumpcode(bool all) const {
       }
     }
     cout << "\t..." << endl;
-    for (short i=_startjcode; i<_nextjcode; i++) {
+    for (short i=START_JCODE; i<_nextjcode; i++) {
       markword(i);
       dump(1, _code[i]);
       mark(i,  _pc, "pc");
-      mark(i, _startjcode, "startjcode");
+      mark(i, START_JCODE, "startjcode");
       cout << endl;
     }
   }

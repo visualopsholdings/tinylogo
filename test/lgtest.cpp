@@ -563,12 +563,10 @@ BOOST_AUTO_TEST_CASE( arguments )
   LogoBuiltinWord empty[] = {};
   Logo logo(empty, 0, 0, Logo::core);
 
-//   logo.compile("TO CRED1; :A * :B; END;");
-//   logo.compile("MAKE \"A 10 MAKE \"B 20 CRED1");
+//   logo.compile("TO MULT; :A * :B; END;");
+//   logo.compile("MAKE \"A 10 MAKE \"B 20 MULT");
  logo.compile("TO MULT :A :B; :A * :B; END;");
  logo.compile("MULT 10 20");
-//   logo.compile("TO MULT :A; :A * 20; END;");
-//   logo.compile("MULT 10");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -581,4 +579,63 @@ BOOST_AUTO_TEST_CASE( arguments )
 }
 
 #endif // HAS_VARIABLES
+
+#include "../arduinoflashstring.hpp"
+
+static const char program_flash[] PROGMEM = 
+  "TO MULT :A :B; :A * :B; END;"
+  "MULT 10 20";
+  ;
+
+BOOST_AUTO_TEST_CASE( flash )
+{
+  cout << "=== flash ===" << endl;
+  
+  LogoBuiltinWord empty[] = {};
+  Logo logo(empty, 0, 0, Logo::core);
+
+  ArduinoFlashString program(program_flash);
+  logo.compile(&program);
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  gCmds.clear();
+  DEBUG_STEP_DUMP(20, false);
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popint(), 200);
+  DEBUG_DUMP(false);
+  
+}
+
+static const char strings_fixedStrings[] PROGMEM = 
+  "MULT\nA\nB\n";
+
+static const char program_fixedStrings[] PROGMEM = 
+  "TO MULT :A :B; :A * :B; END;"
+  "MULT 10 20";
+//   "TO $1 :$2 :$3; :$2 * :$3; END;"
+//   "$1 10 20"
+  ;
+
+BOOST_AUTO_TEST_CASE( fixedStrings )
+{
+  cout << "=== fixedStrings ===" << endl;
+  
+  ArduinoFlashString strings(strings_fixedStrings);
+  LogoBuiltinWord empty[] = {};
+  Logo logo(empty, 0, 0, Logo::core, &strings);
+
+  ArduinoFlashString program(program_fixedStrings);
+  logo.compile(&program);
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  gCmds.clear();
+  DEBUG_STEP_DUMP(20, false);
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popint(), 200);
+  DEBUG_DUMP(false);
+  
+}
+
 

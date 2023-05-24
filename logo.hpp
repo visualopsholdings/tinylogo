@@ -83,8 +83,9 @@
 #define WORD_LEN            24        // these number of bytes
 
 // on some Arduinos this could be MUCH larger.
-#define MAX_WORDS           16        // 4 bytes each
-#define MAX_CODE            80        // 6 bytes each
+#define MAX_WORDS           20        // 4 bytes each
+#define MAX_CODE            100       // 6 bytes each
+#define START_JCODE         30        // the start of where the JCODE lies (the words)
 #define MAX_STACK           16        // 6 bytes each
 
 // might have to use something like this while you are debugging things on the ardiuno
@@ -97,7 +98,7 @@
 // #define MAX_STACK         10        // 6 bytes each
 
 #ifdef HAS_VARIABLES
-#define MAX_VARS              4         // 6 bytes each
+#define MAX_VARS             8         // 6 bytes each
 #endif
 
 #include <string.h>
@@ -119,6 +120,7 @@
 #define LG_NOT_STRING         13
 #define LG_NOT_CALLABLE       14
 #define LG_EXTRA_IN_DEFINE    15
+#define LG_FIXED_NO_NEWLINE   16
 
 #define OPTYPE_NOOP           0 //
 #define OPTYPE_RETURN         1 //
@@ -126,11 +128,11 @@
 #define OPTYPE_BUILTIN        3 // _op = index of builtin, _opand = category 0 = builtin, 1 = core 
 #define OPTYPE_ERR            4 // _op = error
 #define OPTYPE_WORD           5 // _op = index of word
-#define OPTYPE_STRING         6 // _op = index of string, _opand = length of string
+#define OPTYPE_STRING         6 // _op = index of string (-fixedcount), _opand = length of string
 #define OPTYPE_INT            7 // _op = literal integer
 #define OPTYPE_DOUBLE         8 // _op = literal integer part of double, _opand is fractional
 #ifdef HAS_VARIABLES
-#define OPTYPE_REF            9 // _op = index of string with a var in it, _opand = length of string
+#define OPTYPE_REF            9 // _op = index of string (-fixedcount) with a var in it, _opand = length of string
 #define OPTYPE_POPREF         10 // _op = index of var to pop into
 #endif
 
@@ -275,16 +277,55 @@ private:
 
 };
 
+// strings are in an abstract class to allow them
+// to be placed in FLASH memory if we need to.
+
+class LogoString {
+
+public:
+  
+  virtual size_t length() const = 0;
+  virtual char operator[](int index) const = 0;
+  virtual void ncpy(char *to, size_t offset, size_t size) const = 0;
+ 
+};
+
+// just a simple string as a sequence of characters, null terminated.
+
+class LogoSimpleString: public LogoString {
+
+public:
+  LogoSimpleString(const char *code): _code(code) {}
+  
+  size_t length() const { 
+    return strlen(_code); 
+  }
+  
+  char operator[](int index) const { 
+    return _code[index]; 
+  }
+  
+  void ncpy(char *to, size_t offset, size_t len) const { 
+    strncpy(to, _code + offset, len);
+  }
+
+private:
+  const char *_code;
+
+};
+
 class Logo {
 
 public:
-  Logo(LogoBuiltinWord *builtinsr, short size, LogoTimeProvider *time, LogoBuiltinWord *core=0);
+  Logo(LogoBuiltinWord *builtins, short size, LogoTimeProvider *time, LogoBuiltinWord *core=0, LogoString *strings=0);
   ~Logo() {}
   
   // the compiler.
   void compile(const char *code) {
-      compile(code, strlen(code));
+    LogoSimpleString str(code);
+    compile(&str);
   }
+  void compile(LogoString *str);
   
   // find any errors in the code.
   short geterr();
@@ -351,6 +392,8 @@ private:
   short _wordarity;
   
   // the pool of all strings
+  LogoString *_fixedstrings;
+  short _fixedcount;
   char _strings[STRING_POOL_SIZE];
   tStrPool _nextstring;
   
@@ -377,7 +420,6 @@ private:
   tJump _pc;
   tJump _nextcode;
   tJump _nextjcode; // for allocating new jumps
-  tJump _startjcode; // where we started making the jumps.
   
   // the stack
   LogoInstruction _stack[MAX_STACK];
@@ -403,9 +445,8 @@ private:
   // parser
   bool dodefine(const char *word, bool eol);
   void error(short error);
-  void compile(const char *code, short len);
-  void compilewords(const char *buf, short len, bool define);
-  short scanfor(char *s, short size, const char *str, short len, short start, bool newline);
+  void compilewords(LogoString *str, short len, bool define);
+  short scanfor(char *s, short size, LogoString *str, short len, short start, bool newline);
   void parseword(LogoInstruction *entry, const char *word, short len);
   bool istoken(char c, bool newline);
   bool isnum(const char *word, short len);
@@ -420,6 +461,8 @@ private:
   // strings
   short addstring(const char *s, tStrPool len);
   void getstring(char *buf, short buflen, tStrPool str, tStrPool len) const;
+  short findfixed(const char *s);
+  bool getfixed(char *buf, short buflen, tStrPool str) const;
 
   // builtins
   const LogoBuiltinWord *getbuiltin(short op, short opand) const;
@@ -462,6 +505,10 @@ private:
 #define DEBUG_DUMP(all)
 #define DEBUG_DUMP_MSG(msg, all)
 #define DEBUG_STEP_DUMP(count, all)
+#endif
+
+#ifndef ARDUINO
+#define PROGMEM
 #endif
 
 #endif // H_logo

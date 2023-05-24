@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE( tooManyWords )
 
   for (short i=1; i<MAX_WORDS+2; i++) {
     strstream str;
-    str << "TO WORD" << i << "; ON; END;";
+    str << "TO W" << i << "; ON; END;";
     logo.compile(str.str());
   }
   DEBUG_DUMP();

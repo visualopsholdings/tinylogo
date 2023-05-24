@@ -20,6 +20,7 @@
 #include <chrono>
 
 #include "../logo.hpp"
+#include "../arduinoflashstring.hpp"
 
 #include <iostream>
 #include <vector>
@@ -46,15 +47,33 @@ void rgb(Logo &logo, const char *color) {
 
 }
 
-void red(Logo &logo) {
+void ledOn(Logo &logo) {
+
+  gCmds.push_back("LED ON");
+#ifdef PRINT_RESULT
+  cout << gCmds.back() << endl;
+#endif  
+
+}
+
+void ledOff(Logo &logo) {
+
+  gCmds.push_back("LED ON");
+#ifdef PRINT_RESULT
+  cout << gCmds.back() << endl;
+#endif  
+
+}
+
+void redRaw(Logo &logo) {
   rgb(logo, "RED");
 }
 
-void green(Logo &logo) {
+void greenRaw(Logo &logo) {
   rgb(logo, "GREEN");
 }
 
-void blue(Logo &logo) {
+void blueRaw(Logo &logo) {
   rgb(logo, "BLUE");
 }
 
@@ -81,32 +100,85 @@ public:
 };
 #endif
 
+// the strings for the program in flash
+static const char strings_flash[] PROGMEM = 
+  "SCLR\n"    // 1
+  "C\n"       // 2
+  "REDC\n"    // 3
+  "N\n"       // 4
+  "GREENC\n"  // 5
+  "BLUEC\n"   // 6
+  "AMBER\n"   // 7
+  "RED\n"     // 8
+  "GREEN\n"   // 9
+  "BLUE\n"    // 10
+  "REDR\n"    // 11
+  "GREENR\n"  // 12
+  "BLUER\n"   // 13
+  "ON\n"      // 14
+  "OFF\n"     // 15
+  "SETALL\n"  // 16
+  "R\n"       // 17
+  "G\n"       // 18
+  "B\n"       // 19
+  ;
+
+// the initial program goes into FLASH
+static const char program_flash[] PROGMEM = 
+  "TO SCLR :C; 100 - :C / 100  * 255; END;"
+  "TO REDC :N; REDR SCLR :N; END;"
+  "TO GREENC :N; GREENR SCLR :N; END;"
+  "TO BLUEC :N; BLUER SCLR :N; END;"
+  // arguments are reversed!
+  "TO SETALL :B :G :R; REDC :R GREENC :G BLUEC :B; END;"
+  "TO AMBER; SETALL 100 75 0; END;"
+  "TO RED; SETALL 100 0 0; END;"
+  "TO GREEN; SETALL 0 100 0; END;"
+  "TO BLUE; SETALL 0 0 100; END;"
+//   "TO $1 :$2; 100 - :$2 / 100  * 255; END;"
+//   "TO $3 :$4; $11 $1 :$4; END;"
+//   "TO $5 :$4; $12 $1 :$4; END;"
+//   "TO $6 :$4; $13 $1 :$4; END;"
+// //   // arguments are reversed!
+//   "TO $16 :$19 :$18 :$17; $3 :$17 $5 :$18 $6 :$19; END;"
+//   "TO $7; $16 100 75 0; END;"
+//   "TO $8; $16 100 0 0; END;"
+//   "TO $9; $16 0 100 0; END;"
+//   "TO $10; $16 0 0 100; END;"
+  ;
+
 BOOST_AUTO_TEST_CASE( rgbSketch )
 {
   cout << "=== rgbSketch ===" << endl;
   
   LogoBuiltinWord builtins[] = {
-    { "RED", &red, 1 },
-    { "GREEN", &green, 1 },
-    { "BLUE", &blue, 1 },
+  { "ON", &ledOn },
+  { "OFF", &ledOff },
+  { "REDR", &redRaw, 1 },
+  { "GREENR", &greenRaw, 1 },
+  { "BLUER", &blueRaw, 1 },
+//   { "$14", &ledOn },
+//   { "$15", &ledOff },
+//   { "$11", &redRaw, 1 },
+//   { "$12", &greenRaw, 1 },
+//   { "$13", &blueRaw, 1 },
   };
 #ifdef REAL_TIME
   RealTimeProvider time;
 #else
   TestTimeProvider time;
 #endif
-  Logo logo(builtins, sizeof(builtins), &time, Logo::core);
+  ArduinoFlashString strings(strings_flash);
+  Logo logo(builtins, sizeof(builtins), &time, Logo::core, &strings);
 
-  logo.compile("TO C :C; 100 - :C / 100  * 255; END;");
-  logo.compile("TO R :N; RED C :N; END;");
-  logo.compile("TO G :N; GREEN C :N; END;");
-  logo.compile("TO B :N; BLUE C :N; END;");
-  logo.compile("TO A; R 100 G 75 B 0; END;");
+  ArduinoFlashString str(program_flash);
+  logo.compile(&str);
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
   
   logo.resetcode();
-  logo.compile("A");
+  logo.compile("AMBER");
+//    logo.compile("$7");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
