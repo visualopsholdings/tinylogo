@@ -64,7 +64,6 @@ You can read more about logo here https://en.wikipedia.org/wiki/Logo_(programmin
 
 Words need to be defined on 3 lines like this:
 
-
 ```
 TO wordname; BLOCK; END
 ```
@@ -255,3 +254,6 @@ https://forum.arduino.cc/t/how-to-properly-use-wire-onreceive/891195/12
 
 24 May 2023
 - Moved tiny logo, cmd and ringbuffer to their repos.
+25 May 2023
+- Broke compiler out into seperate class hopefully not needed. Also added code
+to allow strings and code to be in FLASH memory.

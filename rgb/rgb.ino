@@ -89,6 +89,7 @@ LogoBuiltinWord builtins[] = {
 ArduinoTimeProvider time;
 ArduinoFlashString strings(strings_flash);
 Logo logo(builtins, sizeof(builtins), &time, Logo::core, &strings);
+LogoCompiler compiler(&logo);
 
 // the initial program goes into FLASH
 static const char program_flash[] PROGMEM = 
@@ -166,7 +167,7 @@ void setup() {
 
   // Compile a little program into the LOGO interpreter :-)
   ArduinoFlashString str(program_flash);
-  logo.compile(&str);
+  compiler.compile(&str);
   int err = logo.geterr();
   if (err) {
     flashErr(1, err + 2);
@@ -210,7 +211,7 @@ void loop() {
     
     // compile whatever it is into the LOGO interpreter and if there's
     // a compile error flash the LED
-    logo.compile(cmdbuf);
+    compiler.compile(cmdbuf);
     int err = logo.geterr();
     if (err) {
       flashErr(1, err);

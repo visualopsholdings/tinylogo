@@ -170,15 +170,16 @@ BOOST_AUTO_TEST_CASE( rgbSketch )
 #endif
   ArduinoFlashString strings(strings_flash);
   Logo logo(builtins, sizeof(builtins), &time, Logo::core, &strings);
+  LogoCompiler compiler(&logo);
 
   ArduinoFlashString str(program_flash);
-  logo.compile(&str);
+  compiler.compile(&str);
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
   
   logo.resetcode();
-  logo.compile("AMBER");
-//    logo.compile("$7");
+  compiler.compile("AMBER");
+//    compiler.compile("$7");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 

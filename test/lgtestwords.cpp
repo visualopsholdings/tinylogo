@@ -51,9 +51,10 @@ BOOST_AUTO_TEST_CASE( make )
   
   LogoBuiltinWord empty[] = {};
   Logo logo(empty, 0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("MAKE \"VAR 10");
-  logo.compile(":VAR");
+  compiler.compile("MAKE \"VAR 10");
+  compiler.compile(":VAR");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -72,10 +73,11 @@ BOOST_AUTO_TEST_CASE( makeChange )
   LogoBuiltinWord empty[] = {};
   TestTimeProvider time;
   Logo logo(empty, 0, &time, Logo::core);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("MAKE \"num 100");
-  logo.compile("MAKE \"num 200");
-  logo.compile("WAIT :num");
+  compiler.compile("MAKE \"num 100");
+  compiler.compile("MAKE \"num 200");
+  compiler.compile("WAIT :num");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -98,8 +100,9 @@ BOOST_AUTO_TEST_CASE( forever )
   };
   TestTimeProvider time;
   Logo logo(builtins, sizeof(builtins), &time, Logo::core);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("1 2 FOREVER [ON WAIT 10 OFF WAIT 20];");
+  compiler.compile("1 2 FOREVER [ON WAIT 10 OFF WAIT 20];");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -127,8 +130,9 @@ BOOST_AUTO_TEST_CASE( repeat )
   };
   TestTimeProvider time;
   Logo logo(builtins, sizeof(builtins), &time, Logo::core);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("REPEAT 3 [ON WAIT 10 OFF WAIT 20];");
+  compiler.compile("REPEAT 3 [ON WAIT 10 OFF WAIT 20];");
   DEBUG_DUMP(false);
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
 
@@ -152,8 +156,9 @@ BOOST_AUTO_TEST_CASE( eqWord )
   
   LogoBuiltinWord empty[] = {};
   Logo logo(empty, 0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("1 = 3");
+  compiler.compile("1 = 3");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -161,7 +166,8 @@ BOOST_AUTO_TEST_CASE( eqWord )
   BOOST_CHECK_EQUAL(logo.popint(), 0);
   
   logo.reset();
-  logo.compile("10 = 10");
+  compiler.reset();
+  compiler.compile("10 = 10");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
   
@@ -179,12 +185,13 @@ BOOST_AUTO_TEST_CASE( ifelseFalse )
   
   LogoBuiltinWord empty[] = {};
   Logo logo(empty, 0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("TO TEST; 0; END");
-  logo.compile("TO THEN; 2; END");
-  logo.compile("TO ELSE; 3; END");
-  logo.compile("IFELSE TEST THEN ELSE");
-//  logo.compile("IFELSE [1 = 1] [THIS] [THAT]");
+  compiler.compile("TO TEST; 0; END");
+  compiler.compile("TO THEN; 2; END");
+  compiler.compile("TO ELSE; 3; END");
+  compiler.compile("IFELSE TEST THEN ELSE");
+//  compiler.compile("IFELSE [1 = 1] [THIS] [THAT]");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -201,12 +208,13 @@ BOOST_AUTO_TEST_CASE( ifelseTrue )
   
   LogoBuiltinWord empty[] = {};
   Logo logo(empty, 0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("TO TEST; 1; END");
-  logo.compile("TO THEN; 2; END");
-  logo.compile("TO ELSE; 3; END");
-  logo.compile("IFELSE TEST THEN ELSE");
-//  logo.compile("IFELSE [1 = 1] [THIS] [THAT]");
+  compiler.compile("TO TEST; 1; END");
+  compiler.compile("TO THEN; 2; END");
+  compiler.compile("TO ELSE; 3; END");
+  compiler.compile("IFELSE TEST THEN ELSE");
+//  compiler.compile("IFELSE [1 = 1] [THIS] [THAT]");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -222,8 +230,9 @@ BOOST_AUTO_TEST_CASE( ifelseCond )
   
   LogoBuiltinWord empty[] = {};
   Logo logo(empty, 0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("IFELSE [1 = 0] [2] [3]");
+  compiler.compile("IFELSE [1 = 0] [2] [3]");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -240,8 +249,9 @@ BOOST_AUTO_TEST_CASE( ifelseSentences )
   
   LogoBuiltinWord empty[] = {};
   Logo logo(empty, 0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("IFELSE [1] [2] [3]");
+  compiler.compile("IFELSE [1] [2] [3]");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -257,8 +267,9 @@ BOOST_AUTO_TEST_CASE( ifelseLiteralTrueCond )
   
   LogoBuiltinWord empty[] = {};
   Logo logo(empty, 0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("IFELSE 1 [2] [3]");
+  compiler.compile("IFELSE 1 [2] [3]");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -275,8 +286,9 @@ BOOST_AUTO_TEST_CASE( ifelseLiteralFalseCond )
   
   LogoBuiltinWord empty[] = {};
   Logo logo(empty, 0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("IFELSE 0 [2] [3]");
+  compiler.compile("IFELSE 0 [2] [3]");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -293,8 +305,9 @@ BOOST_AUTO_TEST_CASE( ifelseTrueLiteralNumBranches )
   
   LogoBuiltinWord empty[] = {};
   Logo logo(empty, 0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("IFELSE 1 2 3");
+  compiler.compile("IFELSE 1 2 3");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -311,8 +324,9 @@ BOOST_AUTO_TEST_CASE( ifelseFalseLiteralNumBranches )
   
   LogoBuiltinWord empty[] = {};
   Logo logo(empty, 0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("IFELSE 0 2 3");
+  compiler.compile("IFELSE 0 2 3");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -329,8 +343,9 @@ BOOST_AUTO_TEST_CASE( ifelseTrueLiteralStringBranches )
   
   LogoBuiltinWord empty[] = {};
   Logo logo(empty, 0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("IFELSE 1 \"A \"B");
+  compiler.compile("IFELSE 1 \"A \"B");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -349,8 +364,9 @@ BOOST_AUTO_TEST_CASE( ifelseFalseLiteralStringBranches )
   
   LogoBuiltinWord empty[] = {};
   Logo logo(empty, 0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("IFELSE 0 \"A \"B");
+  compiler.compile("IFELSE 0 \"A \"B");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -371,9 +387,10 @@ BOOST_AUTO_TEST_CASE( ifelseVarRef )
   
   LogoBuiltinWord empty[] = {};
   Logo logo(empty, 0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("MAKE \"VAR 1");
-  logo.compile("IFELSE :VAR \"A \"B");
+  compiler.compile("MAKE \"VAR 1");
+  compiler.compile("IFELSE :VAR \"A \"B");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -392,8 +409,9 @@ BOOST_AUTO_TEST_CASE( ifelseMissingVar )
   
   LogoBuiltinWord empty[] = {};
   Logo logo(empty, 0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("IFELSE :VAR \"A \"B");
+  compiler.compile("IFELSE :VAR \"A \"B");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -447,8 +465,9 @@ BOOST_AUTO_TEST_CASE( waitWordFired )
   };
   TestWordTimeProvider time;
   Logo logo(builtins, sizeof(builtins), &time, Logo::core);
+  LogoCompiler compiler(&logo);
  
-  logo.compile("WAIT 1000 ON");
+  compiler.compile("WAIT 1000 ON");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -469,8 +488,9 @@ BOOST_AUTO_TEST_CASE( waitWordNotReady )
   };
   TestWordTimeProvider time;
   Logo logo(builtins, sizeof(builtins), &time, Logo::core);
+  LogoCompiler compiler(&logo);
  
-  logo.compile("WAIT 1000 ON");
+  compiler.compile("WAIT 1000 ON");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -490,8 +510,9 @@ BOOST_AUTO_TEST_CASE( arithmetic )
   
   LogoBuiltinWord empty[] = {};
   Logo logo(empty, 0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("3 - 1 * 4 / 3");
+  compiler.compile("3 - 1 * 4 / 3");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 

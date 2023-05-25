@@ -39,6 +39,7 @@ LogoBuiltinWord builtins[] = {
 };
 ArduinoTimeProvider time;
 Logo logo(builtins, sizeof(builtins), &time, Logo::core);
+LogoCompiler compiler(&logo);
 
 void flashErr(int mode, int n) {
   // it's ok to tie up the device with delays here.
@@ -71,9 +72,9 @@ void setup() {
   Wire.onReceive(receiveEvent);
 
   // Compile a little program into the LOGO interpreter :-)
-  logo.compile("TO FLASH; ON WAIT 100 OFF WAIT 1000; END;");
-  logo.compile("TO GO; FOREVER FLASH; END;");
-  logo.compile("TO STOP; OFF; END;");
+  compiler.compile("TO FLASH; ON WAIT 100 OFF WAIT 1000; END;");
+  compiler.compile("TO GO; FOREVER FLASH; END;");
+  compiler.compile("TO STOP; OFF; END;");
   int err = logo.geterr();
   if (err) {
     flashErr(1, err + 2);
@@ -109,7 +110,7 @@ void loop() {
     
     // compile whatever it is into the LOGO interpreter and if there's
     // a compile error flash the LED
-    logo.compile(cmdbuf);
+    compiler.compile(cmdbuf);
     int err = logo.geterr();
     if (err) {
       flashErr(1, err + 2);

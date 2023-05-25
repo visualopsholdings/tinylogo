@@ -86,10 +86,11 @@ BOOST_AUTO_TEST_CASE( ledSketch )
   TestTimeProvider time;
 #endif
   Logo logo(builtins, sizeof(builtins), &time, Logo::core);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("TO FLASH; ON WAIT 1000 OFF WAIT 2000; END;");
-  logo.compile("TO GO; FOREVER FLASH; END;");
-  logo.compile("TO STOP; END;");
+  compiler.compile("TO FLASH; ON WAIT 1000 OFF WAIT 2000; END;");
+  compiler.compile("TO GO; FOREVER FLASH; END;");
+  compiler.compile("TO STOP; END;");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
   
@@ -101,7 +102,7 @@ BOOST_AUTO_TEST_CASE( ledSketch )
   BOOST_CHECK_EQUAL(gCmds.size(), 0);
 
   logo.resetcode();
-  logo.compile("GO");
+  compiler.compile("GO");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -109,7 +110,7 @@ BOOST_AUTO_TEST_CASE( ledSketch )
 #ifdef REAL_TIME
    BOOST_CHECK_EQUAL(logo.run(), 0);
 #else
-  DEBUG_STEP_DUMP(1000, false);
+//  DEBUG_STEP_DUMP(1000, false);
   for (int i=0; i<100; i++) {
     BOOST_CHECK_EQUAL(logo.step(), 0);
   }
@@ -120,7 +121,7 @@ BOOST_AUTO_TEST_CASE( ledSketch )
   BOOST_CHECK_EQUAL(gCmds[3], "WAIT 2000");
     
   logo.resetcode();
-  logo.compile("STOP");
+  compiler.compile("STOP");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
   gCmds.clear();

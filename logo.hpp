@@ -314,11 +314,10 @@ private:
 
 };
 
-class Logo {
+class LogoCompiler {
 
 public:
-  Logo(LogoBuiltinWord *builtins, short size, LogoTimeProvider *time, LogoBuiltinWord *core=0, LogoString *strings=0);
-  ~Logo() {}
+  LogoCompiler(Logo * logo);
   
   // the compiler.
   void compile(const char *code) {
@@ -326,6 +325,55 @@ public:
     compile(&str);
   }
   void compile(LogoString *str);
+  
+  // main execution
+  void reset(); // reset the sentences
+
+#ifdef LOGO_DEBUG
+  void outstate() const;
+#endif
+
+private:
+  
+  Logo *_logo;
+  
+  // the state variables for defining new words
+  bool _inword;
+  bool _inwordargs;
+  short _defining;
+  short _defininglen;
+  short _jump;
+  short _wordarity;
+  
+  // various buffers to hold data
+  char _linebuf[LINE_LEN];
+  char _wordbuf[WORD_LEN];
+  char _findwordbuf[LINE_LEN];
+  char _tmpbuf[LINE_LEN];
+
+  // parser
+  bool dodefine(const char *word, bool eol);
+  void compilewords(LogoString *str, short len, bool define);
+  short scanfor(char *s, short size, LogoString *str, short len, short start, bool newline);
+  bool istoken(char c, bool newline);
+  bool isnum(const char *word, short len);
+
+  // words
+  void compileword(tJump *next, const char *word, short op);
+  void finishword(short word, short wordlen, short jump, short arity);
+  
+  // sentences
+  short _sentencecount;
+
+  void dosentences(char *buf, short len, const char *start);
+  
+};
+
+class Logo {
+
+public:
+  Logo(LogoBuiltinWord *builtins, short size, LogoTimeProvider *time, LogoBuiltinWord *core=0, LogoString *strings=0);
+  ~Logo() {}
   
   // find any errors in the code.
   short geterr();
@@ -340,6 +388,25 @@ public:
   void resetvars(); // reset the variables
   void fail(short err);
   void schedulenext(short delay);
+  
+  // interface to compiler
+  bool hascore() { return _core; }
+  void error(short error);
+  void addop(tJump *next, short type, short op=0, short opand=0);
+  void findbuiltin(const char *name, short *index, short *category);
+  short addstring(const char *s, tStrPool len);
+  void getstring(char *buf, short buflen, tStrPool str, tStrPool len) const;
+
+  // compiler needs direct access to these?
+  
+  // the code
+  tJump _nextcode;
+  tJump _nextjcode; // for allocating new jumps
+  
+  // words
+  short _wordcount;
+  LogoWord _words[MAX_WORDS];
+  short findword(const char *word) const;
   
   // dealing with the stack
   bool stackempty();
@@ -383,14 +450,6 @@ public:
 
 private:
   
-  // the state variables for defining new words
-  bool _inword;
-  bool _inwordargs;
-  short _defining;
-  short _defininglen;
-  short _jump;
-  short _wordarity;
-  
   // the pool of all strings
   LogoString *_fixedstrings;
   short _fixedcount;
@@ -405,21 +464,13 @@ private:
   LogoBuiltinWord *_core;
   short _corecount;
   
-  // the word dictionary;
-  LogoWord _words[MAX_WORDS];
-  short _wordcount;
-  
   // various buffers to hold data
-  char _linebuf[LINE_LEN];
-  char _wordbuf[WORD_LEN];
-  char _findwordbuf[LINE_LEN];
+  char _findbuf[LINE_LEN];
   char _tmpbuf[LINE_LEN];
    
   // the code
   LogoInstruction _code[MAX_CODE];
   tJump _pc;
-  tJump _nextcode;
-  tJump _nextjcode; // for allocating new jumps
   
   // the stack
   LogoInstruction _stack[MAX_STACK];
@@ -434,35 +485,15 @@ private:
   short getvarfromref(const LogoInstruction &entry);
 #endif
   
-  // sentences
-  short _sentencecount;
-
-  void dosentences(char *buf, short len, const char *start);
-  
   // the schdeuler for WAIT
   LogoScheduler _schedule;
   
   // parser
-  bool dodefine(const char *word, bool eol);
-  void error(short error);
-  void compilewords(LogoString *str, short len, bool define);
-  short scanfor(char *s, short size, LogoString *str, short len, short start, bool newline);
-  void parseword(LogoInstruction *entry, const char *word, short len);
-  bool istoken(char c, bool newline);
-  bool isnum(const char *word, short len);
   bool parsestring(short type, short op, short oplen, char *s, short len);
-  void addop(tJump *next, short type, short op=0, short opand=0);
 
-  // words
-  void compileword(tJump *next, const char *word, short op);
-  void finishword(short word, short wordlen, short jump, short arity);
-  short findword(const char *word) const;
-  
   // strings
-  short addstring(const char *s, tStrPool len);
-  void getstring(char *buf, short buflen, tStrPool str, tStrPool len) const;
-  short findfixed(const char *s);
-  bool getfixed(char *buf, short buflen, tStrPool str) const;
+   short findfixed(const char *s);
+   bool getfixed(char *buf, short buflen, tStrPool str) const;
 
   // builtins
   const LogoBuiltinWord *getbuiltin(short op, short opand) const;

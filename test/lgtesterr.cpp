@@ -34,8 +34,9 @@ BOOST_AUTO_TEST_CASE( unknownWord )
   
   LogoBuiltinWord empty[] = {};
   Logo logo(empty, 0, 0);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("XXXX");
+  compiler.compile("XXXX");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -47,8 +48,9 @@ BOOST_AUTO_TEST_CASE( unknownWordInWord )
   
   LogoBuiltinWord empty[] = {};
   Logo logo(empty, 0, 0);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("TO TEST; ON; END;");
+  compiler.compile("TO TEST; ON; END;");
   DEBUG_DUMP(false);
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
 
@@ -60,11 +62,12 @@ BOOST_AUTO_TEST_CASE( tooManyWords )
   
   LogoBuiltinWord empty[] = {};
   Logo logo(empty, 0, 0);
+  LogoCompiler compiler(&logo);
 
   for (short i=1; i<MAX_WORDS+2; i++) {
     strstream str;
     str << "TO W" << i << "; ON; END;";
-    logo.compile(str.str());
+    compiler.compile(str.str());
   }
   DEBUG_DUMP();
   BOOST_CHECK(logo.haserr(LG_TOO_MANY_WORDS));
@@ -76,6 +79,7 @@ BOOST_AUTO_TEST_CASE( outOfStrings )
   
   LogoBuiltinWord empty[] = {};
   Logo logo(empty, 0, 0);
+  LogoCompiler compiler(&logo);
   
   short segn = 16;
   short seg = STRING_POOL_SIZE/segn;
@@ -87,7 +91,7 @@ BOOST_AUTO_TEST_CASE( outOfStrings )
     str << ";";
   }
 
-  logo.compile(str.str());
+  compiler.compile(str.str());
   DEBUG_DUMP(false);
   
   BOOST_CHECK_EQUAL(logo.geterr(), LG_OUT_OF_STRINGS);
@@ -100,6 +104,7 @@ BOOST_AUTO_TEST_CASE( lineTooLong )
   
   LogoBuiltinWord empty[] = {};
   Logo logo(empty, 0, 0);
+  LogoCompiler compiler(&logo);
   
   strstream str;
   for (short i=0; i<20; i++) {
@@ -111,7 +116,7 @@ BOOST_AUTO_TEST_CASE( lineTooLong )
   }
   str << "TOOBIG; ";
   
-  logo.compile(str.str());
+  compiler.compile(str.str());
   DEBUG_DUMP(false);
   BOOST_CHECK_EQUAL(logo.geterr(), LG_LINE_TOO_LONG);
   
@@ -123,6 +128,7 @@ BOOST_AUTO_TEST_CASE( wordTooLong )
   
   LogoBuiltinWord empty[] = {};
   Logo logo(empty, 0, 0);
+  LogoCompiler compiler(&logo);
   
   strstream str;
   for (short i=0; i<WORD_LEN+1; i++) {
@@ -130,7 +136,7 @@ BOOST_AUTO_TEST_CASE( wordTooLong )
   }
   str << "; ";
   
-  logo.compile(str.str());
+  compiler.compile(str.str());
   DEBUG_DUMP(false);
   BOOST_CHECK_EQUAL(logo.geterr(), LG_WORD_TOO_LONG);
  
@@ -142,12 +148,13 @@ BOOST_AUTO_TEST_CASE( outOfCode )
   
   LogoBuiltinWord empty[] = {};
   Logo logo(empty, 0, 0);
+  LogoCompiler compiler(&logo);
   
   strstream str;
   for (short i=0; i<MAX_CODE+2; i++) {
     str << "A;";
   }
-  logo.compile(str.str());
+  compiler.compile(str.str());
   DEBUG_DUMP(false);
   BOOST_CHECK_EQUAL(logo.geterr(), LG_OUT_OF_CODE);
   
@@ -165,6 +172,7 @@ BOOST_AUTO_TEST_CASE( stackOverflow )
     { "NEVER", &nevercalled, MAX_STACK+2 }
   };
   Logo logo(builtins, sizeof(builtins), 0);
+  LogoCompiler compiler(&logo);
   
   strstream str;
   str << "TO LOTS; ";
@@ -172,12 +180,12 @@ BOOST_AUTO_TEST_CASE( stackOverflow )
     str << "A ";
   }
   str << "; END;";
-  logo.compile(str.str());
-  logo.compile("NEVER [LOTS LOTS LOTS LOTS LOTS LOTS]");
+  compiler.compile(str.str());
+  compiler.compile("NEVER [LOTS LOTS LOTS LOTS LOTS LOTS]");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
-  DEBUG_STEP_DUMP(20, false);
+  DEBUG_STEP_DUMP(10, false);
   BOOST_CHECK_EQUAL(logo.run(), LG_STACK_OVERFLOW);
   
 }
@@ -190,11 +198,12 @@ BOOST_AUTO_TEST_CASE( tooManyVariables )
   
   LogoBuiltinWord empty[] = {};
   Logo logo(empty, 0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
 
   for (short i=1; i<MAX_VARS+2; i++) {
     strstream str;
     str << "MAKE \"v" << i << " " << i;
-    logo.compile(str.str());
+    compiler.compile(str.str());
   }
   DEBUG_DUMP(false);
   BOOST_CHECK_EQUAL(logo.run(), LG_TOO_MANY_VARS);
@@ -225,8 +234,9 @@ BOOST_AUTO_TEST_CASE( notString )
     { "WANTSSTRING", &wantsstring, 0 }
   };
   Logo logo(builtins, sizeof(builtins), 0);
-  
-  logo.compile("WANTSSTRING 1");
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("WANTSSTRING 1");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -242,8 +252,9 @@ BOOST_AUTO_TEST_CASE( extraAfterWord )
   
   LogoBuiltinWord empty[] = {};
   Logo logo(empty, 0, 0);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("TO TEST1 AND SOME MORE; END;");
+  compiler.compile("TO TEST1 AND SOME MORE; END;");
   BOOST_CHECK_EQUAL(logo.geterr(), LG_EXTRA_IN_DEFINE);
   DEBUG_DUMP(false);
   

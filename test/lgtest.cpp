@@ -59,8 +59,9 @@ BOOST_AUTO_TEST_CASE( builtin )
     { "ON", &ledOn }
   };
   Logo logo(builtins, sizeof(builtins), 0);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("ON");
+  compiler.compile("ON");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
   
@@ -81,8 +82,9 @@ BOOST_AUTO_TEST_CASE( compound )
     { "WAIT", &wait, 1 }
   };
   Logo logo(builtins, sizeof(builtins), 0);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("ON WAIT 100 OFF WAIT 20");
+  compiler.compile("ON WAIT 100 OFF WAIT 20");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -105,10 +107,11 @@ BOOST_AUTO_TEST_CASE( defineSimpleWord )
     { "OFF", &ledOff }
   };
   Logo logo(builtins, sizeof(builtins), 0);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("TO TURNON; ON; END;");
-  logo.compile("TURNON;");
-  logo.compile("OFF;");
+  compiler.compile("TO TURNON; ON; END;");
+  compiler.compile("TURNON;");
+  compiler.compile("OFF;");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -137,10 +140,11 @@ BOOST_AUTO_TEST_CASE( defineCompoundWord )
     { "WAIT", &wait, 1 }
   };
   Logo logo(builtins, sizeof(builtins), 0);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("TO TEST1; ON WAIT 100 OFF WAIT 20; END;");
-  logo.compile("TO TEST2; OFF WAIT 30 ON WAIT 40; END;");
-  logo.compile("TEST1; TEST2;");
+  compiler.compile("TO TEST1; ON WAIT 100 OFF WAIT 20; END;");
+  compiler.compile("TO TEST2; OFF WAIT 30 ON WAIT 40; END;");
+  compiler.compile("TEST1; TEST2;");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -168,10 +172,11 @@ BOOST_AUTO_TEST_CASE( nestedWord )
     { "WAIT", &wait, 1 }
   };
   Logo logo(builtins, sizeof(builtins), 0);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("TO TEST1; ON WAIT 100 OFF WAIT 20; END;");
-  logo.compile("TO TEST2; TEST1; END;");
-  logo.compile("TEST2;");
+  compiler.compile("TO TEST1; ON WAIT 100 OFF WAIT 20; END;");
+  compiler.compile("TO TEST2; TEST1; END;");
+  compiler.compile("TEST2;");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -195,10 +200,11 @@ BOOST_AUTO_TEST_CASE( defineCompoundWordRun1 )
     { "WAIT", &wait, 1 }
   };
   Logo logo(builtins, sizeof(builtins), 0);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("TO TEST1; ON WAIT 10 OFF WAIT 20; END;");
-  logo.compile("TO TEST2; OFF WAIT 30 ON WAIT 40; END;");
-  logo.compile("TEST1;");
+  compiler.compile("TO TEST1; ON WAIT 10 OFF WAIT 20; END;");
+  compiler.compile("TO TEST2; OFF WAIT 30 ON WAIT 40; END;");
+  compiler.compile("TEST1;");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -218,9 +224,10 @@ BOOST_AUTO_TEST_CASE( defineEmptyWord )
   
   LogoBuiltinWord empty[] = {};
   Logo logo(empty, 0, 0);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("TO TEST1; END;");
-  logo.compile("TEST1");
+  compiler.compile("TO TEST1; END;");
+  compiler.compile("TEST1");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -240,8 +247,9 @@ BOOST_AUTO_TEST_CASE( sentence )
     { "WAIT", &wait, 1 }
   };
   Logo logo(builtins, sizeof(builtins), 0);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("[ON WAIT 10 OFF WAIT 20];");
+  compiler.compile("[ON WAIT 10 OFF WAIT 20];");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -265,8 +273,9 @@ BOOST_AUTO_TEST_CASE( sentences )
     { "WAIT", &wait, 1 }
   };
   Logo logo(builtins, sizeof(builtins), 0);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("[ON] [WAIT 10] [OFF] [WAIT 20];");
+  compiler.compile("[ON] [WAIT 10] [OFF] [WAIT 20];");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -305,9 +314,10 @@ BOOST_AUTO_TEST_CASE( sentenceInWord )
     { "SARG", &sarg, 1 }
   };
   Logo logo(builtins, sizeof(builtins), 0);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("TO TEST; SARG [XXX]; END;");
-  logo.compile("TEST;");
+  compiler.compile("TO TEST; SARG [XXX]; END;");
+  compiler.compile("TEST;");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -327,8 +337,9 @@ BOOST_AUTO_TEST_CASE( arityLiteral1 )
     { "WAIT", &wait, 1 }
   };
   Logo logo(builtins, sizeof(builtins), 0);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("WAIT 20");
+  compiler.compile("WAIT 20");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -347,9 +358,10 @@ BOOST_AUTO_TEST_CASE( arityWord1 )
     { "WAIT", &wait, 1 }
   };
   Logo logo(builtins, sizeof(builtins), 0);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("TO TIME; 20; END");
-  logo.compile("WAIT TIME");
+  compiler.compile("TO TIME; 20; END");
+  compiler.compile("WAIT TIME");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -381,8 +393,9 @@ BOOST_AUTO_TEST_CASE( arityLiteral )
     { "ARGS2", &args2, 2 }
   };
   Logo logo(builtins, sizeof(builtins), 0);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("ARGS2 20 XXXX");
+  compiler.compile("ARGS2 20 XXXX");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -402,10 +415,11 @@ BOOST_AUTO_TEST_CASE( arityWord )
     { "ARGS2", &args2, 2 }
   };
   Logo logo(builtins, sizeof(builtins), 0);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("TO TIME; 20; END");
-  logo.compile("TO THING; XXXX; END");
-  logo.compile("ARGS2 TIME THING");
+  compiler.compile("TO TIME; 20; END");
+  compiler.compile("TO THING; XXXX; END");
+  compiler.compile("ARGS2 TIME THING");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -425,11 +439,12 @@ BOOST_AUTO_TEST_CASE( seperateLines )
     { "SARG", &sarg, 1 }
   };
   Logo logo(builtins, sizeof(builtins), 0);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("TO TEST");
-  logo.compile("  SARG [XXX]");
-  logo.compile("END");
-  logo.compile("TEST");
+  compiler.compile("TO TEST");
+  compiler.compile("  SARG [XXX]");
+  compiler.compile("END");
+  compiler.compile("TEST");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -448,8 +463,9 @@ BOOST_AUTO_TEST_CASE( newLines )
     { "SARG", &sarg, 1 }
   };
   Logo logo(builtins, sizeof(builtins), 0);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("TO TEST\n\tSARG [XXX]\nEND\nTEST");
+  compiler.compile("TO TEST\n\tSARG [XXX]\nEND\nTEST");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -468,8 +484,9 @@ BOOST_AUTO_TEST_CASE( reset )
     { "SARG", &sarg, 1 }
   };
   Logo logo(builtins, sizeof(builtins), 0);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("TO TEST\n\tSARG [XXX]\nEND\nTEST");
+  compiler.compile("TO TEST\n\tSARG [XXX]\nEND\nTEST");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -505,8 +522,9 @@ BOOST_AUTO_TEST_CASE( infix )
     { "INFIX", &infixfn, 1 },
   };
   Logo logo(builtins, sizeof(builtins), 0);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("1 INFIX 5");
+  compiler.compile("1 INFIX 5");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -524,8 +542,9 @@ BOOST_AUTO_TEST_CASE( literalsOnStack )
   
   LogoBuiltinWord empty[] = {};
   Logo logo(empty, 0, 0);
+  LogoCompiler compiler(&logo);
 
-  logo.compile("TO NUM; 1 2 3; END; NUM");
+  compiler.compile("TO NUM; 1 2 3; END; NUM");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -562,11 +581,12 @@ BOOST_AUTO_TEST_CASE( arguments )
   
   LogoBuiltinWord empty[] = {};
   Logo logo(empty, 0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
 
-//   logo.compile("TO MULT; :A * :B; END;");
-//   logo.compile("MAKE \"A 10 MAKE \"B 20 MULT");
- logo.compile("TO MULT :A :B; :A * :B; END;");
- logo.compile("MULT 10 20");
+//   compiler.compile("TO MULT; :A * :B; END;");
+//   compiler.compile("MAKE \"A 10 MAKE \"B 20 MULT");
+ compiler.compile("TO MULT :A :B; :A * :B; END;");
+ compiler.compile("MULT 10 20");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -593,9 +613,10 @@ BOOST_AUTO_TEST_CASE( flash )
   
   LogoBuiltinWord empty[] = {};
   Logo logo(empty, 0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
 
   ArduinoFlashString program(program_flash);
-  logo.compile(&program);
+  compiler.compile(&program);
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -624,9 +645,10 @@ BOOST_AUTO_TEST_CASE( fixedStrings )
   ArduinoFlashString strings(strings_fixedStrings);
   LogoBuiltinWord empty[] = {};
   Logo logo(empty, 0, 0, Logo::core, &strings);
+  LogoCompiler compiler(&logo);
 
   ArduinoFlashString program(program_fixedStrings);
-  logo.compile(&program);
+  compiler.compile(&program);
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
