@@ -24,10 +24,12 @@
   };
   ArduinoTimeProvider time;
   Logo logo(builtins, sizeof(builtins), &time, &Logo::core);
-  logo.compile("TO GO; FOREVER [ON WAIT 100 OFF WAIT 1000]; END;");
+  LogoCompiler compiler(&logo);
+  
+  compiler.compile("TO GO; FOREVER [ON WAIT 100 OFF WAIT 1000]; END;");
 
   ... then on some trigger
-  logo.compile("GO");
+  compiler.compile("GO");
   int err = logo.geterr();
   if (err) {
     ... do something with the error number
