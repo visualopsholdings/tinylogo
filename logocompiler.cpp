@@ -164,10 +164,9 @@ const LogoBuiltinWord *Logo::getbuiltin(const LogoInstruction &entry) const {
 
 short LogoCompiler::findword(const char *word) const {
 
+  short len = strlen(word);
   for (short i=0; i<_wordcount; i++) {
-    char *buf = const_cast<char *>(_findwordbuf);
-    _logo->getstring(buf, sizeof(_findwordbuf), _words[i]._name, _words[i]._namelen);
-    if (strcmp(_findwordbuf, word) == 0) {
+    if (_logo->stringcmp(word, len, _words[i]._name, _words[i]._namelen)) {
       return i;
     }
   }
@@ -207,14 +206,11 @@ void LogoCompiler::dosentences(char *buf, short len, const char *start) {
       return;
     }
   
-    memmove(_tmpbuf, start + 1, end - start - 1);
-    _tmpbuf[end - start - 1] = 0;
-  
-    snprintf(_findwordbuf, sizeof(_findwordbuf), "&%d", _sentencecount);
+    snprintf(_sentencebuf, sizeof(_sentencebuf), "&%d", _sentencecount);
     _sentencecount++;
 
-    short wlen = strlen(_findwordbuf);
-    short word = _logo->addstring(_findwordbuf, wlen);
+    short wlen = strlen(_sentencebuf);
+    short word = _logo->addstring(_sentencebuf, wlen);
     if (word < 0) {
       _logo->error(LG_OUT_OF_STRINGS);
       return;
@@ -223,20 +219,20 @@ void LogoCompiler::dosentences(char *buf, short len, const char *start) {
     // how much to go?
     short endlen = strlen(end);
     
-    // replace sentence in the original string.
-    memmove((char *)start, _findwordbuf, wlen);
-    memmove((char *)(start + wlen), end + 1, endlen);
-    
     // remember where we are before compiling.
     short jump = _logo->_nextjcode;
     
     // add all the words etc.
-    LogoSimpleString str(_tmpbuf);
+    LogoSimpleString str(start + 1, end - start - 1);
     compilewords(&str, str.length(), false);
     
     // and finish off the word
     finishword(word, wlen, jump, 0);
   
+    // replace sentence in the original string.
+    memmove((char *)start, _sentencebuf, wlen);
+    memmove((char *)(start + wlen), end + 1, endlen);
+    
     if (endlen > 1) {
       start = strstr(buf, "[");
       if (!start) {
@@ -277,8 +273,9 @@ void LogoCompiler::compile(LogoString *str) {
       dosentences(_linebuf, strlen(_linebuf), s);
     }
     
-    LogoSimpleString str(_linebuf);
-    compilewords(&str, str.length(), true);
+    short len = strlen(_linebuf);
+    LogoSimpleString str(_linebuf, len);
+    compilewords(&str, len, true);
   }
 
 }

@@ -25,7 +25,7 @@ public:
   
   // the compiler.
   void compile(const char *code) {
-    LogoSimpleString str(code);
+    LogoSimpleString str(code, strlen(code));
     compile(&str);
   }
   void compile(LogoString *str);
@@ -66,8 +66,7 @@ private:
   // various buffers to hold data
   char _linebuf[LINE_LEN];
   char _wordbuf[WORD_LEN];
-  char _findwordbuf[LINE_LEN];
-  char _tmpbuf[LINE_LEN];
+  char _sentencebuf[WORD_LEN];
 
   // words
   short _wordcount;

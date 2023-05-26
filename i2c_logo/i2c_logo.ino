@@ -16,6 +16,7 @@
 #include "logo.hpp"
 #include "logocompiler.hpp"
 #include "arduinotimeprovider.hpp"
+#include "arduinoflashstring.hpp"
 
 #include <Wire.h>
 
@@ -41,6 +42,12 @@ LogoBuiltinWord builtins[] = {
 ArduinoTimeProvider time;
 Logo logo(builtins, sizeof(builtins), &time, Logo::core);
 LogoCompiler compiler(&logo);
+
+static const char program_flash[] PROGMEM = 
+  "TO FLASH; ON WAIT 100 OFF WAIT 1000; END;"
+  "TO GO; FOREVER FLASH; END;"
+  "TO STOP; OFF; END;"
+  ;
 
 void flashErr(int mode, int n) {
   // it's ok to tie up the device with delays here.
@@ -73,9 +80,8 @@ void setup() {
   Wire.onReceive(receiveEvent);
 
   // Compile a little program into the LOGO interpreter :-)
-  compiler.compile("TO FLASH; ON WAIT 100 OFF WAIT 1000; END;");
-  compiler.compile("TO GO; FOREVER FLASH; END;");
-  compiler.compile("TO STOP; OFF; END;");
+  ArduinoFlashString str(program_flash);
+  compiler.compile(&str);
   int err = logo.geterr();
   if (err) {
     flashErr(1, err + 2);

@@ -943,6 +943,27 @@ short Logo::findfixed(const char *s) {
   return -1;
 }
 
+bool Logo::fixedcmp(const char *s, short slen, tStrPool str) const {
+
+  if (_fixedstrings) {
+    short len = _fixedstrings->length();
+    short start = 0;
+    short index = 0;
+    for (int i=0; i<len; i++) {
+      if ((*_fixedstrings)[i] == '\n') {
+        if (index == str && _fixedstrings->ncmp(s, start, slen) == 0) {
+          return true;
+        }
+        start = i + 1;
+        index++;
+      }
+    }
+  }
+  
+  return false;
+  
+}
+
 bool Logo::getfixed(char *buf, short buflen, tStrPool str) const {
 
   if (_fixedstrings && str < _fixedcount) {
@@ -990,6 +1011,20 @@ short Logo::addstring(const char *s, tStrPool len) {
   return str;
 }
 
+bool Logo::stringcmp(const char *s, short slen, tStrPool str, tStrPool len) const {
+
+  if (slen != len) {
+    return false;
+  }
+  
+  if (fixedcmp(s, slen, str)) {
+    return true;
+  }
+  
+  return strncmp(s, _strings + (str - _fixedcount), len) == 0;
+  
+}
+
 void Logo::getstring(char *buf, short buflen, tStrPool str, tStrPool len) const {
 
   if (getfixed(buf, buflen, str)) {
@@ -1007,10 +1042,9 @@ short Logo::findvariable(const char *word) const {
 
   DEBUG_IN_ARGS(Logo, "findvariable", "%s%i", word, _varcount);
   
+  short len = strlen(word);
   for (short i=0; i<_varcount; i++) {
-    char *buf = const_cast<char *>(_findbuf);
-    getstring(buf, sizeof(_findbuf), _variables[i]._name, _variables[i]._namelen);
-    if (strcmp(_findbuf, word) == 0) {
+    if (stringcmp(word, len, _variables[i]._name, _variables[i]._namelen)) {
       return i;
     }
   }

@@ -160,8 +160,8 @@ typedef short tStrPool;
 #endif
 
 // types are predefinced and small.
-typedef unsigned char tType;
-
+typedef short tType;
+typedef unsigned char tVarType;
 typedef unsigned char tByte;
 
 // allow the code jump to be a char if the code is small.
@@ -190,7 +190,6 @@ typedef struct {
 
 typedef struct {
   tType     _optype;
-  tByte     _unused;
   short     _op;    // needs to hold a (possible) literal number
   short     _opand; // could be holding a repeat count
 } LogoInstruction;
@@ -198,7 +197,7 @@ typedef struct {
 #ifdef HAS_VARIABLES
 
 typedef struct {
-  tType              _type; // just OPTYPE_STRING, OPTYPE_INT or OPTYPE_DOUBLE
+  tVarType           _type; // just OPTYPE_STRING, OPTYPE_INT or OPTYPE_DOUBLE
   tStrPool           _name;
   tStrPool           _namelen;
   tStrPool           _valuelen;
@@ -290,7 +289,8 @@ public:
   
   virtual size_t length() const = 0;
   virtual char operator[](int index) const = 0;
-  virtual void ncpy(char *to, size_t offset, size_t size) const = 0;
+  virtual void ncpy(char *to, size_t offset, size_t len) const = 0;
+  virtual int ncmp(const char *to, size_t offset, size_t len) const = 0;
  
 };
 
@@ -299,10 +299,13 @@ public:
 class LogoSimpleString: public LogoString {
 
 public:
-  LogoSimpleString(const char *code): _code(code) {}
+  LogoSimpleString(const char *code, short len): _code(code), _len(len) {}
+  LogoSimpleString(const char *code): _code(code) {
+    _len = strlen(_code);
+  }
   
   size_t length() const { 
-    return strlen(_code); 
+    return _len; 
   }
   
   char operator[](int index) const { 
@@ -313,9 +316,14 @@ public:
     strncpy(to, _code + offset, len);
   }
 
+  int ncmp(const char *to, size_t offset, size_t len) const { 
+    return strncmp(to, _code + offset, len);
+  }
+
 private:
   const char *_code;
-
+  short _len;
+  
 };
 
 class LogoCompiler;
@@ -347,6 +355,7 @@ public:
   void findbuiltin(const char *name, short *index, short *category);
   short addstring(const char *s, tStrPool len);
   void getstring(char *buf, short buflen, tStrPool str, tStrPool len) const;
+  bool stringcmp(const char *s, short slen, tStrPool str, tStrPool len) const;
   const LogoBuiltinWord *getbuiltin(short op, short opand) const;
 
   // compiler needs direct access to these?
@@ -410,8 +419,7 @@ private:
   short _corecount;
   
   // various buffers to hold data
-  char _findbuf[LINE_LEN];
-  char _tmpbuf[LINE_LEN];
+  char _tmpbuf[WORD_LEN];
    
   // the code
   LogoInstruction _code[MAX_CODE];
@@ -436,9 +444,10 @@ private:
   // parser
   bool parsestring(short type, short op, short oplen, char *s, short len);
 
-  // strings
-   short findfixed(const char *s);
-   bool getfixed(char *buf, short buflen, tStrPool str) const;
+  // fixed strings
+  short findfixed(const char *s);
+  bool fixedcmp(const char *s, short slen, tStrPool str) const;
+  bool getfixed(char *buf, short buflen, tStrPool str) const;
 
   // builtins
   const LogoBuiltinWord *getbuiltin(const LogoInstruction &entry) const;

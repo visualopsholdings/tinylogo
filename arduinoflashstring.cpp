@@ -25,8 +25,14 @@ char ArduinoFlashString::operator[](int index) const {
   
 }
 
-void ArduinoFlashString::ncpy(char *to, size_t offset, size_t size) const {
+void ArduinoFlashString::ncpy(char *to, size_t offset, size_t len) const {
 
-  strncpy_P(to, _str + offset, size);
+  strncpy_P(to, _str + offset, len);
+  
+}
+
+int ArduinoFlashString::ncmp(const char *to, size_t offset, size_t len) const {
+
+  return strncmp_P(to, _str + offset, len);
   
 }

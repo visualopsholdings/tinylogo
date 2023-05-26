@@ -248,7 +248,22 @@ https://forum.arduino.cc/t/how-to-properly-use-wire-onreceive/891195/12
 
 ## Current development focus
 
+### Moving code into flash memory.
+
+We can put the strings and the actual PROGRAM code into flash memory now, but I'm working
+om being able to put the actual code in flash memory.
+
+2K of dynamic memory isn't a whole lot :-)
+
+So the basic idea is you write your code incrememntally and use a simple tool to compile the
+code to an array of data which you include in the sktech as Flash memory.
+
+Then you can still incrementally compile new words which go into the variable space.
+
 ### OUTPUT from the Arduino to the PI
+
+Actually pretty simple, just need examples.
+
 
 ## Change Log
 
@@ -257,3 +272,5 @@ https://forum.arduino.cc/t/how-to-properly-use-wire-onreceive/891195/12
 25 May 2023
 - Broke compiler out into seperate class hopefully not needed. Also added code
 to allow strings and code to be in FLASH memory.
+26 May 2023
+- Eliminate a whole lot of the buffers to free memory up.

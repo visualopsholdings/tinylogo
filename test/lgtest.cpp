@@ -664,4 +664,56 @@ BOOST_AUTO_TEST_CASE( fixedStrings )
   
 }
 
+BOOST_AUTO_TEST_CASE( getstring )
+{
+  cout << "=== getstring ===" << endl;
+  
+  LogoBuiltinWord empty[] = {};
+  Logo logo(empty, 0, 0, 0, 0);
 
+  const char *s1 = "XXX";
+  short len1 = strlen(s1);
+  short str1 = logo.addstring(s1, len1);
+
+  const char *s2 = "YYY";
+  short len2 = strlen(s2);
+  short str2 = logo.addstring(s2, len2);
+
+  char name[32];
+  logo.getstring(name, sizeof(name), str1, len1);
+  BOOST_CHECK_EQUAL(name, s1);
+  
+  logo.getstring(name, sizeof(name), str2, len2);
+  BOOST_CHECK_EQUAL(name, s2);
+  
+}
+
+BOOST_AUTO_TEST_CASE( stringcmp )
+{
+  cout << "=== stringcmp ===" << endl;
+  
+  ArduinoFlashString strings(strings_fixedStrings);
+  LogoBuiltinWord empty[] = {};
+  Logo logo(empty, 0, 0, 0, &strings);
+
+  const char *s1 = "XXX";
+  short len1 = strlen(s1);
+  short str1 = logo.addstring(s1, len1);
+
+  const char *s2 = "YYY";
+  short len2 = strlen(s2);
+  short str2 = logo.addstring(s2, len2);
+
+  BOOST_CHECK(logo.stringcmp("XXX", 3, str1, len1));
+  BOOST_CHECK(logo.stringcmp("YYY", 3, str2, len2));
+  BOOST_CHECK(!logo.stringcmp("XXX", 3, str1, len1+1));
+  BOOST_CHECK(!logo.stringcmp("AAA", 3, str1, len1));
+  BOOST_CHECK(logo.stringcmp("MULT", 4, 0, 4));
+  BOOST_CHECK(!logo.stringcmp("SSSS", 4, 0, 4));
+  BOOST_CHECK(logo.stringcmp("A", 1, 1, 1));
+  BOOST_CHECK(logo.stringcmp("B", 1, 2, 1));
+  BOOST_CHECK(!logo.stringcmp("B", 1, 1, 1));
+  BOOST_CHECK(!logo.stringcmp("C", 1, 2, 1));
+  BOOST_CHECK(!logo.stringcmp("C", 1, 4, 1));
+  
+}
