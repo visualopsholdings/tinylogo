@@ -17,6 +17,7 @@
 #include <boost/test/auto_unit_test.hpp>
 
 #include "../logo.hpp"
+#include "../logocompiler.hpp"
 
 #include <iostream>
 #include <vector>

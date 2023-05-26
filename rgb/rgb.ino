@@ -14,6 +14,7 @@
 #include "ringbuffer.hpp"
 #include "cmd.hpp"
 #include "logo.hpp"
+#include "logocompiler.hpp"
 #include "arduinotimeprovider.hpp"
 #include "arduinoflashstring.hpp"
 
@@ -53,25 +54,20 @@ char cmdbuf[64];
 
 // the strings for the program in flash
 static const char strings_flash[] PROGMEM = 
-  "SCLR\n"    // 1
-  "C\n"       // 2
-  "REDC\n"    // 3
-  "N\n"       // 4
-  "GREENC\n"  // 5
-  "BLUEC\n"   // 6
-  "AMBER\n"   // 7
-  "RED\n"     // 8
-  "GREEN\n"   // 9
-  "BLUE\n"    // 10
-  "REDR\n"    // 11
-  "GREENR\n"  // 12
-  "BLUER\n"   // 13
-  "ON\n"      // 14
-  "OFF\n"     // 15
-  "SETALL\n"  // 16
-  "R\n"       // 17
-  "G\n"       // 18
-  "B\n"       // 19
+	"SCLR\n"
+	"REDC\n"
+	"GREENC\n"
+	"BLUEC\n"
+	"SETALL\n"
+	"AMBER\n"
+	"RED\n"
+	"GREEN\n"
+	"BLUE\n"
+	"C\n"
+	"N\n"
+	"B\n"
+	"G\n"
+	"R\n"
   ;
 
 LogoBuiltinWord builtins[] = {
@@ -80,11 +76,6 @@ LogoBuiltinWord builtins[] = {
   { "REDR", &redRaw, 1 },
   { "GREENR", &greenRaw, 1 },
   { "BLUER", &blueRaw, 1 },
-//   { "$14", &ledOn },
-//   { "$15", &ledOff },
-//   { "$11", &redRaw, 1 },
-//   { "$12", &greenRaw, 1 },
-//   { "$13", &blueRaw, 1 },
 };
 ArduinoTimeProvider time;
 ArduinoFlashString strings(strings_flash);
@@ -103,16 +94,6 @@ static const char program_flash[] PROGMEM =
   "TO RED; SETALL 100 0 0; END;"
   "TO GREEN; SETALL 0 100 0; END;"
   "TO BLUE; SETALL 0 0 100; END;"
-//   "TO $1 :$2; 100 - :$2 / 100  * 255; END;"
-//   "TO $3 :$4; $11 $1 :$4; END;"
-//   "TO $5 :$4; $12 $1 :$4; END;"
-//   "TO $6 :$4; $13 $1 :$4; END;"
-// //   // arguments are reversed!
-//   "TO $16 :$19 :$18 :$17; $3 :$17 $5 :$18 $6 :$19; END;"
-//   "TO $7; $16 100 75 0; END;"
-//   "TO $8; $16 100 0 0; END;"
-//   "TO $9; $16 0 100 0; END;"
-//   "TO $10; $16 0 0 100; END;"
   ;
 
 void flashErr(int mode, int n) {

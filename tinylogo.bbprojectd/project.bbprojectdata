@@ -10,6 +10,8 @@
 		<string>84F92782-67FF-4848-9641-7AF2B039DF95</string>
 		<string>0F252CB5-3EF5-4B07-A53C-1CA3A730BC8E</string>
 		<string>2C76D6E0-1404-4FDD-A3EF-1FB730E2887A</string>
+		<string>2B2DDF54-11C4-4418-82DC-5548E914358E</string>
+		<string>83CB7B2A-485C-4DDD-9B8C-962A57C44AA4</string>
 		<string>30B54FF5-83D3-4EF4-AC77-6CFF17388EC7</string>
 		<string>BA157282-4ED8-4893-A12E-196142798892</string>
 		<string>48D9D3DF-432B-45C6-904E-B3812486B0E6</string>
@@ -171,6 +173,56 @@
 			<string>test</string>
 			<key>ItemType</key>
 			<string>FolderReference</string>
+			<key>UserOverrideItemName</key>
+			<true/>
+		</dict>
+		<key>2B2DDF54-11C4-4418-82DC-5548E914358E</key>
+		<dict>
+			<key>ItemData</key>
+			<dict>
+				<key>BookmarkData</key>
+				<data>
+				Ym9vazADAAAAAAQQMAAAAMbynEhbFZxoo7oGBso2p5y1
+				S2hunw2ga0XCFY2tMvo9LAIAAAQAAAADAwAAAAgAKAUA
+				AAABAQAAVXNlcnMAAAAEAAAAAQEAAHBhdWwDAAAAAQEA
+				AERldgAHAAAAAQEAAEFyZHVpbm8ACQAAAAEBAABsaWJy
+				YXJpZXMAAAAIAAAAAQEAAHRpbnlsb2dvEAAAAAEBAABs
+				b2dvY29tcGlsZXIuaHBwHAAAAAEGAAAQAAAAIAAAACwA
+				AAA4AAAASAAAAFwAAABsAAAACAAAAAQDAADYWgAAAAAA
+				AAgAAAAEAwAAvDIEAAAAAAAIAAAABAMAAEaDFgAAAAAA
+				CAAAAAQDAABBlCYAAAAAAAgAAAAEAwAAv5QmAAAAAAAI
+				AAAABAMAACXBUAoAAAAACAAAAAQDAAAPxVcKAAAAABwA
+				AAABBgAAqAAAALgAAADIAAAA2AAAAOgAAAD4AAAACAEA
+				AAgAAAAABAAAQcUHuH84RsQYAAAAAQIAAAEAAAAAAAAA
+				DwAAAAAAAAAAAAAAAAAAAAgAAAAEAwAABQAAAAAAAAAE
+				AAAAAwMAAPUBAAAIAAAAAQkAAGZpbGU6Ly8vDAAAAAEB
+				AABNYWNpbnRvc2ggSEQIAAAABAMAAACQgpbnAAAACAAA
+				AAAEAABBxOxLvQAAACQAAAABAQAAQTE0RTlGMzgtQUNB
+				RC00RUZCLTk0Q0EtMzQ0NTcxRkU1QzY5GAAAAAECAACB
+				AAAAAQAAAO8TAAABAAAAAAAAAAAAAAABAAAAAQEAAC8A
+				AAAAAAAAAQUAAMwAAAD+////AQAAAAAAAAAQAAAABBAA
+				AIQAAAAAAAAABRAAABgBAAAAAAAAEBAAAEwBAAAAAAAA
+				QBAAADwBAAAAAAAAAiAAABgCAAAAAAAABSAAAIgBAAAA
+				AAAAECAAAJgBAAAAAAAAESAAAMwBAAAAAAAAEiAAAKwB
+				AAAAAAAAEyAAALwBAAAAAAAAICAAAPgBAAAAAAAAMCAA
+				ACQCAAAAAAAAAcAAAGwBAAAAAAAAEcAAACAAAAAAAAAA
+				EsAAAHwBAAAAAAAAENAAAAQAAAAAAAAA
+				</data>
+				<key>FileURL</key>
+				<string>file:///Users/paul/Dev/Arduino/libraries/tinylogo/logocompiler.hpp</string>
+				<key>HasSecurityScope</key>
+				<true/>
+				<key>RelativePath</key>
+				<string>./logocompiler.hpp</string>
+				<key>TypeID</key>
+				<string>_CFileLocator</string>
+				<key>Version</key>
+				<integer>1</integer>
+			</dict>
+			<key>ItemName</key>
+			<string>logocompiler.hpp</string>
+			<key>ItemType</key>
+			<string>FileReference</string>
 			<key>UserOverrideItemName</key>
 			<true/>
 		</dict>
@@ -375,6 +427,56 @@
 			<string>i2c_logo</string>
 			<key>ItemType</key>
 			<string>FolderReference</string>
+			<key>UserOverrideItemName</key>
+			<true/>
+		</dict>
+		<key>83CB7B2A-485C-4DDD-9B8C-962A57C44AA4</key>
+		<dict>
+			<key>ItemData</key>
+			<dict>
+				<key>BookmarkData</key>
+				<data>
+				Ym9vazADAAAAAAQQMAAAAIG4WVGF0VYSVjZRZq2Q0ZPf
+				6clvnJY+S+dTU704gDDbLAIAAAQAAAADAwAAAAgAKAUA
+				AAABAQAAVXNlcnMAAAAEAAAAAQEAAHBhdWwDAAAAAQEA
+				AERldgAHAAAAAQEAAEFyZHVpbm8ACQAAAAEBAABsaWJy
+				YXJpZXMAAAAIAAAAAQEAAHRpbnlsb2dvEAAAAAEBAABs
+				b2dvY29tcGlsZXIuY3BwHAAAAAEGAAAQAAAAIAAAACwA
+				AAA4AAAASAAAAFwAAABsAAAACAAAAAQDAADYWgAAAAAA
+				AAgAAAAEAwAAvDIEAAAAAAAIAAAABAMAAEaDFgAAAAAA
+				CAAAAAQDAABBlCYAAAAAAAgAAAAEAwAAv5QmAAAAAAAI
+				AAAABAMAACXBUAoAAAAACAAAAAQDAAAVxVcKAAAAABwA
+				AAABBgAAqAAAALgAAADIAAAA2AAAAOgAAAD4AAAACAEA
+				AAgAAAAABAAAQcUCkL4WJ3gYAAAAAQIAAAEAAAAAAAAA
+				DwAAAAAAAAAAAAAAAAAAAAgAAAAEAwAABQAAAAAAAAAE
+				AAAAAwMAAPUBAAAIAAAAAQkAAGZpbGU6Ly8vDAAAAAEB
+				AABNYWNpbnRvc2ggSEQIAAAABAMAAACQgpbnAAAACAAA
+				AAAEAABBxOxLvQAAACQAAAABAQAAQTE0RTlGMzgtQUNB
+				RC00RUZCLTk0Q0EtMzQ0NTcxRkU1QzY5GAAAAAECAACB
+				AAAAAQAAAO8TAAABAAAAAAAAAAAAAAABAAAAAQEAAC8A
+				AAAAAAAAAQUAAMwAAAD+////AQAAAAAAAAAQAAAABBAA
+				AIQAAAAAAAAABRAAABgBAAAAAAAAEBAAAEwBAAAAAAAA
+				QBAAADwBAAAAAAAAAiAAABgCAAAAAAAABSAAAIgBAAAA
+				AAAAECAAAJgBAAAAAAAAESAAAMwBAAAAAAAAEiAAAKwB
+				AAAAAAAAEyAAALwBAAAAAAAAICAAAPgBAAAAAAAAMCAA
+				ACQCAAAAAAAAAcAAAGwBAAAAAAAAEcAAACAAAAAAAAAA
+				EsAAAHwBAAAAAAAAENAAAAQAAAAAAAAA
+				</data>
+				<key>FileURL</key>
+				<string>file:///Users/paul/Dev/Arduino/libraries/tinylogo/logocompiler.cpp</string>
+				<key>HasSecurityScope</key>
+				<true/>
+				<key>RelativePath</key>
+				<string>./logocompiler.cpp</string>
+				<key>TypeID</key>
+				<string>_CFileLocator</string>
+				<key>Version</key>
+				<integer>1</integer>
+			</dict>
+			<key>ItemName</key>
+			<string>logocompiler.cpp</string>
+			<key>ItemType</key>
+			<string>FileReference</string>
 			<key>UserOverrideItemName</key>
 			<true/>
 		</dict>

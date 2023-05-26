@@ -13,10 +13,11 @@
   https://github.com/visualopsholdings/tinylogo
 */
 
+#include "../logo.hpp"
+#include "../logocompiler.hpp"
+
 #define BOOST_AUTO_TEST_MAIN
 #include <boost/test/auto_unit_test.hpp>
-
-#include "../logo.hpp"
 
 #include <iostream>
 #include <vector>
@@ -292,8 +293,6 @@ BOOST_AUTO_TEST_CASE( sentences )
 
 void sarg(Logo &logo) {
 
-  DEBUG_DUMP_MSG("sarg", false);
-  
   char s[WORD_LEN];
   logo.popstring(s, sizeof(s));
 //  logo.execword(s);
@@ -629,8 +628,11 @@ BOOST_AUTO_TEST_CASE( flash )
 }
 
 static const char strings_fixedStrings[] PROGMEM = 
-  "MULT\nA\nB\n";
-
+	"MULT\n"
+	"A\n"
+	"B\n"
+  ;
+  
 static const char program_fixedStrings[] PROGMEM = 
   "TO MULT :A :B; :A * :B; END;"
   "MULT 10 20";
@@ -652,6 +654,8 @@ BOOST_AUTO_TEST_CASE( fixedStrings )
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
+//  logo.dumpstringscode(&compiler);
+  
   gCmds.clear();
   DEBUG_STEP_DUMP(20, false);
   BOOST_CHECK_EQUAL(logo.run(), 0);

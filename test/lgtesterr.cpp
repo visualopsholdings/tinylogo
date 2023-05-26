@@ -17,6 +17,7 @@
 #include <boost/test/auto_unit_test.hpp>
 
 #include "../logo.hpp"
+#include "../logocompiler.hpp"
 
 #include <iostream>
 #include <vector>
@@ -220,7 +221,6 @@ void condret(Logo &logo) {
 
 void wantsstring(Logo &logo) {
   
-  DEBUG_DUMP(false);
   tStrPool s, l;
   logo.codetostring(1, &s, &l);
 

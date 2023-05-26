@@ -13,13 +13,14 @@
   https://github.com/visualopsholdings/tinylogo
 */
 
+#include "../logo.hpp"
+#include "../logocompiler.hpp"
+
 #define BOOST_AUTO_TEST_MAIN
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <thread>
 #include <chrono>
-
-#include "../logo.hpp"
 
 #include <iostream>
 #include <vector>

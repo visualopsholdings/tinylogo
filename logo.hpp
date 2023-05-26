@@ -129,7 +129,7 @@
 #define OPTYPE_HALT           2 //
 #define OPTYPE_BUILTIN        3 // _op = index of builtin, _opand = category 0 = builtin, 1 = core 
 #define OPTYPE_ERR            4 // _op = error
-#define OPTYPE_WORD           5 // _op = index of word
+#define OPTYPE_WORD           5 // _op = where to jump, _opand = possible arity
 #define OPTYPE_STRING         6 // _op = index of string (-fixedcount), _opand = length of string
 #define OPTYPE_INT            7 // _op = literal integer
 #define OPTYPE_DOUBLE         8 // _op = literal integer part of double, _opand is fractional
@@ -162,6 +162,8 @@ typedef short tStrPool;
 // types are predefinced and small.
 typedef unsigned char tType;
 
+typedef unsigned char tByte;
+
 // allow the code jump to be a char if the code is small.
 #if MAX_CODE <= 256
 typedef unsigned char tJump;
@@ -174,7 +176,7 @@ typedef short tJump;
 typedef struct {
   const char    *_name;
   tLogoFp       _code;
-  unsigned char _arity; // smaller than 256?
+  tByte         _arity; // smaller than 256?
 } LogoBuiltinWord;
 
 typedef struct {
@@ -182,15 +184,15 @@ typedef struct {
   tStrPool  _namelen;
   tJump     _jump;
 #ifdef HAS_VARIABLES
-  unsigned char _arity; // smaller than 256?
+ tByte      _arity; // smaller than 256?
 #endif
 } LogoWord;
 
 typedef struct {
   tType     _optype;
-    // spare char here.
-  short     _opand; // could be holding a repeat count
+  tByte     _unused;
   short     _op;    // needs to hold a (possible) literal number
+  short     _opand; // could be holding a repeat count
 } LogoInstruction;
 
 #ifdef HAS_VARIABLES
@@ -316,60 +318,7 @@ private:
 
 };
 
-class LogoCompiler {
-
-public:
-  LogoCompiler(Logo * logo);
-  
-  // the compiler.
-  void compile(const char *code) {
-    LogoSimpleString str(code);
-    compile(&str);
-  }
-  void compile(LogoString *str);
-  
-  // main execution
-  void reset(); // reset the sentences
-
-#ifdef LOGO_DEBUG
-  void outstate() const;
-#endif
-
-private:
-  
-  Logo *_logo;
-  
-  // the state variables for defining new words
-  bool _inword;
-  bool _inwordargs;
-  short _defining;
-  short _defininglen;
-  short _jump;
-  short _wordarity;
-  
-  // various buffers to hold data
-  char _linebuf[LINE_LEN];
-  char _wordbuf[WORD_LEN];
-  char _findwordbuf[LINE_LEN];
-  char _tmpbuf[LINE_LEN];
-
-  // parser
-  bool dodefine(const char *word, bool eol);
-  void compilewords(LogoString *str, short len, bool define);
-  short scanfor(char *s, short size, LogoString *str, short len, short start, bool newline);
-  bool istoken(char c, bool newline);
-  bool isnum(const char *word, short len);
-
-  // words
-  void compileword(tJump *next, const char *word, short op);
-  void finishword(short word, short wordlen, short jump, short arity);
-  
-  // sentences
-  short _sentencecount;
-
-  void dosentences(char *buf, short len, const char *start);
-  
-};
+class LogoCompiler;
 
 class Logo {
 
@@ -398,17 +347,13 @@ public:
   void findbuiltin(const char *name, short *index, short *category);
   short addstring(const char *s, tStrPool len);
   void getstring(char *buf, short buflen, tStrPool str, tStrPool len) const;
+  const LogoBuiltinWord *getbuiltin(short op, short opand) const;
 
   // compiler needs direct access to these?
   
   // the code
   tJump _nextcode;
   tJump _nextjcode; // for allocating new jumps
-  
-  // words
-  short _wordcount;
-  LogoWord _words[MAX_WORDS];
-  short findword(const char *word) const;
   
   // dealing with the stack
   bool stackempty();
@@ -439,18 +384,16 @@ public:
 
 #ifdef LOGO_DEBUG
   void outstate() const;
-  void dump(const char *msg, bool all=true) const;
-  void dump(bool all=true) const;
-  void dumpwords() const;
-  void dumpvars() const;
-  void dumpcode(bool all=true) const;
-  void dumpstack(bool all=true) const;
-  short stepdump(short n, bool all=true);
+  void dumpvars(const LogoCompiler *compiler, bool code=false) const;
+  void dumpcode(const LogoCompiler *compiler, bool all=true) const;
+  void dumpstack(const LogoCompiler *compiler, bool all=true) const;
+  void dumpstringscode(LogoCompiler *compiler) const;
 #endif
 
   static LogoBuiltinWord core[];
 
 private:
+//  friend class LogoCompiler;
   
   // the pool of all strings
   LogoString *_fixedstrings;
@@ -498,7 +441,6 @@ private:
    bool getfixed(char *buf, short buflen, tStrPool str) const;
 
   // builtins
-  const LogoBuiltinWord *getbuiltin(short op, short opand) const;
   const LogoBuiltinWord *getbuiltin(const LogoInstruction &entry) const;
   
   // the machine
@@ -508,20 +450,8 @@ private:
   short doreturn();
   short dobuiltin();
   short doarity();
-  bool call(const LogoWord &word);
+  bool call(short jump, tByte opand2);
   
-#ifdef LOGO_DEBUG
-  void markword(tJump jump) const;
-  void dump(short indent, const LogoInstruction &entry) const;
-  void dump(short indent, short type, short op, short oplen) const;
-  void printword(const LogoWord &word) const;
-  void entab(short indent) const;
-  void mark(short i, short mark, const char *name) const;
-#ifdef HAS_VARIABLES
-  void printvar(const LogoVar &var) const;
-#endif
-#endif // LOGO_DEBUG
-
 };
 
 #ifdef LOGO_DEBUG
@@ -530,9 +460,9 @@ private:
 #define DEBUG_DUMP_MSG(msg, all)
 #define DEBUG_STEP_DUMP(count, all)
 #else
-#define DEBUG_DUMP(all)                                     logo.dump(all)
-#define DEBUG_DUMP_MSG(msg, all)                            logo.dump(msg, all)
-#define DEBUG_STEP_DUMP(count, all)                         BOOST_CHECK_EQUAL(logo.stepdump(count, all), 0)
+#define DEBUG_DUMP(all)                                     compiler.dump(all)
+#define DEBUG_DUMP_MSG(msg, all)                            compiler.dump(msg, all)
+#define DEBUG_STEP_DUMP(count, all)                         BOOST_CHECK_EQUAL(compiler.stepdump(count, all), 0)
 #endif // ARDUINO
 #else
 #define DEBUG_DUMP(all)

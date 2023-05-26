@@ -14,6 +14,7 @@
 #include "ringbuffer.hpp"
 #include "cmd.hpp"
 #include "logo.hpp"
+#include "logocompiler.hpp"
 #include "arduinotimeprovider.hpp"
 
 #include <Wire.h>
