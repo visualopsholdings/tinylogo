@@ -250,15 +250,15 @@ https://forum.arduino.cc/t/how-to-properly-use-wire-onreceive/891195/12
 
 ### Moving code into flash memory.
 
-We can put the strings and the actual PROGRAM code into flash memory now, but I'm working
-om being able to put the actual code in flash memory.
-
 2K of dynamic memory isn't a whole lot :-)
 
-So the basic idea is you write your code incrememntally and use a simple tool to compile the
-code to an array of data which you include in the sktech as Flash memory.
+We can put the strings and the actual PROGRAM code into flash memory now, but I'm working
+on being able to put the actual code in flash memory.
 
-Then you can still incrementally compile new words which go into the variable space.
+So the basic idea is you write your code incrementally and use a simple tool to compile the
+code to an array of data which you include in the sketch as Flash memory.
+
+Then you can still add new words which go into the variable space.
 
 ### OUTPUT from the Arduino to the PI
 
