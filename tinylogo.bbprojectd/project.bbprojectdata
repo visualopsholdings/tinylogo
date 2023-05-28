@@ -15,6 +15,8 @@
 		<string>30B54FF5-83D3-4EF4-AC77-6CFF17388EC7</string>
 		<string>BA157282-4ED8-4893-A12E-196142798892</string>
 		<string>48D9D3DF-432B-45C6-904E-B3812486B0E6</string>
+		<string>5C76B986-8637-4C38-BF38-D708DAEA4DCA</string>
+		<string>D063C381-B469-4753-BBFA-B036DEAED28A</string>
 		<string>898005D8-D6FB-4F4D-9D4A-A37B38B31F32</string>
 		<string>D3DA77D0-0731-4D90-B371-0EAF21A13745</string>
 		<string>D71FF120-7961-4F38-956D-C487D3A9F6E3</string>
@@ -380,6 +382,56 @@
 			<key>UserOverrideItemName</key>
 			<true/>
 		</dict>
+		<key>5C76B986-8637-4C38-BF38-D708DAEA4DCA</key>
+		<dict>
+			<key>ItemData</key>
+			<dict>
+				<key>BookmarkData</key>
+				<data>
+				Ym9vazQDAAAAAAQQMAAAAPK3lpjQN0Lyqc+cPdqFqLiD
+				Pn/cLRAJeN5zkGHQNmxWMAIAAAQAAAADAwAAAAgAKAUA
+				AAABAQAAVXNlcnMAAAAEAAAAAQEAAHBhdWwDAAAAAQEA
+				AERldgAHAAAAAQEAAEFyZHVpbm8ACQAAAAEBAABsaWJy
+				YXJpZXMAAAAIAAAAAQEAAHRpbnlsb2dvFAAAAAEBAABh
+				cmR1aW5vZmxhc2hjb2RlLmhwcBwAAAABBgAAEAAAACAA
+				AAAsAAAAOAAAAEgAAABcAAAAbAAAAAgAAAAEAwAA2FoA
+				AAAAAAAIAAAABAMAALwyBAAAAAAACAAAAAQDAABGgxYA
+				AAAAAAgAAAAEAwAAQZQmAAAAAAAIAAAABAMAAL+UJgAA
+				AAAACAAAAAQDAAAlwVAKAAAAAAgAAAAEAwAAvtNeCgAA
+				AAAcAAAAAQYAAKwAAAC8AAAAzAAAANwAAADsAAAA/AAA
+				AAwBAAAIAAAAAAQAAEHFDZhr9d8WGAAAAAECAAABAAAA
+				AAAAAA8AAAAAAAAAAAAAAAAAAAAIAAAABAMAAAUAAAAA
+				AAAABAAAAAMDAAD1AQAACAAAAAEJAABmaWxlOi8vLwwA
+				AAABAQAATWFjaW50b3NoIEhECAAAAAQDAAAAkIKW5wAA
+				AAgAAAAABAAAQcTsS70AAAAkAAAAAQEAAEExNEU5RjM4
+				LUFDQUQtNEVGQi05NENBLTM0NDU3MUZFNUM2ORgAAAAB
+				AgAAgQAAAAEAAADvEwAAAQAAAAAAAAAAAAAAAQAAAAEB
+				AAAvAAAAAAAAAAEFAADMAAAA/v///wEAAAAAAAAAEAAA
+				AAQQAACIAAAAAAAAAAUQAAAcAQAAAAAAABAQAABQAQAA
+				AAAAAEAQAABAAQAAAAAAAAIgAAAcAgAAAAAAAAUgAACM
+				AQAAAAAAABAgAACcAQAAAAAAABEgAADQAQAAAAAAABIg
+				AACwAQAAAAAAABMgAADAAQAAAAAAACAgAAD8AQAAAAAA
+				ADAgAAAoAgAAAAAAAAHAAABwAQAAAAAAABHAAAAgAAAA
+				AAAAABLAAACAAQAAAAAAABDQAAAEAAAAAAAAAA==
+				</data>
+				<key>FileURL</key>
+				<string>file:///Users/paul/Dev/Arduino/libraries/tinylogo/arduinoflashcode.hpp</string>
+				<key>HasSecurityScope</key>
+				<true/>
+				<key>RelativePath</key>
+				<string>./arduinoflashcode.hpp</string>
+				<key>TypeID</key>
+				<string>_CFileLocator</string>
+				<key>Version</key>
+				<integer>1</integer>
+			</dict>
+			<key>ItemName</key>
+			<string>arduinoflashcode.hpp</string>
+			<key>ItemType</key>
+			<string>FileReference</string>
+			<key>UserOverrideItemName</key>
+			<true/>
+		</dict>
 		<key>69D3D806-5777-4DF6-97E1-40712B10CABC</key>
 		<dict>
 			<key>ItemData</key>
@@ -677,6 +729,56 @@
 			</dict>
 			<key>ItemName</key>
 			<string>arduinoflashstring.hpp</string>
+			<key>ItemType</key>
+			<string>FileReference</string>
+			<key>UserOverrideItemName</key>
+			<true/>
+		</dict>
+		<key>D063C381-B469-4753-BBFA-B036DEAED28A</key>
+		<dict>
+			<key>ItemData</key>
+			<dict>
+				<key>BookmarkData</key>
+				<data>
+				Ym9vazQDAAAAAAQQMAAAADemAzgTYgDOaVFIHjvuSXxG
+				HIdxjW1PBw1ijSYDyTVXMAIAAAQAAAADAwAAAAgAKAUA
+				AAABAQAAVXNlcnMAAAAEAAAAAQEAAHBhdWwDAAAAAQEA
+				AERldgAHAAAAAQEAAEFyZHVpbm8ACQAAAAEBAABsaWJy
+				YXJpZXMAAAAIAAAAAQEAAHRpbnlsb2dvFAAAAAEBAABh
+				cmR1aW5vZmxhc2hjb2RlLmNwcBwAAAABBgAAEAAAACAA
+				AAAsAAAAOAAAAEgAAABcAAAAbAAAAAgAAAAEAwAA2FoA
+				AAAAAAAIAAAABAMAALwyBAAAAAAACAAAAAQDAABGgxYA
+				AAAAAAgAAAAEAwAAQZQmAAAAAAAIAAAABAMAAL+UJgAA
+				AAAACAAAAAQDAAAlwVAKAAAAAAgAAAAEAwAAx9NeCgAA
+				AAAcAAAAAQYAAKwAAAC8AAAAzAAAANwAAADsAAAA/AAA
+				AAwBAAAIAAAAAAQAAEHFApC+Fid4GAAAAAECAAABAAAA
+				AAAAAA8AAAAAAAAAAAAAAAAAAAAIAAAABAMAAAUAAAAA
+				AAAABAAAAAMDAAD1AQAACAAAAAEJAABmaWxlOi8vLwwA
+				AAABAQAATWFjaW50b3NoIEhECAAAAAQDAAAAkIKW5wAA
+				AAgAAAAABAAAQcTsS70AAAAkAAAAAQEAAEExNEU5RjM4
+				LUFDQUQtNEVGQi05NENBLTM0NDU3MUZFNUM2ORgAAAAB
+				AgAAgQAAAAEAAADvEwAAAQAAAAAAAAAAAAAAAQAAAAEB
+				AAAvAAAAAAAAAAEFAADMAAAA/v///wEAAAAAAAAAEAAA
+				AAQQAACIAAAAAAAAAAUQAAAcAQAAAAAAABAQAABQAQAA
+				AAAAAEAQAABAAQAAAAAAAAIgAAAcAgAAAAAAAAUgAACM
+				AQAAAAAAABAgAACcAQAAAAAAABEgAADQAQAAAAAAABIg
+				AACwAQAAAAAAABMgAADAAQAAAAAAACAgAAD8AQAAAAAA
+				ADAgAAAoAgAAAAAAAAHAAABwAQAAAAAAABHAAAAgAAAA
+				AAAAABLAAACAAQAAAAAAABDQAAAEAAAAAAAAAA==
+				</data>
+				<key>FileURL</key>
+				<string>file:///Users/paul/Dev/Arduino/libraries/tinylogo/arduinoflashcode.cpp</string>
+				<key>HasSecurityScope</key>
+				<true/>
+				<key>RelativePath</key>
+				<string>./arduinoflashcode.cpp</string>
+				<key>TypeID</key>
+				<string>_CFileLocator</string>
+				<key>Version</key>
+				<integer>1</integer>
+			</dict>
+			<key>ItemName</key>
+			<string>arduinoflashcode.cpp</string>
 			<key>ItemType</key>
 			<string>FileReference</string>
 			<key>UserOverrideItemName</key>

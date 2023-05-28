@@ -18,19 +18,19 @@ project (flashcmd)
   add_definitions(-DBOOST_ALL_DYN_LINK) 
   enable_testing()
 
-add_executable(LGTest lgtest.cpp ../logo.cpp ../logocompiler.cpp)
+add_executable(LGTest lgtest.cpp ../logo.cpp ../logocompiler.cpp ../arduinoflashcode.cpp)
   target_link_libraries(LGTest ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
-add_executable(LGTestErr lgtesterr.cpp ../logo.cpp ../logocompiler.cpp)
+add_executable(LGTestErr lgtesterr.cpp ../logo.cpp ../logocompiler.cpp ../arduinoflashcode.cpp)
   target_link_libraries(LGTestErr ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
-add_executable(LGTestWords lgtestwords.cpp ../logo.cpp ../logocompiler.cpp)
+add_executable(LGTestWords lgtestwords.cpp ../logo.cpp ../logocompiler.cpp ../arduinoflashcode.cpp)
   target_link_libraries(LGTestWords ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
-add_executable(LGTestLEDSketch lgtestledsketch.cpp ../logo.cpp ../logocompiler.cpp)
+add_executable(LGTestLEDSketch lgtestledsketch.cpp ../logo.cpp ../logocompiler.cpp ../arduinoflashcode.cpp)
   target_link_libraries(LGTestLEDSketch ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
-add_executable(LGTestRGBSketch lgtestrgbsketch.cpp ../logo.cpp ../logocompiler.cpp)
+add_executable(LGTestRGBSketch lgtestrgbsketch.cpp ../logo.cpp ../logocompiler.cpp ../arduinoflashcode.cpp)
   target_link_libraries(LGTestRGBSketch ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
 add_test(LGTest LGTest)

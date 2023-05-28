@@ -15,6 +15,7 @@
 
 #include "../logo.hpp"
 #include "../logocompiler.hpp"
+#include "../arduinoflashcode.hpp"
 
 #define BOOST_AUTO_TEST_MAIN
 #include <boost/test/auto_unit_test.hpp>
@@ -562,7 +563,7 @@ BOOST_AUTO_TEST_CASE( sizes )
   
   // half this size on an arduino
   BOOST_CHECK_EQUAL(sizeof(LogoBuiltinWord), 24);
-  BOOST_CHECK_EQUAL(sizeof(LogoInstruction), 6);
+  BOOST_CHECK_EQUAL(sizeof(tLogoInstruction), 6);
 #ifdef HAS_VARIABLES
   BOOST_CHECK_EQUAL(sizeof(LogoWord), 4);
   BOOST_CHECK_EQUAL(sizeof(LogoVar), 6);
@@ -715,5 +716,76 @@ BOOST_AUTO_TEST_CASE( stringcmp )
   BOOST_CHECK(!logo.stringcmp("B", 1, 1, 1));
   BOOST_CHECK(!logo.stringcmp("C", 1, 2, 1));
   BOOST_CHECK(!logo.stringcmp("C", 1, 4, 1));
+  
+}
+
+BOOST_AUTO_TEST_CASE( staticCodeDump )
+{
+  cout << "=== staticCodeDump ===" << endl;
+  
+  LogoBuiltinWord builtins[] = {
+    { "ON", &ledOn },
+    { "OFF", &ledOff },
+    { "WAIT", &wait, 1 }
+  };
+  Logo logo(builtins, sizeof(builtins));
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("TO TEST1; ON WAIT 10 OFF WAIT 20; END;");
+  compiler.compile("TO TEST2; OFF WAIT 30 ON WAIT 40; END;");
+  compiler.compile("TEST1;");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  logo.dumpinst(&compiler, "code_staticCode");
+  logo.dumpstringscode(&compiler, "strings_staticCode");
+    
+}
+
+static const short code_staticCode[][INST_LENGTH] PROGMEM = {
+	{ OPTYPE_JUMP, 2, 0 },		// 0
+	{ OPTYPE_HALT, 0, 0 },		// 1
+	{ OPTYPE_BUILTIN, 0, 0 },		// 2
+	{ OPTYPE_BUILTIN, 2, 0 },		// 3
+	{ OPTYPE_INT, 10, 0 },		// 4
+	{ OPTYPE_BUILTIN, 1, 0 },		// 5
+	{ OPTYPE_BUILTIN, 2, 0 },		// 6
+	{ OPTYPE_INT, 20, 0 },		// 7
+	{ OPTYPE_RETURN, 0, 0 },		// 8
+	{ OPTYPE_BUILTIN, 1, 0 },		// 9
+	{ OPTYPE_BUILTIN, 2, 0 },		// 10
+	{ OPTYPE_INT, 30, 0 },		// 11
+	{ OPTYPE_BUILTIN, 0, 0 },		// 12
+	{ OPTYPE_BUILTIN, 2, 0 },		// 13
+	{ OPTYPE_INT, 40, 0 },		// 14
+	{ OPTYPE_RETURN, 0, 0 },		// 15
+	{ SCOPTYPE_WORD, 2, 0 }, 
+	{ SCOPTYPE_WORD, 9, 0 }, 
+	{ SCOPTYPE_END, 0, 0 } 
+};
+static const char strings_staticCode[] PROGMEM = {
+	"TEST1\n"
+	"TEST2\n"
+};
+
+BOOST_AUTO_TEST_CASE( staticCodeUse )
+{
+  cout << "=== staticCodeUse ===" << endl;
+  
+  LogoBuiltinWord builtins[] = {
+    { "ON", &ledOn },
+    { "OFF", &ledOff },
+    { "WAIT", &wait, 1 }
+  };
+  ArduinoFlashCode code((const PROGMEM short *)code_staticCode);
+  ArduinoFlashString strings(strings_staticCode);
+  Logo logo(builtins, sizeof(builtins), 0, 0, &strings, &code);
+
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(gCmds.size(), 4);
+  BOOST_CHECK_EQUAL(gCmds[0], "LED ON");
+  BOOST_CHECK_EQUAL(gCmds[1], "WAIT 10");
+  BOOST_CHECK_EQUAL(gCmds[2], "LED OFF");
+  BOOST_CHECK_EQUAL(gCmds[3], "WAIT 20");
   
 }

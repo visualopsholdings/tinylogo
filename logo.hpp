@@ -127,26 +127,31 @@
 #define OPTYPE_NOOP           0 //
 #define OPTYPE_RETURN         1 //
 #define OPTYPE_HALT           2 //
-#define OPTYPE_BUILTIN        3 // _op = index of builtin, _opand = category 0 = builtin, 1 = core 
-#define OPTYPE_ERR            4 // _op = error
-#define OPTYPE_WORD           5 // _op = where to jump, _opand = possible arity
-#define OPTYPE_STRING         6 // _op = index of string (-fixedcount), _opand = length of string
-#define OPTYPE_INT            7 // _op = literal integer
-#define OPTYPE_DOUBLE         8 // _op = literal integer part of double, _opand is fractional
+#define OPTYPE_BUILTIN        3 // FIELD_OP = index of builtin, FIELD_OPAND = category 0 = builtin, 1 = core 
+#define OPTYPE_ERR            4 // FIELD_OP = error
+#define OPTYPE_JUMP           5 // FIELD_OP = where to jump, FIELD_OPAND = possible arity
+#define OPTYPE_STRING         6 // FIELD_OP = index of string (-fixedcount), FIELD_OPAND = length of string
+#define OPTYPE_INT            7 // FIELD_OP = literal integer
+#define OPTYPE_DOUBLE         8 // FIELD_OP = literal integer part of double, FIELD_OPAND is fractional
 #ifdef HAS_VARIABLES
-#define OPTYPE_REF            9 // _op = index of string (-fixedcount) with a var in it, _opand = length of string
-#define OPTYPE_POPREF         10 // _op = index of var to pop into
+#define OPTYPE_REF            9 // FIELD_OP = index of string (-fixedcount) with a var in it, FIELD_OPAND = length of string
+#define OPTYPE_POPREF         10 // FIELD_OP = index of var to pop into
 #endif
 
 // only on the stack
 #define SOP_START             100
-#define SOPTYPE_ARITY         SOP_START + 1 // _op = the arity of the builtin function
-#define SOPTYPE_RETADDR       SOP_START + 2 // _op = the return address. These are just on the stack
-#define SOPTYPE_MRETADDR      SOP_START + 3 // _op = the offset to modify by
+#define SOPTYPE_ARITY         SOP_START + 1 // FIELD_OP = the arity of the builtin function
+#define SOPTYPE_RETADDR       SOP_START + 2 // FIELD_OP = the return address. These are just on the stack
+#define SOPTYPE_MRETADDR      SOP_START + 3 // FIELD_OP = the offset to modify by
 #ifdef HAS_IFELSE
-#define SOPTYPE_CONDRET       SOP_START + 4 // _op = the return address of if true, otherwise _op + 1
+#define SOPTYPE_CONDRET       SOP_START + 4 // FIELD_OP = the return address of if true, otherwise _op + 1
 #define SOPTYPE_SKIP          SOP_START + 5 // skip the next instruction if on the stack under a return
 #endif
+
+// only in static code
+#define SCOP_START            200
+#define SCOPTYPE_WORD         SCOP_START + 1 // FIELD_OP the jump location, FIELD_OPAND the arity
+#define SCOPTYPE_END          SCOP_START + 2 // the end of static code.
 
 class Logo;
 
@@ -179,20 +184,14 @@ typedef struct {
   tByte         _arity; // smaller than 256?
 } LogoBuiltinWord;
 
-typedef struct {
-  tStrPool  _name;
-  tStrPool  _namelen;
-  tJump     _jump;
-#ifdef HAS_VARIABLES
- tByte      _arity; // smaller than 256?
-#endif
-} LogoWord;
+// a single instruction.
+#define INST_LENGTH   3 // in shorts
 
-typedef struct {
-  tType     _optype;
-  short     _op;    // needs to hold a (possible) literal number
-  short     _opand; // could be holding a repeat count
-} LogoInstruction;
+typedef short tLogoInstruction[INST_LENGTH];
+
+#define FIELD_OPTYPE  0
+#define FIELD_OP      1
+#define FIELD_OPAND   2
 
 #ifdef HAS_VARIABLES
 
@@ -327,11 +326,12 @@ private:
 };
 
 class LogoCompiler;
+class ArduinoFlashCode;
 
 class Logo {
 
 public:
-  Logo(LogoBuiltinWord *builtins, short size, LogoTimeProvider *time, LogoBuiltinWord *core=0, LogoString *strings=0);
+  Logo(LogoBuiltinWord *builtins, short size, LogoTimeProvider *time=0, LogoBuiltinWord *core=0, LogoString *strings=0, ArduinoFlashCode *code=0);
   ~Logo() {}
   
   // find any errors in the code.
@@ -351,6 +351,7 @@ public:
   // interface to compiler
   bool hascore() { return _core; }
   void error(short error);
+  void outofcode();
   void addop(tJump *next, short type, short op=0, short opand=0);
   void findbuiltin(const char *name, short *index, short *category);
   short addstring(const char *s, tStrPool len);
@@ -393,10 +394,16 @@ public:
 
 #ifdef LOGO_DEBUG
   void outstate() const;
-  void dumpvars(const LogoCompiler *compiler, bool code=false) const;
   void dumpcode(const LogoCompiler *compiler, bool all=true) const;
   void dumpstack(const LogoCompiler *compiler, bool all=true) const;
-  void dumpstringscode(LogoCompiler *compiler) const;
+  void dumpvars(const LogoCompiler *compiler) const;
+#endif
+ 
+#ifndef ARDUINO
+  void dumpstringscode(LogoCompiler *compiler, const char *varname) const;
+  void dumpinst(LogoCompiler *compiler, const char *varname) const;
+  void optypename(short optype) const;
+  void dumpvarscode(const LogoCompiler *compiler) const;
 #endif
 
   static LogoBuiltinWord core[];
@@ -422,11 +429,12 @@ private:
   char _tmpbuf[WORD_LEN];
    
   // the code
-  LogoInstruction _code[MAX_CODE];
+  tLogoInstruction _code[MAX_CODE];
   tJump _pc;
+  ArduinoFlashCode *_acode;
   
   // the stack
-  LogoInstruction _stack[MAX_STACK];
+  tLogoInstruction _stack[MAX_STACK];
   short _tos;
   
 #ifdef HAS_VARIABLES
@@ -435,7 +443,7 @@ private:
   short _varcount;
 
   short findvariable(const char *word) const;
-  short getvarfromref(const LogoInstruction &entry);
+  short getvarfromref(short op, short opand);
 #endif
   
   // the schdeuler for WAIT
@@ -449,17 +457,15 @@ private:
   bool fixedcmp(const char *s, short slen, tStrPool str) const;
   bool getfixed(char *buf, short buflen, tStrPool str) const;
 
-  // builtins
-  const LogoBuiltinWord *getbuiltin(const LogoInstruction &entry) const;
-  
   // the machine
-  bool push(const LogoInstruction &entry);
+  bool push(short type, short op=0, short opand=0);
   short parseint(short type, short op, short opand);
   double parsedouble(short type, short op, short opand);
   short doreturn();
   short dobuiltin();
   short doarity();
   bool call(short jump, tByte opand2);
+  short instField(short pc, short field) const;
   
 };
 

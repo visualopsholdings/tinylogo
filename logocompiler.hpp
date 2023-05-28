@@ -18,6 +18,15 @@
 
 #include "logo.hpp"
 
+typedef struct {
+  tStrPool  _name;
+  tStrPool  _namelen;
+  tJump     _jump;
+#ifdef HAS_VARIABLES
+ tByte      _arity; // smaller than 256?
+#endif
+} LogoWord;
+
 class LogoCompiler {
 
 public:
@@ -37,18 +46,25 @@ public:
   void outstate() const;
   void dump(const char *msg, bool all=true) const;
   void dump(bool all=true) const;
-  void dumpwords(bool code=false) const;
   short stepdump(short n, bool all=true);
-  void dump(short indent, const LogoInstruction &entry) const;
   void dump(short indent, short type, short op, short opand) const;
-  void printword(const LogoWord &word, bool code=false) const;
-  void entab(short indent) const;
   void mark(short i, short mark, const char *name) const;
   void searchword(short op) const;
   void markword(tJump jump) const;
+  void printword(const LogoWord &word) const;
+  void dumpwordnames() const;
 #ifdef HAS_VARIABLES
-  void printvar(const LogoVar &var, bool code=false) const;
+  void printvar(const LogoVar &var) const;
 #endif
+#endif
+
+#ifndef ARDUINO
+  void dumpwordscode(short offset) const;
+  void dumpwordnamescode() const;
+  bool haswords() { return _wordcount > 0; }
+  void entab(short indent) const;
+  void printwordcode(const LogoWord &word) const;
+  void printvarcode(const LogoVar &var) const;
 #endif
 
 private:

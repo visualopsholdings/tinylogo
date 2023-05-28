@@ -250,6 +250,7 @@ https://forum.arduino.cc/t/how-to-properly-use-wire-onreceive/891195/12
 
 ### Moving code into flash memory.
 
+The RGB LED example is starting to be fleshed out and useful but 
 2K of dynamic memory isn't a whole lot :-)
 
 We can put the strings and the actual PROGRAM code into flash memory now, but I'm working
