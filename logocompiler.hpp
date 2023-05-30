@@ -67,6 +67,10 @@ public:
   void printvarcode(const LogoVar &var) const;
 #endif
 
+  // public for testing.
+  short scanfor(short *strstart, short *strsize, LogoString *str, short start, short len, bool newline);
+  void dosentences(char *buf, short len, const char *start);
+
 private:
   
   Logo *_logo;
@@ -81,8 +85,7 @@ private:
   
   // various buffers to hold data
   char _linebuf[LINE_LEN];
-  char _wordbuf[WORD_LEN];
-  char _sentencebuf[WORD_LEN];
+  char _sentencebuf[SENTENCE_LEN];
 
   // words
   short _wordcount;
@@ -92,15 +95,13 @@ private:
   short _sentencecount;
 
   // parser
-  bool dodefine(const char *word, bool eol);
-  void compilewords(LogoString *str, short len, bool define);
-  short scanfor(char *s, short size, LogoString *str, short len, short start, bool newline);
+  bool dodefine(LogoString *str, short wordstart, short wordlen, bool eol);
+  void compilewords(LogoString *str, short start, short len, bool define);
   bool istoken(char c, bool newline);
-  bool isnum(const char *word, short len);
-  void compileword(tJump *next, const char *word, short op);
+  bool isnum(LogoString *str, short wordstart, short wordlen);
+  void compileword(tJump *next, LogoString *str, short wordstart, short wordlen, short op);
   void finishword(short word, short wordlen, short jump, short arity);
-  void dosentences(char *buf, short len, const char *start);
-  short findword(const char *word) const;
+  short findword(LogoString *str, short wordstart, short wordlen) const;
   
 };
 

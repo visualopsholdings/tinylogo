@@ -275,3 +275,5 @@ Actually pretty simple, just need examples.
 to allow strings and code to be in FLASH memory.
 26 May 2023
 - Eliminate a whole lot of the buffers to free memory up.
+30 May 2023
+- Rewrite scanning to not need buffers in simple cases (still needed for sentences)

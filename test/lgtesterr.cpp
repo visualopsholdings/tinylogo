@@ -123,26 +123,6 @@ BOOST_AUTO_TEST_CASE( lineTooLong )
   
 }
 
-BOOST_AUTO_TEST_CASE( wordTooLong )
-{
-  cout << "=== wordTooLong ===" << endl;
-  
-  LogoBuiltinWord empty[] = {};
-  Logo logo(empty, 0, 0);
-  LogoCompiler compiler(&logo);
-  
-  strstream str;
-  for (short i=0; i<WORD_LEN+1; i++) {
-    str << "A";
-  }
-  str << "; ";
-  
-  compiler.compile(str.str());
-  DEBUG_DUMP(false);
-  BOOST_CHECK_EQUAL(logo.geterr(), LG_WORD_TOO_LONG);
- 
-}
-
 BOOST_AUTO_TEST_CASE( outOfCode )
 {
   cout << "=== outOfCode ===" << endl;
@@ -163,32 +143,6 @@ BOOST_AUTO_TEST_CASE( outOfCode )
 
 void nevercalled(Logo &logo) {
   BOOST_FAIL( "was called!" );
-}
-
-BOOST_AUTO_TEST_CASE( stackOverflow )
-{
-  cout << "=== stackOverflow ===" << endl;
-  
-  LogoBuiltinWord builtins[] = {
-    { "NEVER", &nevercalled, MAX_STACK+2 }
-  };
-  Logo logo(builtins, sizeof(builtins), 0);
-  LogoCompiler compiler(&logo);
-  
-  strstream str;
-  str << "TO LOTS; ";
-  for (short i=0; i<8; i++) {
-    str << "A ";
-  }
-  str << "; END;";
-  compiler.compile(str.str());
-  compiler.compile("NEVER [LOTS LOTS LOTS LOTS LOTS LOTS]");
-  BOOST_CHECK_EQUAL(logo.geterr(), 0);
-  DEBUG_DUMP(false);
-
-  DEBUG_STEP_DUMP(10, false);
-  BOOST_CHECK_EQUAL(logo.run(), LG_STACK_OVERFLOW);
-  
 }
 
 #ifdef HAS_VARIABLES

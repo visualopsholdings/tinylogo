@@ -18,6 +18,12 @@ project (flashcmd)
   add_definitions(-DBOOST_ALL_DYN_LINK) 
   enable_testing()
 
+add_executable(LGTestCompiler lgtestcompiler.cpp ../logo.cpp ../logocompiler.cpp ../arduinoflashcode.cpp)
+  target_link_libraries(LGTestCompiler ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+
+add_executable(LGTestString lgteststring.cpp ../logo.cpp ../logocompiler.cpp ../arduinoflashcode.cpp)
+  target_link_libraries(LGTestString ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+
 add_executable(LGTest lgtest.cpp ../logo.cpp ../logocompiler.cpp ../arduinoflashcode.cpp)
   target_link_libraries(LGTest ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
@@ -33,6 +39,8 @@ add_executable(LGTestLEDSketch lgtestledsketch.cpp ../logo.cpp ../logocompiler.c
 add_executable(LGTestRGBSketch lgtestrgbsketch.cpp ../logo.cpp ../logocompiler.cpp ../arduinoflashcode.cpp)
   target_link_libraries(LGTestRGBSketch ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
+add_test(LGTestCompiler LGTestCompiler)
+add_test(LGTestString LGTestString)
 add_test(LGTest LGTest)
 add_test(LGTestErr LGTestErr)
 add_test(LGTestWords LGTestWords)

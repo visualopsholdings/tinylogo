@@ -441,9 +441,9 @@ BOOST_AUTO_TEST_CASE( seperateLines )
   Logo logo(builtins, sizeof(builtins), 0);
   LogoCompiler compiler(&logo);
 
-  compiler.compile("TO TEST");
-  compiler.compile("  SARG [XXX]");
-  compiler.compile("END");
+  compiler.compile("TO TEST\n");
+  compiler.compile("  SARG [XXX]\n");
+  compiler.compile("END\n");
   compiler.compile("TEST");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
@@ -672,13 +672,15 @@ BOOST_AUTO_TEST_CASE( getstring )
   LogoBuiltinWord empty[] = {};
   Logo logo(empty, 0, 0, 0, 0);
 
-  const char *s1 = "XXX";
-  short len1 = strlen(s1);
-  short str1 = logo.addstring(s1, len1);
+   const char *s1 = "XXX";
+  LogoSimpleString ss1(s1);
+  short len1 = ss1.length();
+  short str1 = logo.addstring(&ss1, 0, len1);
 
-  const char *s2 = "YYY";
-  short len2 = strlen(s2);
-  short str2 = logo.addstring(s2, len2);
+   const char *s2 = "YYY";
+  LogoSimpleString ss2(s2);
+  short len2 = ss2.length();
+  short str2 = logo.addstring(&ss2, 0, len2);
 
   char name[32];
   logo.getstring(name, sizeof(name), str1, len1);
@@ -697,25 +699,33 @@ BOOST_AUTO_TEST_CASE( stringcmp )
   LogoBuiltinWord empty[] = {};
   Logo logo(empty, 0, 0, 0, &strings);
 
-  const char *s1 = "XXX";
-  short len1 = strlen(s1);
-  short str1 = logo.addstring(s1, len1);
+  LogoSimpleString s1("XXX");
+  short len1 = s1.length();
+  short str1 = logo.addstring(&s1, 0, len1);
 
-  const char *s2 = "YYY";
-  short len2 = strlen(s2);
-  short str2 = logo.addstring(s2, len2);
+  LogoSimpleString s2("YYY");
+  short len2 = s2.length();
+  short str2 = logo.addstring(&s2, 0, len2);
 
-  BOOST_CHECK(logo.stringcmp("XXX", 3, str1, len1));
-  BOOST_CHECK(logo.stringcmp("YYY", 3, str2, len2));
-  BOOST_CHECK(!logo.stringcmp("XXX", 3, str1, len1+1));
-  BOOST_CHECK(!logo.stringcmp("AAA", 3, str1, len1));
-  BOOST_CHECK(logo.stringcmp("MULT", 4, 0, 4));
-  BOOST_CHECK(!logo.stringcmp("SSSS", 4, 0, 4));
-  BOOST_CHECK(logo.stringcmp("A", 1, 1, 1));
-  BOOST_CHECK(logo.stringcmp("B", 1, 2, 1));
-  BOOST_CHECK(!logo.stringcmp("B", 1, 1, 1));
-  BOOST_CHECK(!logo.stringcmp("C", 1, 2, 1));
-  BOOST_CHECK(!logo.stringcmp("C", 1, 4, 1));
+  LogoSimpleString t1("XXX");
+  BOOST_CHECK(logo.stringcmp(&t1, 0, t1.length(), str1, len1));
+  LogoSimpleString t2("YYY");
+  BOOST_CHECK(logo.stringcmp(&t2, 0, t2.length(), str2, len2));
+  BOOST_CHECK(!logo.stringcmp(&t1, 0, t1.length(), str1, len1+1));
+  LogoSimpleString t3("AAA");
+  BOOST_CHECK(!logo.stringcmp(&t3, 0, t3.length(), str1, len1));
+  LogoSimpleString t4("MULT");
+  BOOST_CHECK(logo.stringcmp(&t4, 0, t4.length(), 0, 4));
+  LogoSimpleString t5("SSSS");
+  BOOST_CHECK(!logo.stringcmp(&t5, 0, t5.length(), 0, 4));
+  LogoSimpleString t6("A");
+  BOOST_CHECK(logo.stringcmp(&t6, 0, t6.length(), 1, 1));
+  LogoSimpleString t7("B");
+  BOOST_CHECK(logo.stringcmp(&t7, 0, t7.length(), 2, 1));
+  BOOST_CHECK(!logo.stringcmp(&t7, 0, t7.length(), 1, 1));
+  LogoSimpleString t8("C");
+  BOOST_CHECK(!logo.stringcmp(&t8, 0, t8.length(), 2, 1));
+  BOOST_CHECK(!logo.stringcmp(&t8, 0, t8.length(), 4, 1));
   
 }
 

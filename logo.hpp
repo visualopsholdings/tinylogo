@@ -83,6 +83,7 @@
 #define STRING_POOL_SIZE    128       // these number of bytes
 #define LINE_LEN            40        // these number of bytes
 #define WORD_LEN            24        // these number of bytes
+#define SENTENCE_LEN        4         // & and 3 more digits
 
 // on some Arduinos this could be MUCH larger.
 #define MAX_WORDS           20        // 4 bytes each
@@ -291,6 +292,12 @@ public:
   virtual void ncpy(char *to, size_t offset, size_t len) const = 0;
   virtual int ncmp(const char *to, size_t offset, size_t len) const = 0;
  
+  short toi(size_t offset, size_t len);
+  short find(char c, size_t offset, size_t len);
+#ifdef LOGO_DEBUG
+  void dump(const char *msg, short start, short len);
+#endif
+
 };
 
 // just a simple string as a sequence of characters, null terminated.
@@ -313,6 +320,7 @@ public:
   
   void ncpy(char *to, size_t offset, size_t len) const { 
     strncpy(to, _code + offset, len);
+    to[len] = 0;
   }
 
   int ncmp(const char *to, size_t offset, size_t len) const { 
@@ -353,10 +361,10 @@ public:
   void error(short error);
   void outofcode();
   void addop(tJump *next, short type, short op=0, short opand=0);
-  void findbuiltin(const char *name, short *index, short *category);
-  short addstring(const char *s, tStrPool len);
+  void findbuiltin(LogoString *str, short start, short slen, short *index, short *category);
+  short addstring(LogoString *str, short start, short slen);
   void getstring(char *buf, short buflen, tStrPool str, tStrPool len) const;
-  bool stringcmp(const char *s, short slen, tStrPool str, tStrPool len) const;
+  bool stringcmp(LogoString *str, short start, short slen, tStrPool stri, tStrPool len) const;
   const LogoBuiltinWord *getbuiltin(short op, short opand) const;
 
   // compiler needs direct access to these?
@@ -377,7 +385,7 @@ public:
   void pushstring(tStrPool n, tStrPool len);  
   bool pop();
 #ifdef HAS_VARIABLES
-  short defineintvar(const char *s, short i);
+  short defineintvar2(LogoString *str, short start, short slen, short i);
 #endif
   
   // logo words can be self modifying code but be careful!
@@ -442,7 +450,7 @@ private:
   LogoVar _variables[MAX_VARS];
   short _varcount;
 
-  short findvariable(const char *word) const;
+  short findvariable2(LogoString *str, short start, short slen) const;
   short getvarfromref(short op, short opand);
 #endif
   
@@ -453,8 +461,8 @@ private:
   bool parsestring(short type, short op, short oplen, char *s, short len);
 
   // fixed strings
-  short findfixed(const char *s);
-  bool fixedcmp(const char *s, short slen, tStrPool str) const;
+  short findfixed(LogoString *str, short start, short slen);
+  bool fixedcmp(LogoString *stri, short start, short slen, tStrPool str) const;
   bool getfixed(char *buf, short buflen, tStrPool str) const;
 
   // the machine

@@ -234,7 +234,8 @@ short Logo::getvarfromref(short op, short opand) {
   DEBUG_IN(Logo, "getvarfromref");
   
   getstring(_tmpbuf, sizeof(_tmpbuf), op, opand);
-  return findvariable(_tmpbuf);
+  LogoSimpleString str(_tmpbuf);
+  return findvariable2(&str, 0, str.length());
 
 }
 #endif
@@ -339,10 +340,9 @@ void Logo::fail(short err) {
   
   DEBUG_IN_ARGS(Logo, "fail", "%i", err);
   
-  _pc = 0;
-  _code[0][FIELD_OPTYPE] = OPTYPE_ERR;
-  _code[0][FIELD_OP] = err;
-  _code[0][FIELD_OPAND] = 0;
+  _code[_pc+1][FIELD_OPTYPE] = OPTYPE_ERR;
+  _code[_pc+1][FIELD_OP] = err;
+  _code[_pc+1][FIELD_OPAND] = 0;
   
 }
 
@@ -885,21 +885,21 @@ void Logo::addop(tJump *next, short type, short op, short opand) {
   
 }
 
-void Logo::findbuiltin(const char *name, short *index, short *category) {
+void Logo::findbuiltin(LogoString *str, short start, short slen, short *index, short *category) {
 
-  DEBUG_IN_ARGS(Logo, "findbuiltin", "%s", name);
+  DEBUG_IN_ARGS(Logo, "findbuiltin", "%i%i", start, slen);
   
   *index = -1;
   *category = 0;
   for (short i=0; i<_builtincount; i++) {
-    if (strcmp(_builtins[i]._name, name) == 0) {
+   if (str->ncmp(_builtins[i]._name, start, slen) == 0) {
       *index = i;
       return;
     }
   }
   
   for (short i=0; i<_corecount; i++) {
-    if (strcmp(_core[i]._name, name) == 0) {
+    if (str->ncmp(_core[i]._name, start, slen) == 0) {
       *index = i;
       *category = 1;
       return;
@@ -908,23 +908,23 @@ void Logo::findbuiltin(const char *name, short *index, short *category) {
   
 }
 
-short Logo::findfixed(const char *s) {
+short Logo::findfixed(LogoString *str, short start, short slen) {
 
-  DEBUG_IN_ARGS(Logo, "findfixed", "%s", s);
+  DEBUG_IN_ARGS(Logo, "findfixed", "%i%i", start, slen);
   
   if (_fixedstrings) {
     short len = _fixedstrings->length();
-    short start = 0;
+    short start2 = 0;
     short index = 0;
     for (int i=0; i<len; i++) {
       if ((*_fixedstrings)[i] == '\n') {
-        _fixedstrings->ncpy(_tmpbuf, start, i-start);
-        _tmpbuf[i-start] = 0;
-        if (strcmp(_tmpbuf, s) == 0) {
-          DEBUG_RETURN(" %i", index);
+        _fixedstrings->ncpy(_tmpbuf, start2, i-start2);
+        _tmpbuf[i-start2] = 0;
+        if (str->ncmp(_tmpbuf, start, i-start2) == 0) {
+          DEBUG_RETURN(" found %i", index);
           return index;
         }
-        start = i + 1;
+        start2 = i + 1;
         index++;
       }
     }
@@ -934,15 +934,16 @@ short Logo::findfixed(const char *s) {
   return -1;
 }
 
-bool Logo::fixedcmp(const char *s, short slen, tStrPool str) const {
+bool Logo::fixedcmp(LogoString *stri, short start, short slen, tStrPool str) const {
 
   if (_fixedstrings) {
+    stri->ncpy((char *)_tmpbuf, start, slen);
     short len = _fixedstrings->length();
     short start = 0;
     short index = 0;
     for (int i=0; i<len; i++) {
       if ((*_fixedstrings)[i] == '\n') {
-        if (index == str && _fixedstrings->ncmp(s, start, slen) == 0) {
+        if (index == str && _fixedstrings->ncmp(_tmpbuf, start, slen) == 0) {
           return true;
         }
         start = i + 1;
@@ -978,41 +979,42 @@ bool Logo::getfixed(char *buf, short buflen, tStrPool str) const {
   return false;
 }
 
-short Logo::addstring(const char *s, tStrPool len) {
+short Logo::addstring(LogoString *str, short start, short slen) {
 
-  DEBUG_IN_ARGS(Logo, "addstring", "%s%i", s, len);
+  DEBUG_IN_ARGS(Logo, "addstring", "%i%i", start, slen);
   
-  short fixed = findfixed(s);
+  short fixed = findfixed(str, start, slen);
   if (fixed >= 0) {
     DEBUG_RETURN(" %i", fixed);
     return fixed;
   }
 
-  if ((_nextstring + len) >= STRING_POOL_SIZE) {
+  if ((_nextstring + slen) >= STRING_POOL_SIZE) {
     DEBUG_RETURN(" %i", -1);
     return -1;
   }
   
   short cur = _nextstring;
-  memmove(_strings + cur, s, len);
-  _nextstring += len;
+  str->ncpy(_strings + cur, start, slen);
+  _nextstring += slen;
   
-  short str = cur + _fixedcount;
-  DEBUG_RETURN(" %i", str);
-  return str;
+  short stri = cur + _fixedcount;
+  DEBUG_RETURN(" %i", stri);
+  return stri;
 }
 
-bool Logo::stringcmp(const char *s, short slen, tStrPool str, tStrPool len) const {
+
+bool Logo::stringcmp(LogoString *stri, short start, short slen, tStrPool str, tStrPool len) const {
 
   if (slen != len) {
     return false;
   }
   
-  if (fixedcmp(s, slen, str)) {
+  if (fixedcmp(stri, start, slen, str)) {
     return true;
   }
   
-  return strncmp(s, _strings + (str - _fixedcount), len) == 0;
+  return stri->ncmp(_strings + (str - _fixedcount), start, len) == 0;
   
 }
 
@@ -1029,13 +1031,12 @@ void Logo::getstring(char *buf, short buflen, tStrPool str, tStrPool len) const 
 }
 
 #ifdef HAS_VARIABLES
-short Logo::findvariable(const char *word) const {
+short Logo::findvariable2(LogoString *stri, short start, short slen) const {
 
-  DEBUG_IN_ARGS(Logo, "findvariable", "%s%i", word, _varcount);
+  DEBUG_IN_ARGS(Logo, "findvariable", "%i%i", start, _varcount);
   
-  short len = strlen(word);
   for (short i=0; i<_varcount; i++) {
-    if (stringcmp(word, len, _variables[i]._name, _variables[i]._namelen)) {
+    if (stringcmp(stri, start, slen, _variables[i]._name, _variables[i]._namelen)) {
       return i;
     }
   }
@@ -1076,27 +1077,6 @@ bool Logo::haserr(short err) {
   return false;
 }
 
-void LogoCompiler::finishword(short word, short wordlen, short jump, short arity) {
-
-  DEBUG_IN_ARGS(LogoCompiler, "finishword", "%i%i%i%i", word, wordlen, jump, arity);
-  
-  _logo->addop(&_logo->_nextjcode, OPTYPE_RETURN);
-      
-  if (_wordcount >= MAX_WORDS) {
-    _logo->error(LG_TOO_MANY_WORDS);
-    return;
-  }
-
-  _words[_wordcount]._name = word;
-  _words[_wordcount]._namelen = wordlen;
-  _words[_wordcount]._jump = jump;
-#ifdef HAS_VARIABLES
-  _words[_wordcount]._arity = arity;
-#endif
-  _wordcount++;
-
-}
-
 void Logo::error(short error) {
   addop(&_nextcode, OPTYPE_ERR, error);
 }
@@ -1112,14 +1092,13 @@ void Logo::outofcode() {
 }
 
 #ifdef HAS_VARIABLES
-short Logo::defineintvar(const char *s, short i) {
+short Logo::defineintvar2(LogoString *stri, short start, short slen, short i) {
 
-  DEBUG_IN_ARGS(Logo, "defineintvar", "%s%i", s, i);
+  DEBUG_IN_ARGS(Logo, "defineintvar2", "%i%i%i", start, slen, i);
   
-  short var = findvariable(s);
+  short var = findvariable2(stri, start, slen);
   if (var < 0) {
-    short len = strlen(s);
-    short str = addstring(s, len);
+    short str = addstring(stri, start, slen);
     if (str < 0) {
       error(LG_OUT_OF_STRINGS);
       return -1;
@@ -1130,7 +1109,7 @@ short Logo::defineintvar(const char *s, short i) {
     }
     var = _varcount;
     _variables[_varcount]._name = str;
-    _variables[_varcount]._namelen = len;
+    _variables[_varcount]._namelen = slen;
     _varcount++;
   }
   
@@ -1440,7 +1419,8 @@ void LogoWords::make(Logo &logo) {
   short n = logo.popint();
   char s[WORD_LEN];
   logo.popstring(s, sizeof(s));
-  logo.defineintvar(s, n);
+  LogoSimpleString str(s);
+  logo.defineintvar2(&str, 0, str.length(), n);
   
 }
 #endif
