@@ -268,12 +268,15 @@ Actually pretty simple, just need examples.
 
 ## Change Log
 
-24 May 2023
+### 24 May 2023
 - Moved tiny logo, cmd and ringbuffer to their repos.
-25 May 2023
+
+### 25 May 2023
 - Broke compiler out into seperate class hopefully not needed. Also added code
 to allow strings and code to be in FLASH memory.
-26 May 2023
+
+### 26 May 2023
 - Eliminate a whole lot of the buffers to free memory up.
-30 May 2023
+
+### 30 May 2023
 - Rewrite scanning to not need buffers in simple cases (still needed for sentences)
