@@ -18,13 +18,17 @@
 
 #include "logo.hpp"
 
+#ifndef ARDUINO
+#include <fstream>
+#endif
+
+#define LINE_LEN            64        // these number of bytes
+
 typedef struct {
   tStrPool  _name;
   tStrPool  _namelen;
   tJump     _jump;
-#ifdef HAS_VARIABLES
  tByte      _arity; // smaller than 256?
-#endif
 } LogoWord;
 
 class LogoCompiler {
@@ -53,18 +57,19 @@ public:
   void markword(tJump jump) const;
   void printword(const LogoWord &word) const;
   void dumpwordnames() const;
-#ifdef HAS_VARIABLES
   void printvar(const LogoVar &var) const;
-#endif
 #endif
 
 #ifndef ARDUINO
   void dumpwordscode(short offset) const;
-  void dumpwordnamescode() const;
+  void dumpwordstrings() const;
+  int wordstringslist(char *buf, int len) const;
   bool haswords() { return _wordcount > 0; }
   void entab(short indent) const;
-  void printwordcode(const LogoWord &word) const;
+  void printwordstring(const LogoWord &word) const;
+  void printvarstring(const LogoVar &var) const;
   void printvarcode(const LogoVar &var) const;
+  static void compile(std::fstream &file, const std::string &name);
 #endif
 
   // public for testing.
@@ -94,6 +99,9 @@ private:
   // sentences
   short _sentencecount;
 
+  // builtin definition
+  char _builtindef[LINE_LEN];
+  
   // parser
   bool dodefine(LogoString *str, short wordstart, short wordlen, bool eol);
   void compilewords(LogoString *str, short start, short len, bool define);
@@ -102,7 +110,13 @@ private:
   void compileword(tJump *next, LogoString *str, short wordstart, short wordlen, short op);
   void finishword(short word, short wordlen, short jump, short arity);
   short findword(LogoString *str, short wordstart, short wordlen) const;
+  short findword(LogoStringResult *str) const;
+  void findbuiltindef(LogoString *stri, short wordstart, short wordlen, short *index, short *category);
   
+#ifndef ARDUINO
+  int compile(std::fstream &file, Logo *logo);
+#endif
+
 };
 
 #endif // H_logocompiler

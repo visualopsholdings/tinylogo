@@ -99,30 +99,6 @@ BOOST_AUTO_TEST_CASE( outOfStrings )
   
 }
 
-BOOST_AUTO_TEST_CASE( lineTooLong )
-{
-  cout << "=== lineTooLong ===" << endl;
-  
-  LogoBuiltinWord empty[] = {};
-  Logo logo(empty, 0, 0);
-  LogoCompiler compiler(&logo);
-  
-  strstream str;
-  for (short i=0; i<20; i++) {
-    str << "A";
-  }
-  str << "; ";
-  for (short i=0; i<LINE_LEN; i++) {
-    str << "B";
-  }
-  str << "TOOBIG; ";
-  
-  compiler.compile(str.str());
-  DEBUG_DUMP(false);
-  BOOST_CHECK_EQUAL(logo.geterr(), LG_LINE_TOO_LONG);
-  
-}
-
 BOOST_AUTO_TEST_CASE( outOfCode )
 {
   cout << "=== outOfCode ===" << endl;
@@ -145,8 +121,6 @@ void nevercalled(Logo &logo) {
   BOOST_FAIL( "was called!" );
 }
 
-#ifdef HAS_VARIABLES
-
 BOOST_AUTO_TEST_CASE( tooManyVariables )
 {
   cout << "=== tooManyVariables ===" << endl;
@@ -164,10 +138,6 @@ BOOST_AUTO_TEST_CASE( tooManyVariables )
   BOOST_CHECK_EQUAL(logo.run(), LG_TOO_MANY_VARS);
   
 }
-
-#endif // HAS_VARIABLES
-
-#ifdef HAS_IFELSE
 
 void condret(Logo &logo) {
   logo.condreturn(0);
@@ -197,8 +167,6 @@ BOOST_AUTO_TEST_CASE( notString )
   BOOST_CHECK_EQUAL(logo.run(), LG_NOT_STRING);
 
 }
-
-#endif // HAS_IFELSE
 
 BOOST_AUTO_TEST_CASE( extraAfterWord )
 {

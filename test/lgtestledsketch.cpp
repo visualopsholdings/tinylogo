@@ -15,6 +15,8 @@
 
 #include "../logo.hpp"
 #include "../logocompiler.hpp"
+#include "../arduinoflashstring.hpp"
+#include "../arduinoflashcode.hpp"
 
 #define BOOST_AUTO_TEST_MAIN
 #include <boost/test/auto_unit_test.hpp>
@@ -73,6 +75,37 @@ public:
 };
 #endif
 
+static const char strings_led[] PROGMEM = {
+	"FLASH\n"
+	"GO\n"
+	"STOP\n"
+};
+static const short code_led[][INST_LENGTH] PROGMEM = {
+	{ OPTYPE_NOOP, 0, 0 },		// 0
+	{ OPTYPE_HALT, 0, 0 },		// 1
+	{ OPTYPE_BUILTIN, 0, 0 },		// 2
+	{ OPTYPE_BUILTIN, 5, 1 },		// 3
+	{ OPTYPE_INT, 100, 0 },		// 4
+	{ OPTYPE_BUILTIN, 1, 0 },		// 5
+	{ OPTYPE_BUILTIN, 5, 1 },		// 6
+	{ OPTYPE_INT, 1000, 0 },		// 7
+	{ OPTYPE_RETURN, 0, 0 },		// 8
+	{ OPTYPE_BUILTIN, 2, 1 },		// 9
+	{ OPTYPE_JUMP, 2, 0 },		// 10
+	{ OPTYPE_RETURN, 0, 0 },		// 11
+	{ OPTYPE_BUILTIN, 1, 0 },		// 12
+	{ OPTYPE_RETURN, 0, 0 },		// 13
+	{ SCOPTYPE_WORD, 2, 0 }, 
+	{ SCOPTYPE_WORD, 9, 0 }, 
+	{ SCOPTYPE_WORD, 12, 0 }, 
+	{ SCOPTYPE_END, 0, 0 } 
+};
+static const char program_led[] PROGMEM = 
+  "TO FLASH; ON WAIT 100 OFF WAIT 1000; END;"
+  "TO GO; FOREVER FLASH; END;"
+  "TO STOP; OFF; END;"
+  ;
+
 BOOST_AUTO_TEST_CASE( ledSketch )
 {
   cout << "=== ledSketch ===" << endl;
@@ -86,51 +119,52 @@ BOOST_AUTO_TEST_CASE( ledSketch )
 #else
   TestTimeProvider time;
 #endif
-  Logo logo(builtins, sizeof(builtins), &time, Logo::core);
+  ArduinoFlashString strings(strings_led);
+  ArduinoFlashCode code((const PROGMEM short *)code_led);
+  Logo logo(builtins, sizeof(builtins), &time, Logo::core, &strings, &code);
+#ifdef LOGO_DEBUG
   LogoCompiler compiler(&logo);
+#endif
 
-  compiler.compile("TO FLASH; ON WAIT 1000 OFF WAIT 2000; END;");
-  compiler.compile("TO GO; FOREVER FLASH; END;");
-  compiler.compile("TO STOP; END;");
-  BOOST_CHECK_EQUAL(logo.geterr(), 0);
-  DEBUG_DUMP(false);
+  gCmds.clear();
+  BOOST_CHECK_EQUAL(logo.callword("GO"), 0);
   
-  gCmds.clear();
-//   DEBUG_STEP_DUMP(100, false);
-  for (int i=0; i<10; i++) {
-    BOOST_CHECK_EQUAL(logo.step(), 0);
-  }
-  BOOST_CHECK_EQUAL(gCmds.size(), 0);
-
-  logo.resetcode();
-  compiler.compile("GO");
-  BOOST_CHECK_EQUAL(logo.geterr(), 0);
-  DEBUG_DUMP(false);
-
-  gCmds.clear();
 #ifdef REAL_TIME
    BOOST_CHECK_EQUAL(logo.run(), 0);
 #else
-//  DEBUG_STEP_DUMP(1000, false);
-  for (int i=0; i<100; i++) {
+//  DEBUG_STEP_DUMP(20, false);
+  for (int i=0; i<20; i++) {
     BOOST_CHECK_EQUAL(logo.step(), 0);
   }
-  BOOST_CHECK_EQUAL(gCmds.size(), 49);
+  BOOST_CHECK_EQUAL(gCmds.size(), 9);
   BOOST_CHECK_EQUAL(gCmds[0], "LED ON");
-  BOOST_CHECK_EQUAL(gCmds[1], "WAIT 1000");
+  BOOST_CHECK_EQUAL(gCmds[1], "WAIT 100");
   BOOST_CHECK_EQUAL(gCmds[2], "LED OFF");
-  BOOST_CHECK_EQUAL(gCmds[3], "WAIT 2000");
+  BOOST_CHECK_EQUAL(gCmds[3], "WAIT 1000");
     
   logo.resetcode();
-  compiler.compile("STOP");
-  BOOST_CHECK_EQUAL(logo.geterr(), 0);
-  DEBUG_DUMP(false);
   gCmds.clear();
-//  DEBUG_STEP_DUMP(100, false);
+  BOOST_CHECK_EQUAL(logo.callword("STOP"), 0);
+  DEBUG_DUMP(false);
+//  DEBUG_STEP_DUMP(10, false);
   for (int i=0; i<10; i++) {
-    BOOST_CHECK_EQUAL(logo.step(), 0);
+    int err = logo.step();
+    BOOST_CHECK(err == 0 || err == LG_STOP);
   }
-  BOOST_CHECK_EQUAL(gCmds.size(), 0);
+  BOOST_CHECK_EQUAL(gCmds.size(), 1);
+  BOOST_CHECK_EQUAL(gCmds[0], "LED OFF");
+
+  logo.resetcode();
+  gCmds.clear();
+  BOOST_CHECK_EQUAL(logo.callword("ON"), 0);
+  DEBUG_DUMP(false);
+//  DEBUG_STEP_DUMP(10, false);
+  for (int i=0; i<10; i++) {
+    int err = logo.step();
+    BOOST_CHECK(err == 0 || err == LG_STOP);
+  }
+  BOOST_CHECK_EQUAL(gCmds.size(), 1);
+  BOOST_CHECK_EQUAL(gCmds[0], "LED ON");
 #endif
   
 }

@@ -73,57 +73,42 @@
 
 //#define LOGO_DEBUG
 
-// if you don't need variables, save about 1.6k bytes
-#define HAS_VARIABLES
-
-// if you don't need IFELSE and all it needs you can save around 1.2k bytes
-#define HAS_IFELSE
-
-// about 14.5k with all code, 9.6k bare bones with everything off.
-#define STRING_POOL_SIZE    128       // these number of bytes
-#define LINE_LEN            40        // these number of bytes
-#define WORD_LEN            24        // these number of bytes
-#define SENTENCE_LEN        4         // & and 3 more digits
-
 // on some Arduinos this could be MUCH larger.
+// if you run out of space, take a look at using flash memory to store your strings 
+// and even code.
+#define STRING_POOL_SIZE    128       // these number of bytes
+#define NUM_LEN             12        // these number of bytes
+#define SENTENCE_LEN        4         // & and 3 more digits
 #define MAX_WORDS           20        // 4 bytes each
 #define MAX_CODE            100       // 6 bytes each
 #define START_JCODE         30        // the start of where the JCODE lies (the words)
 #define MAX_STACK           16        // 6 bytes each
-
-// might have to use something like this while you are debugging things on the ardiuno
-// itself
-// #define STRING_POOL_SIZE  64       // these number of bytes
-// #define LINE_LEN          32        // these number of bytes
-// #define WORD_LEN          16        // these number of bytes
-// #define MAX_WORDS         10        // 4 bytes each
-// #define MAX_CODE          80        // 6 bytes each
-// #define MAX_STACK         10        // 6 bytes each
-
-#ifdef HAS_VARIABLES
-#define MAX_VARS             8         // 6 bytes each
-#endif
+#define MAX_VARS             8        // 6 bytes each
 
 #include <string.h>
 #include <stdio.h>
+#include <math.h>
+
+#ifndef min
+#define min(a,b)            (((a) < (b)) ? (a) : (b))
+#endif
 
 // success is 0
 #define LG_STOP               1
 #define LG_UNHANDLED_OP_TYPE  2
 #define LG_TOO_MANY_WORDS     3
 #define LG_OUT_OF_STRINGS     4
-#define LG_LINE_TOO_LONG      5
-#define LG_WORD_TOO_LONG      6
-#define LG_OUT_OF_CODE        7
-#define LG_STACK_OVERFLOW     8
-#define LG_WORD_NOT_FOUND     9
-#define LG_NO_RETURN_ADDRESS  10
-#define LG_TOO_MANY_VARS      11
-#define LG_NOT_INT            12
-#define LG_NOT_STRING         13
-#define LG_NOT_CALLABLE       14
-#define LG_EXTRA_IN_DEFINE    15
-#define LG_FIXED_NO_NEWLINE   16
+#define LG_OUT_OF_CODE        5
+#define LG_STACK_OVERFLOW     6
+#define LG_WORD_NOT_FOUND     7
+#define LG_NO_RETURN_ADDRESS  8
+#define LG_TOO_MANY_VARS      9
+#define LG_NOT_INT            10
+#define LG_NOT_STRING         11
+#define LG_NOT_CALLABLE       12
+#define LG_EXTRA_IN_DEFINE    13
+#define LG_FIXED_NO_NEWLINE   14
+#define LG_ARITY_NOT_IMPL     15
 
 #define OPTYPE_NOOP           0 //
 #define OPTYPE_RETURN         1 //
@@ -134,25 +119,23 @@
 #define OPTYPE_STRING         6 // FIELD_OP = index of string (-fixedcount), FIELD_OPAND = length of string
 #define OPTYPE_INT            7 // FIELD_OP = literal integer
 #define OPTYPE_DOUBLE         8 // FIELD_OP = literal integer part of double, FIELD_OPAND is fractional
-#ifdef HAS_VARIABLES
 #define OPTYPE_REF            9 // FIELD_OP = index of string (-fixedcount) with a var in it, FIELD_OPAND = length of string
 #define OPTYPE_POPREF         10 // FIELD_OP = index of var to pop into
-#endif
 
 // only on the stack
 #define SOP_START             100
 #define SOPTYPE_ARITY         SOP_START + 1 // FIELD_OP = the arity of the builtin function
 #define SOPTYPE_RETADDR       SOP_START + 2 // FIELD_OP = the return address. These are just on the stack
 #define SOPTYPE_MRETADDR      SOP_START + 3 // FIELD_OP = the offset to modify by
-#ifdef HAS_IFELSE
 #define SOPTYPE_CONDRET       SOP_START + 4 // FIELD_OP = the return address of if true, otherwise _op + 1
 #define SOPTYPE_SKIP          SOP_START + 5 // skip the next instruction if on the stack under a return
-#endif
 
 // only in static code
 #define SCOP_START            200
+// words and vars are layed out in teh same order as the fixed strings.
 #define SCOPTYPE_WORD         SCOP_START + 1 // FIELD_OP the jump location, FIELD_OPAND the arity
-#define SCOPTYPE_END          SCOP_START + 2 // the end of static code.
+#define SCOPTYPE_VAR          SCOP_START + 2 // FIELD_OP the variable value
+#define SCOPTYPE_END          SCOP_START + 3 // the end of static code.
 
 class Logo;
 
@@ -194,8 +177,6 @@ typedef short tLogoInstruction[INST_LENGTH];
 #define FIELD_OP      1
 #define FIELD_OPAND   2
 
-#ifdef HAS_VARIABLES
-
 typedef struct {
   tVarType           _type; // just OPTYPE_STRING, OPTYPE_INT or OPTYPE_DOUBLE
   tStrPool           _name;
@@ -204,8 +185,6 @@ typedef struct {
   short              _value; // needs to hold a (possible) literal number
 } LogoVar;
 
-#endif // HAS_VARIABLES
-
 class LogoWords {
 
 public:
@@ -213,10 +192,8 @@ public:
   static void err(Logo &logo);
   static short errArity;
   
-#ifdef HAS_IFELSE
   static void ifelse(Logo &logo);
   static short ifelseArity;
-#endif
   
   static void repeat(Logo &logo);
   static short repeatArity;
@@ -224,10 +201,8 @@ public:
   static void forever(Logo &logo);
   static short foreverArity;
 
-#ifdef HAS_VARIABLES
   static void make(Logo &logo);
   static short makeArity;
-#endif
 
   static void wait(Logo &logo);
   static short waitArity;
@@ -249,9 +224,7 @@ public:
 
 private:
 
-#ifdef HAS_IFELSE
   static bool pushliterals(Logo &logo, short rel);
-#endif
 
 };
 
@@ -294,8 +267,9 @@ public:
  
   short toi(size_t offset, size_t len);
   short find(char c, size_t offset, size_t len);
+  short ncmp2(LogoString *to, short offsetto, short offset, short len) const;
 #ifdef LOGO_DEBUG
-  void dump(const char *msg, short start, short len);
+  void dump(const char *msg, short start, short len) const;
 #endif
 
 };
@@ -309,6 +283,12 @@ public:
   LogoSimpleString(const char *code): _code(code) {
     _len = strlen(_code);
   }
+  LogoSimpleString(): _code(0), _len(0) {}
+  
+  void set(const char *code, short len) {
+    _code = code;
+    _len = len;
+  }
   
   size_t length() const { 
     return _len; 
@@ -318,19 +298,67 @@ public:
     return _code[index]; 
   }
   
-  void ncpy(char *to, size_t offset, size_t len) const { 
-    strncpy(to, _code + offset, len);
-    to[len] = 0;
-  }
-
-  int ncmp(const char *to, size_t offset, size_t len) const { 
-    return strncmp(to, _code + offset, len);
-  }
-
+  void ncpy(char *to, size_t offset, size_t len) const ;
+  int ncmp(const char *to, size_t offset, size_t len) const;
+  double tof();
+    
 private:
   const char *_code;
   short _len;
   
+};
+
+class LogoStringResult {
+
+public:
+  LogoStringResult() : _fixed(0), _fixedstart(0), _fixedlen(0) {}
+  
+  void init() {
+    _simple.set(0, 0);
+    _fixed = 0;
+  }
+  
+  size_t length() const { 
+    if (_fixed) {
+      return _fixedlen;
+    }
+    return _simple.length();
+  }
+
+  int ncmp(const char *to) {
+    if (_fixed) {
+      return _fixed->ncmp(to, _fixedstart, _fixedlen);
+    }
+    return _simple.ncmp(to, 0, _simple.length());
+  }
+
+  void ncpy(char *to, int len) {
+    if (_fixed) {
+      _fixed->ncpy(to, _fixedstart, min(len, _fixedlen));
+      return;
+    }
+    _simple.ncpy(to, 0, min(len, _simple.length()));
+  }
+
+  short toi() {
+    if (_fixed) {
+      return _fixed->toi(_fixedstart, _fixedlen);
+    }
+    return _simple.toi(0, _simple.length());
+  }
+  
+  double tof() {
+    if (_fixed) {
+      // don't know how to do this yet...
+      return 0;
+    }
+    return _simple.tof();
+  }
+  
+  LogoSimpleString _simple;
+  LogoString *_fixed;
+  short _fixedstart;
+  short _fixedlen;
 };
 
 class LogoCompiler;
@@ -355,7 +383,8 @@ public:
   void resetvars(); // reset the variables
   void fail(short err);
   void schedulenext(short delay);
-  
+  int callword(const char *word); // call a word by name if you know it.
+   
   // interface to compiler
   bool hascore() { return _core; }
   void error(short error);
@@ -363,8 +392,10 @@ public:
   void addop(tJump *next, short type, short op=0, short opand=0);
   void findbuiltin(LogoString *str, short start, short slen, short *index, short *category);
   short addstring(LogoString *str, short start, short slen);
-  void getstring(char *buf, short buflen, tStrPool str, tStrPool len) const;
+  short addstring(LogoStringResult *stri);
+  void getstring(LogoStringResult *stri, tStrPool str, tStrPool len) const;
   bool stringcmp(LogoString *str, short start, short slen, tStrPool stri, tStrPool len) const;
+  bool stringcmp(LogoStringResult *str, tStrPool stri, tStrPool len) const;
   const LogoBuiltinWord *getbuiltin(short op, short opand) const;
 
   // compiler needs direct access to these?
@@ -381,16 +412,16 @@ public:
   void splitdouble(double n, short *op, short *opand);
   double joindouble(short op, short opand) const;
   void pushdouble(double n);
-  void popstring(char *s, tStrPool len);  
+  void popstring(LogoStringResult *result);  
   void pushstring(tStrPool n, tStrPool len);  
   bool pop();
-#ifdef HAS_VARIABLES
-  short defineintvar2(LogoString *str, short start, short slen, short i);
-#endif
+  short findvariable(LogoString *str, short start, short slen) const;
+  short findvariable(LogoStringResult *str) const;
+  short newintvar(short str, short slen, short n);
+  void  setintvar(short var, short n);
   
   // logo words can be self modifying code but be careful!
   void modifyreturn(short rel, short n);
-#ifdef HAS_IFELSE
   bool codeisint(short rel);
   bool codeisstring(short rel);
   short codetoint(short rel);
@@ -398,19 +429,22 @@ public:
   void jumpskip(short rel);
   void jump(short rel);
   void condreturn(short rel);
-#endif
 
 #ifdef LOGO_DEBUG
   void outstate() const;
   void dumpcode(const LogoCompiler *compiler, bool all=true) const;
   void dumpstack(const LogoCompiler *compiler, bool all=true) const;
   void dumpvars(const LogoCompiler *compiler) const;
+  void dumpstaticwords(const LogoCompiler *compiler) const;
 #endif
  
 #ifndef ARDUINO
+  int stringslist(LogoCompiler *compiler, char *buf, int len) const;
+  int varstringslist(LogoCompiler *compiler, char *buf, int len) const;
   void dumpstringscode(LogoCompiler *compiler, const char *varname) const;
   void dumpinst(LogoCompiler *compiler, const char *varname) const;
   void optypename(short optype) const;
+  void dumpvarsstrings(const LogoCompiler *compiler) const;
   void dumpvarscode(const LogoCompiler *compiler) const;
 #endif
 
@@ -433,37 +467,34 @@ private:
   LogoBuiltinWord *_core;
   short _corecount;
   
-  // various buffers to hold data
-  char _tmpbuf[WORD_LEN];
+  // buffer to hold a number conversion
+  char _numbuf[NUM_LEN];
    
   // the code
   tLogoInstruction _code[MAX_CODE];
   tJump _pc;
-  ArduinoFlashCode *_acode;
+  ArduinoFlashCode *_staticcode;
   
   // the stack
   tLogoInstruction _stack[MAX_STACK];
   short _tos;
   
-#ifdef HAS_VARIABLES
   // the variables
   LogoVar _variables[MAX_VARS];
   short _varcount;
 
-  short findvariable2(LogoString *str, short start, short slen) const;
   short getvarfromref(short op, short opand);
-#endif
   
   // the schdeuler for WAIT
   LogoScheduler _schedule;
   
   // parser
-  bool parsestring(short type, short op, short oplen, char *s, short len);
+  bool parsestring(short type, short op, short oplen, LogoStringResult *str);
 
   // fixed strings
   short findfixed(LogoString *str, short start, short slen);
-  bool fixedcmp(LogoString *stri, short start, short slen, tStrPool str) const;
-  bool getfixed(char *buf, short buflen, tStrPool str) const;
+  bool fixedcmp(LogoString *stri, short strstart, short slen, tStrPool str, tStrPool len) const;
+  bool getfixed(LogoStringResult *reuslt, tStrPool str) const;
 
   // the machine
   bool push(short type, short op=0, short opand=0);

@@ -16,6 +16,7 @@
 #include "../logo.hpp"
 #include "../logocompiler.hpp"
 #include "../arduinoflashstring.hpp"
+#include "../arduinoflashcode.hpp"
 
 #define BOOST_AUTO_TEST_MAIN
 #include <boost/test/auto_unit_test.hpp>
@@ -102,7 +103,7 @@ public:
 #endif
 
 // the strings for the program in flash
-static const char strings_flash[] PROGMEM = 
+static const char strings_rgb[] PROGMEM = {
 	"SCLR\n"
 	"REDC\n"
 	"GREENC\n"
@@ -117,29 +118,86 @@ static const char strings_flash[] PROGMEM =
 	"B\n"
 	"G\n"
 	"R\n"
-  ;
-
-// the initial program goes into FLASH
-static const char program_flash[] PROGMEM = 
-  "TO SCLR :C; 100 - :C / 100  * 255; END;"
-  "TO REDC :N; REDR SCLR :N; END;"
-  "TO GREENC :N; GREENR SCLR :N; END;"
-  "TO BLUEC :N; BLUER SCLR :N; END;"
-  // arguments are reversed!
-  "TO SETALL :B :G :R; REDC :R GREENC :G BLUEC :B; END;"
-  "TO AMBER; SETALL 100 75 0; END;"
-  "TO RED; SETALL 100 0 0; END;"
-  "TO GREEN; SETALL 0 100 0; END;"
-  "TO BLUE; SETALL 0 0 100; END;"
-  ;
+};
+static const short code_rgb[][INST_LENGTH] PROGMEM = {
+	{ OPTYPE_NOOP, 0, 0 },		// 0
+	{ OPTYPE_HALT, 0, 0 },		// 1
+	{ OPTYPE_POPREF, 0, 0 },		// 2
+	{ OPTYPE_INT, 100, 0 },		// 3
+	{ OPTYPE_BUILTIN, 7, 1 },		// 4
+	{ OPTYPE_REF, 9, 1 },		// 5
+	{ OPTYPE_BUILTIN, 9, 1 },		// 6
+	{ OPTYPE_INT, 100, 0 },		// 7
+	{ OPTYPE_BUILTIN, 10, 1 },		// 8
+	{ OPTYPE_INT, 255, 0 },		// 9
+	{ OPTYPE_RETURN, 0, 0 },		// 10
+	{ OPTYPE_POPREF, 1, 0 },		// 11
+	{ OPTYPE_BUILTIN, 0, 0 },		// 12
+	{ OPTYPE_JUMP, 2, 1 },		// 13
+	{ OPTYPE_REF, 10, 1 },		// 14
+	{ OPTYPE_RETURN, 0, 0 },		// 15
+	{ OPTYPE_POPREF, 1, 0 },		// 16
+	{ OPTYPE_BUILTIN, 1, 0 },		// 17
+	{ OPTYPE_JUMP, 2, 1 },		// 18
+	{ OPTYPE_REF, 10, 1 },		// 19
+	{ OPTYPE_RETURN, 0, 0 },		// 20
+	{ OPTYPE_POPREF, 1, 0 },		// 21
+	{ OPTYPE_BUILTIN, 2, 0 },		// 22
+	{ OPTYPE_JUMP, 2, 1 },		// 23
+	{ OPTYPE_REF, 10, 1 },		// 24
+	{ OPTYPE_RETURN, 0, 0 },		// 25
+	{ OPTYPE_POPREF, 2, 0 },		// 26
+	{ OPTYPE_POPREF, 3, 0 },		// 27
+	{ OPTYPE_POPREF, 4, 0 },		// 28
+	{ OPTYPE_JUMP, 11, 1 },		// 29
+	{ OPTYPE_REF, 13, 1 },		// 30
+	{ OPTYPE_JUMP, 16, 1 },		// 31
+	{ OPTYPE_REF, 12, 1 },		// 32
+	{ OPTYPE_JUMP, 21, 1 },		// 33
+	{ OPTYPE_REF, 11, 1 },		// 34
+	{ OPTYPE_RETURN, 0, 0 },		// 35
+	{ OPTYPE_JUMP, 26, 3 },		// 36
+	{ OPTYPE_INT, 100, 0 },		// 37
+	{ OPTYPE_INT, 75, 0 },		// 38
+	{ OPTYPE_INT, 0, 0 },		// 39
+	{ OPTYPE_RETURN, 0, 0 },		// 40
+	{ OPTYPE_JUMP, 26, 3 },		// 41
+	{ OPTYPE_INT, 100, 0 },		// 42
+	{ OPTYPE_INT, 0, 0 },		// 43
+	{ OPTYPE_INT, 0, 0 },		// 44
+	{ OPTYPE_RETURN, 0, 0 },		// 45
+	{ OPTYPE_JUMP, 26, 3 },		// 46
+	{ OPTYPE_INT, 0, 0 },		// 47
+	{ OPTYPE_INT, 100, 0 },		// 48
+	{ OPTYPE_INT, 0, 0 },		// 49
+	{ OPTYPE_RETURN, 0, 0 },		// 50
+	{ OPTYPE_JUMP, 26, 3 },		// 51
+	{ OPTYPE_INT, 0, 0 },		// 52
+	{ OPTYPE_INT, 0, 0 },		// 53
+	{ OPTYPE_INT, 100, 0 },		// 54
+	{ OPTYPE_RETURN, 0, 0 },		// 55
+	{ SCOPTYPE_WORD, 2, 1 }, 
+	{ SCOPTYPE_WORD, 11, 1 }, 
+	{ SCOPTYPE_WORD, 16, 1 }, 
+	{ SCOPTYPE_WORD, 21, 1 }, 
+	{ SCOPTYPE_WORD, 26, 3 }, 
+	{ SCOPTYPE_WORD, 36, 0 }, 
+	{ SCOPTYPE_WORD, 41, 0 }, 
+	{ SCOPTYPE_WORD, 46, 0 }, 
+	{ SCOPTYPE_WORD, 51, 0 }, 
+	{ SCOPTYPE_VAR, 0, 0 }, 
+	{ SCOPTYPE_VAR, 0, 0 }, 
+	{ SCOPTYPE_VAR, 0, 0 }, 
+	{ SCOPTYPE_VAR, 0, 0 }, 
+	{ SCOPTYPE_VAR, 0, 0 }, 
+	{ SCOPTYPE_END, 0, 0 } 
+};
 
 BOOST_AUTO_TEST_CASE( rgbSketch )
 {
   cout << "=== rgbSketch ===" << endl;
   
   LogoBuiltinWord builtins[] = {
-  { "ON", &ledOn },
-  { "OFF", &ledOff },
   { "REDR", &redRaw, 1 },
   { "GREENR", &greenRaw, 1 },
   { "BLUER", &blueRaw, 1 },
@@ -149,30 +207,42 @@ BOOST_AUTO_TEST_CASE( rgbSketch )
 #else
   TestTimeProvider time;
 #endif
- ArduinoFlashString strings(strings_flash);
- Logo logo(builtins, sizeof(builtins), &time, Logo::core, &strings);
-//  Logo logo(builtins, sizeof(builtins), &time, Logo::core);
+  ArduinoFlashString strings(strings_rgb);
+  ArduinoFlashCode code((const PROGMEM short *)code_rgb);
+  Logo logo(builtins, sizeof(builtins), &time, Logo::core, &strings, &code);
+#ifdef LOGO_DEBUG
   LogoCompiler compiler(&logo);
-
-  ArduinoFlashString str(program_flash);
-  compiler.compile(&str);
-  BOOST_CHECK_EQUAL(logo.geterr(), 0);
-  DEBUG_DUMP(false);
-  
-//  logo.dumpstringscode(&compiler);
-
-  logo.resetcode();
-  compiler.compile("AMBER");
-  BOOST_CHECK_EQUAL(logo.geterr(), 0);
-  DEBUG_DUMP(false);
+#endif
 
   gCmds.clear();
-  DEBUG_STEP_DUMP(20, false);
-  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.callword("AMBER"), 0);
   
+#ifdef REAL_TIME
+   BOOST_CHECK_EQUAL(logo.run(), 0);
+#else
+//  DEBUG_STEP_DUMP(20, false);
+  for (int i=0; i<100; i++) {
+    int err = logo.step();
+    BOOST_CHECK(err == 0 || err == LG_STOP);
+  }
   BOOST_CHECK_EQUAL(gCmds.size(), 3);
   BOOST_CHECK_EQUAL(gCmds[0], "RED 0");
   BOOST_CHECK_EQUAL(gCmds[1], "GREEN 63");
   BOOST_CHECK_EQUAL(gCmds[2], "BLUE 255");
+    
+  logo.resetcode();
+  gCmds.clear();
+  BOOST_CHECK_EQUAL(logo.callword("RED"), 0);
+//  DEBUG_STEP_DUMP(10, false);
+  for (int i=0; i<100; i++) {
+    int err = logo.step();
+    BOOST_CHECK(err == 0 || err == LG_STOP);
+  }
+  BOOST_CHECK_EQUAL(gCmds.size(), 3);
+  BOOST_CHECK_EQUAL(gCmds[0], "RED 0");
+  BOOST_CHECK_EQUAL(gCmds[1], "GREEN 255");
+  BOOST_CHECK_EQUAL(gCmds[2], "BLUE 255");
 
+#endif
+   
 }

@@ -34,6 +34,7 @@ void Logo::outstate() const {
 
 #ifndef ARDUINO
 #include <iostream>
+#include <sstream>
 using namespace std;
 #endif
 
@@ -41,22 +42,14 @@ using namespace std;
 #include <ctype.h>
 #include <math.h>
 
-#ifndef min
-#define min(a,b)            (((a) < (b)) ? (a) : (b))
-#endif
-
 // all the core words are here. To make it smaller you can comment them
 // in and out here.
 LogoBuiltinWord Logo::core[] = {
   { "ERR", LogoWords::err, LogoWords::errArity },
-#ifdef HAS_VARIABLES
   { "MAKE", LogoWords::make, LogoWords::makeArity },
-#endif
   { "FOREVER", LogoWords::forever, LogoWords::foreverArity },
   { "REPEAT", LogoWords::repeat, LogoWords::repeatArity },
-#ifdef HAS_IFELSE
   { "IFELSE", LogoWords::ifelse, LogoWords::ifelseArity },
-#endif
   { "WAIT", LogoWords::wait, LogoWords::waitArity },
   { "=", LogoWords::eq, LogoWords::eqArity },
   { "-", LogoWords::subtract, LogoWords::subtractArity },
@@ -71,12 +64,9 @@ Logo::Logo(LogoBuiltinWord *builtins, short size, LogoTimeProvider *time, LogoBu
   _core(core), 
   _nextstring(0), _fixedstrings(strings), _fixedcount(0), 
   _pc(0), _tos(0), _schedule(time),
-  _acode(code) {
+  _staticcode(code) {
   
-#ifdef HAS_VARIABLES
   _varcount = 0;
-#endif
-
   _builtincount = size / sizeof(LogoBuiltinWord);
   _corecount = _core ? sizeof(Logo::core) / sizeof(LogoBuiltinWord) : 0;
   _nextjcode = START_JCODE;
@@ -101,6 +91,19 @@ Logo::Logo(LogoBuiltinWord *builtins, short size, LogoTimeProvider *time, LogoBu
     }
   }
   
+  if (_staticcode) {
+    short pc = 0;
+    while (pc < MAX_CODE && (*_staticcode)[pc][0] != SCOPTYPE_WORD) {
+      pc++;
+    }
+    for (int i=0; pc < MAX_CODE && ((*_staticcode)[pc])[0] != SCOPTYPE_END; i++, pc++) {
+      if ((*_staticcode)[pc][0] == SCOPTYPE_VAR) {
+        LogoStringResult result;
+        getfixed(&result, i);
+        newintvar(i, result.length(), (*_staticcode)[pc][1]);
+      }
+    }
+  }
 }
 
 short Logo::run() {
@@ -158,9 +161,7 @@ void Logo::resetvars() {
 
   DEBUG_IN(Logo, "resetvars");
   
-#ifdef HAS_VARIABLES
   _varcount = 0;
-#endif
 
 }
 
@@ -185,8 +186,12 @@ short Logo::parseint(short type, short op, short opand) {
   switch (type) {
   
   case OPTYPE_STRING:
-    getstring(_tmpbuf, sizeof(_tmpbuf), op, opand);
-    return atoi(_tmpbuf);
+    {
+      LogoStringResult result;
+      getstring(&result, op, opand);
+      return result.toi();
+    }
+    break;
     
   case OPTYPE_INT:
   case OPTYPE_DOUBLE:
@@ -203,11 +208,17 @@ short Logo::parseint(short type, short op, short opand) {
 
 double Logo::parsedouble(short type, short op, short opand) {
 
+  DEBUG_IN_ARGS(Logo, "parsedouble", "%i%i%i", type, op, opand);
+  
   switch (type) {
   
   case OPTYPE_STRING:
-    getstring(_tmpbuf, sizeof(_tmpbuf), op, opand);
-    return atof(_tmpbuf);
+    {
+      LogoStringResult result;
+      getstring(&result, op, opand);
+      return result.tof();
+    }
+    break;
     
   case OPTYPE_INT:
     return (double)op;
@@ -228,17 +239,15 @@ bool Logo::stackempty() {
   return _tos == 0;
 }
 
-#ifdef HAS_VARIABLES
 short Logo::getvarfromref(short op, short opand) {
 
-  DEBUG_IN(Logo, "getvarfromref");
+  DEBUG_IN_ARGS(Logo, "getvarfromref", "%i%i", op, opand);
   
-  getstring(_tmpbuf, sizeof(_tmpbuf), op, opand);
-  LogoSimpleString str(_tmpbuf);
-  return findvariable2(&str, 0, str.length());
+  LogoStringResult result;
+  getstring(&result, op, opand);
+  return findvariable(&result);
 
 }
-#endif
 
 short Logo::popint() {
 
@@ -252,7 +261,6 @@ short Logo::popint() {
   if (i >= 0) {
     return i;
   }
-#ifdef HAS_VARIABLES
   if (_stack[_tos][FIELD_OPTYPE] == OPTYPE_REF) {
     short var = getvarfromref(_stack[_tos][FIELD_OP], _stack[_tos][FIELD_OPAND]);
     if (var >= 0) {
@@ -262,7 +270,6 @@ short Logo::popint() {
       }
     }
   }
-#endif  
   return 0;
 }
 
@@ -278,7 +285,6 @@ double Logo::popdouble() {
   if (i >= 0) {
     return i;
   }
-#ifdef HAS_VARIABLES
   if (_stack[_tos][FIELD_OPTYPE] == OPTYPE_REF) {
     short var = getvarfromref(_stack[_tos][FIELD_OP], _stack[_tos][FIELD_OPAND]);
     if (var >= 0) {
@@ -288,7 +294,6 @@ double Logo::popdouble() {
       }
     }
   }
-#endif  
   return 0;
 }
 
@@ -356,20 +361,22 @@ void Logo::modifyreturn(short rel, short count) {
 
 }
 
-bool Logo::parsestring(short type, short op, short opand, char *s, short len) {
+bool Logo::parsestring(short type, short op, short opand, LogoStringResult *str) {
 
   switch (type) {
   
   case OPTYPE_STRING:
-    getstring(s, len, op, opand);
+    getstring(str, op, opand);
     return true;
     
   case OPTYPE_INT:
-    snprintf(s, len, "%d", op);
+    snprintf(_numbuf, sizeof(_numbuf), "%d", op);
+    str->_simple.set(_numbuf, strlen(_numbuf));
     return true;
     
   case OPTYPE_DOUBLE:
-    snprintf(s, len, "%f", joindouble(op, opand));
+    snprintf(_numbuf, sizeof(_numbuf), "%f", joindouble(op, opand));
+    str->_simple.set(_numbuf, strlen(_numbuf));
     return true;
     
   default:
@@ -393,7 +400,7 @@ bool Logo::pop() {
   
 }
 
-void Logo::popstring(char *s, tStrPool len) {
+void Logo::popstring(LogoStringResult *result) {
 
   DEBUG_IN(Logo, "popstring");
   
@@ -401,16 +408,12 @@ void Logo::popstring(char *s, tStrPool len) {
     error(LG_STACK_OVERFLOW);
     return;
   }
-  if (!parsestring(_stack[_tos][FIELD_OPTYPE], _stack[_tos][FIELD_OP], _stack[_tos][FIELD_OPAND], s, len)) {
-#ifdef HAS_VARIABLES
+  if (!parsestring(_stack[_tos][FIELD_OPTYPE], _stack[_tos][FIELD_OP], _stack[_tos][FIELD_OPAND], result)) {
     short var = getvarfromref(_stack[_tos][FIELD_OP], _stack[_tos][FIELD_OPAND]);
     if (var >= 0) {
-      if (!parsestring(_variables[var]._type, _variables[var]._value, _variables[var]._valuelen, s, len))
-#endif
-        *s = 0;
-#ifdef HAS_VARIABLES
+      if (!parsestring(_variables[var]._type, _variables[var]._value, _variables[var]._valuelen, result))
+        result->init();
     }
-#endif  
   }
 }
 
@@ -432,19 +435,17 @@ bool Logo::push(short type, short op, short opand) {
 }
 
 short Logo::instField(short pc, short field) const {
-  if (_acode) {
-    return (*_acode)[pc][field];
+  if (_staticcode) {
+    return (*_staticcode)[pc][field];
   }
   return _code[pc][field];
 }
 
-#ifdef HAS_IFELSE
 bool Logo::codeisint(short rel) {
 
   DEBUG_IN_ARGS(Logo, "codeisint", "%i", rel);
   
   bool val;
-#ifdef HAS_VARIABLES
   if (instField(_pc+rel, FIELD_OPTYPE) == OPTYPE_REF) {
     short var = getvarfromref(instField(_pc+rel, FIELD_OP), instField(_pc+rel, FIELD_OPAND));
     if (var >= 0) {
@@ -457,7 +458,6 @@ bool Logo::codeisint(short rel) {
     DEBUG_RETURN(" ref %b", val);
     return val;
   }
-#endif 
  
   val = instField(_pc+rel, FIELD_OPTYPE) == OPTYPE_INT;
   DEBUG_RETURN(" num %b", val);
@@ -470,7 +470,6 @@ short Logo::codetoint(short rel) {
   DEBUG_IN_ARGS(Logo, "codetoint", "%i", rel);
   
   short val;
-#ifdef HAS_VARIABLES
   if (instField(_pc+rel, FIELD_OPTYPE) == OPTYPE_REF) {
     short var = getvarfromref(instField(_pc+rel, FIELD_OP), instField(_pc+rel, FIELD_OPAND));
     if (var >= 0) {
@@ -487,7 +486,6 @@ short Logo::codetoint(short rel) {
     DEBUG_RETURN(" ref %i", val);
     return val;
   }
-#endif
   
   if (instField(_pc+rel, FIELD_OPTYPE) != OPTYPE_INT) {
     error(LG_NOT_INT);
@@ -543,7 +541,6 @@ void Logo::condreturn(short rel) {
   }
     
 }
-#endif // HAS_IFELSE
 
 bool Logo::call(short jump, tByte arity) {
 
@@ -558,14 +555,12 @@ bool Logo::call(short jump, tByte arity) {
     return false;
   }
   
-#ifdef HAS_VARIABLES
   if (arity) {
     push(SOPTYPE_ARITY, _pc, arity);
     
     DEBUG_RETURN(" word has arity", 0);
     return true;
   }
-#endif
 
   // push the return adddres
   push(SOPTYPE_RETADDR, _pc + 1);
@@ -575,6 +570,50 @@ bool Logo::call(short jump, tByte arity) {
 
   return true;
   
+}
+
+int Logo::callword(const char *word) {
+
+  LogoSimpleString s(word);
+  
+  // true for a builtin.
+  short index = -1, category = 0;
+  findbuiltin(&s, 0, s.length(), &index, &category);
+  if (index >= 0) {
+    const LogoBuiltinWord *builtin = getbuiltin(index, category);
+    if (!builtin) {
+      // problem with the code, no actual builtin?
+      return LG_OUT_OF_CODE;
+    }
+    builtin->_code(*this);
+    return 0;
+  }
+
+  // try for a word with this string.
+  short n = findfixed(&s, 0, s.length());
+  if (n < 0) {
+    return LG_WORD_NOT_FOUND;
+  }
+  int w = 0;
+  for (short i=0; i<MAX_CODE; i++) {
+    short type = instField(i, FIELD_OPTYPE);
+    if (type == SCOPTYPE_WORD) {
+      if (w == n) {
+        short op = instField(i, FIELD_OP);
+        short opand = instField(i, FIELD_OPAND);
+        if (opand > 0) {
+          // could probably just check the stack and see if it has the arity
+          // and then go for it.
+          return LG_ARITY_NOT_IMPL;
+        }
+        call(op+1, 0);
+        return 0;
+      }
+      w++;
+    }
+  }
+  // problem with the code, couldn't find the word.
+  return LG_OUT_OF_CODE;
 }
 
 void Logo::schedulenext(short delay) {
@@ -642,7 +681,6 @@ short Logo::step() {
     }
     break;
     
-#ifdef HAS_VARIABLES
   case OPTYPE_REF:
     {
       short var = getvarfromref(instField(_pc, FIELD_OP), instField(_pc, FIELD_OPAND));
@@ -675,7 +713,6 @@ short Logo::step() {
     // and set the variable to that value.
     _variables[instField(_pc, FIELD_OP)]._value = _stack[_tos][FIELD_OP];
     break;
-#endif
     
   case OPTYPE_JUMP:
     if (!call(instField(_pc, FIELD_OP), instField(_pc, FIELD_OPAND))) {
@@ -734,7 +771,6 @@ short Logo::doarity() {
     return 0;
   }
   
-#ifdef HAS_VARIABLES
   if (instField(pc, FIELD_OPTYPE) == OPTYPE_JUMP) {
   
     DEBUG_OUT("jumping to %i", instField(pc, FIELD_OP));
@@ -749,7 +785,6 @@ short Logo::doarity() {
     
     return 0;
   }
-#endif
 
   DEBUG_RETURN(" not a builtin or word", 0);
   return LG_NOT_CALLABLE;
@@ -767,6 +802,10 @@ short Logo::dobuiltin() {
   
   // get the builtin.
   const LogoBuiltinWord *builtin = getbuiltin(instField(call, FIELD_OP), instField(call, FIELD_OPAND));
+  if (!builtin) {
+      // problem with the code, no actual builtin?
+      return LG_OUT_OF_CODE;
+  }
   short arity = builtin->_arity;
   
   if (arity == 0) {
@@ -808,7 +847,6 @@ short Logo::doreturn() {
   
   if (ret > 0) {
   
-#ifdef HAS_IFELSE
     if (_stack[ret-1][FIELD_OPTYPE] == SOPTYPE_CONDRET) {
   
       if (_stack[ret+1][FIELD_OPTYPE] == OPTYPE_INT && _stack[ret+1][FIELD_OP]) {
@@ -841,7 +879,6 @@ short Logo::doreturn() {
 
       return 0;
     }
-#endif // HAS_IFELSE
     
     if (_stack[ret-1][FIELD_OPTYPE] == SOPTYPE_MRETADDR) {
 
@@ -892,14 +929,14 @@ void Logo::findbuiltin(LogoString *str, short start, short slen, short *index, s
   *index = -1;
   *category = 0;
   for (short i=0; i<_builtincount; i++) {
-   if (str->ncmp(_builtins[i]._name, start, slen) == 0) {
+   if (strlen(_builtins[i]._name) == slen && str->ncmp(_builtins[i]._name, start, slen) == 0) {
       *index = i;
       return;
     }
   }
   
   for (short i=0; i<_corecount; i++) {
-    if (str->ncmp(_core[i]._name, start, slen) == 0) {
+    if (strlen(_core[i]._name) == slen && str->ncmp(_core[i]._name, start, slen) == 0) {
       *index = i;
       *category = 1;
       return;
@@ -908,23 +945,21 @@ void Logo::findbuiltin(LogoString *str, short start, short slen, short *index, s
   
 }
 
-short Logo::findfixed(LogoString *str, short start, short slen) {
+short Logo::findfixed(LogoString *stri, short strstart, short slen) {
 
-  DEBUG_IN_ARGS(Logo, "findfixed", "%i%i", start, slen);
+  DEBUG_IN_ARGS(Logo, "findfixed", "%i%i", strstart, slen);
   
   if (_fixedstrings) {
     short len = _fixedstrings->length();
-    short start2 = 0;
+    short start = 0;
     short index = 0;
     for (int i=0; i<len; i++) {
       if ((*_fixedstrings)[i] == '\n') {
-        _fixedstrings->ncpy(_tmpbuf, start2, i-start2);
-        _tmpbuf[i-start2] = 0;
-        if (str->ncmp(_tmpbuf, start, i-start2) == 0) {
+        if (_fixedstrings->ncmp2(stri, strstart, start, i-start) == 0) {
           DEBUG_RETURN(" found %i", index);
           return index;
         }
-        start2 = i + 1;
+        start = i + 1;
         index++;
       }
     }
@@ -934,30 +969,35 @@ short Logo::findfixed(LogoString *str, short start, short slen) {
   return -1;
 }
 
-bool Logo::fixedcmp(LogoString *stri, short start, short slen, tStrPool str) const {
+bool Logo::fixedcmp(LogoString *stri, short strstart, short slen, tStrPool str, tStrPool len) const {
 
+//  DEBUG_IN_ARGS(Logo, "fixedcmp", "%i%i%i%i", strstart, slen, str, len);
+  
   if (_fixedstrings) {
-    stri->ncpy((char *)_tmpbuf, start, slen);
-    short len = _fixedstrings->length();
+    short tlen = _fixedstrings->length();
     short start = 0;
     short index = 0;
-    for (int i=0; i<len; i++) {
+    for (int i=0; i<tlen; i++) {
       if ((*_fixedstrings)[i] == '\n') {
-        if (index == str && _fixedstrings->ncmp(_tmpbuf, start, slen) == 0) {
-          return true;
+        if (index == str) {
+          if (_fixedstrings->ncmp2(stri, strstart, start, min(slen, len)) == 0) {
+            return true;
+          }
         }
         start = i + 1;
         index++;
       }
     }
   }
-  
+
   return false;
   
 }
 
-bool Logo::getfixed(char *buf, short buflen, tStrPool str) const {
+bool Logo::getfixed(LogoStringResult *result, tStrPool str) const {
 
+//  DEBUG_IN_ARGS(Logo, "getfixed", "%i", str);
+  
   if (_fixedstrings && str < _fixedcount) {
     short start = 0;
     short index = 0;
@@ -965,9 +1005,10 @@ bool Logo::getfixed(char *buf, short buflen, tStrPool str) const {
     for (int i=0; i<len; i++) {
       if ((*_fixedstrings)[i] == '\n') {
         if (index == str) {
-          short l = min(buflen, i-start);
-          _fixedstrings->ncpy(buf, start, l);
-          buf[l] = 0;
+          result->_fixed = _fixedstrings;
+          result->_fixedstart = start;
+          result->_fixedlen = i-start;
+//          DEBUG_RETURN(" %b", true);
           return true;
         }
         start = i + 1;
@@ -976,6 +1017,7 @@ bool Logo::getfixed(char *buf, short buflen, tStrPool str) const {
     }
   }
   
+//  DEBUG_RETURN(" %b", false);
   return false;
 }
 
@@ -1003,6 +1045,14 @@ short Logo::addstring(LogoString *str, short start, short slen) {
   return stri;
 }
 
+short Logo::addstring(LogoStringResult *stri) {
+
+  if (stri->_fixed) {
+    return addstring(stri->_fixed, stri->_fixedstart, stri->_fixedlen);
+  }
+  return addstring(&stri->_simple, 0, stri->_simple.length());
+
+}
 
 bool Logo::stringcmp(LogoString *stri, short start, short slen, tStrPool str, tStrPool len) const {
 
@@ -1010,7 +1060,7 @@ bool Logo::stringcmp(LogoString *stri, short start, short slen, tStrPool str, tS
     return false;
   }
   
-  if (fixedcmp(stri, start, slen, str)) {
+  if (fixedcmp(stri, start, slen, str, len)) {
     return true;
   }
   
@@ -1018,20 +1068,37 @@ bool Logo::stringcmp(LogoString *stri, short start, short slen, tStrPool str, tS
   
 }
 
-void Logo::getstring(char *buf, short buflen, tStrPool str, tStrPool len) const {
+bool Logo::stringcmp(LogoStringResult *stri, tStrPool str, tStrPool len) const {
 
-  if (getfixed(buf, buflen, str)) {
-    return;
+//  DEBUG_IN(Logo, "stringcmp");
+  
+  if (stri->length() != len) {
+//    DEBUG_RETURN(" no len", 0);
+    return false;
   }
-
-  short l = min(buflen, len);
-  memmove(buf, _strings + (str - _fixedcount), l);
-  buf[l] = 0;
+  
+  if (stri->_fixed) {
+    return stringcmp(stri->_fixed, stri->_fixedstart, stri->_fixedlen, str, len);
+  }
+  else {
+    return stringcmp(&stri->_simple, 0, stri->_simple.length(), str, len);
+  }
   
 }
 
-#ifdef HAS_VARIABLES
-short Logo::findvariable2(LogoString *stri, short start, short slen) const {
+void Logo::getstring(LogoStringResult *stri, tStrPool str, tStrPool len) const {
+
+//  DEBUG_IN_ARGS(Logo, "getstring", "%i%i", str, len);
+  
+  if (getfixed(stri, str)) {
+    return;
+  }
+
+  stri->_simple.set(_strings + (str - _fixedcount), len);
+  
+}
+
+short Logo::findvariable(LogoString *stri, short start, short slen) const {
 
   DEBUG_IN_ARGS(Logo, "findvariable", "%i%i", start, _varcount);
   
@@ -1043,7 +1110,20 @@ short Logo::findvariable2(LogoString *stri, short start, short slen) const {
   
   return -1;
 }
-#endif
+short Logo::findvariable(LogoStringResult *stri) const {
+
+  DEBUG_IN_ARGS(Logo, "findvariable", "%i", _varcount);
+  
+  for (short i=0; i<_varcount; i++) {
+    if (stringcmp(stri, _variables[i]._name, _variables[i]._namelen)) {
+      DEBUG_RETURN(" %i", i);
+      return i;
+    }
+  }
+  
+  DEBUG_RETURN(" %i", -1);
+  return -1;
+}
 
 short Logo::geterr() {
 
@@ -1091,35 +1171,33 @@ void Logo::outofcode() {
 
 }
 
-#ifdef HAS_VARIABLES
-short Logo::defineintvar2(LogoString *stri, short start, short slen, short i) {
+short Logo::newintvar(short str, short slen, short n) {
 
-  DEBUG_IN_ARGS(Logo, "defineintvar2", "%i%i%i", start, slen, i);
-  
-  short var = findvariable2(stri, start, slen);
-  if (var < 0) {
-    short str = addstring(stri, start, slen);
-    if (str < 0) {
-      error(LG_OUT_OF_STRINGS);
-      return -1;
-    }
-    if (_varcount >= MAX_VARS) {
-      error(LG_TOO_MANY_VARS);
-      return -1;
-    }
-    var = _varcount;
-    _variables[_varcount]._name = str;
-    _variables[_varcount]._namelen = slen;
-    _varcount++;
+  if (str < 0) {
+    error(LG_OUT_OF_STRINGS);
+    return -1;
   }
-  
+  if (_varcount >= MAX_VARS) {
+    error(LG_TOO_MANY_VARS);
+    return -1;
+  }
+  short var = _varcount;
+  _varcount++;
+  _variables[var]._name = str;
+  _variables[var]._namelen = slen;
   _variables[var]._type = OPTYPE_INT;
-  _variables[var]._value = i;
+  _variables[var]._value = n;
   _variables[var]._valuelen = 0;
-    
   return var;
+  
 }
-#endif
+void Logo::setintvar(short var, short n) {
+
+  _variables[var]._type = OPTYPE_INT;
+  _variables[var]._value = n;
+  _variables[var]._valuelen = 0;
+  
+}
 
 void LogoScheduler::schedule(short ms) {
   if (!_provider) {
@@ -1210,21 +1288,33 @@ void Logo::dumpinst(LogoCompiler *compiler, const char *varname) const {
 
 }
 
+int Logo::stringslist(LogoCompiler *compiler, char *buf, int len) const {
+
+  int count = 0;
+  count += compiler->wordstringslist(buf, len);
+  count += varstringslist(compiler, buf, len);
+  return count;
+  
+}
+
 void Logo::dumpstringscode(LogoCompiler *compiler, const char *varname) const {
 
   cout << "static const char "<< varname << "[] PROGMEM = {" << endl;
-  compiler->dumpwordnamescode();
+  // these are in a particuar order
+  compiler->dumpwordstrings();
+  dumpvarsstrings(compiler);
   char name[32];
   for (short i=0; i<_nextcode; i++) {
     switch (_code[i][FIELD_OPTYPE]) {
     
     case OPTYPE_STRING:
-      getstring(name, sizeof(name), _code[i][FIELD_OP], _code[i][FIELD_OPAND]);
+      LogoStringResult result;
+      getstring(&result, _code[i][FIELD_OP], _code[i][FIELD_OPAND]);
+      result.ncpy(name, sizeof(name));
       cout << "\t\"" << name << "\\n\"" << endl;
       break;
     }
   }
-  dumpvarscode(compiler);
   cout << "};" << endl;
 }
 
@@ -1258,14 +1348,12 @@ void Logo::optypename(short optype) const {
   case OPTYPE_DOUBLE:
     cout << "OPTYPE_DOUBLE";
     break;
-#ifdef HAS_VARIABLES
   case OPTYPE_REF:
     cout << "OPTYPE_REF";
     break;
   case OPTYPE_POPREF:
     cout << "OPTYPE_POPREF";
     break;
-#endif
   case SOPTYPE_ARITY:
     cout << "SOPTYPE_ARITY";
     break;
@@ -1275,21 +1363,18 @@ void Logo::optypename(short optype) const {
   case SOPTYPE_MRETADDR:
     cout << "SOPTYPE_MRETADDR";
     break;
-#ifdef HAS_IFELSE
   case SOPTYPE_CONDRET:
     cout << "SOPTYPE_CONDRET";
     break;
   case SOPTYPE_SKIP:
     cout << "SOPTYPE_SKIP";
     break;
-#endif
   default:
     cout << "BAD_OP_" << optype;
   }
   
 }
 
-#ifdef HAS_VARIABLES
 void Logo::dumpvarscode(const LogoCompiler *compiler) const {
 
   if (!_varcount) {
@@ -1298,16 +1383,46 @@ void Logo::dumpvarscode(const LogoCompiler *compiler) const {
   
   for (short i=0; i<_varcount; i++) {
     compiler->printvarcode(_variables[i]);
+  }
+}
+
+void Logo::dumpvarsstrings(const LogoCompiler *compiler) const {
+
+  if (!_varcount) {
+    return;
+  }
+  
+  for (short i=0; i<_varcount; i++) {
+    compiler->printvarstring(_variables[i]);
     cout << endl;
   }
   
 }
-#endif // HAS_VARIABLES
-#endif // ARDUINO
+
+int Logo::varstringslist(LogoCompiler *compiler, char *buf, int len) const {
+
+  if (!_varcount) {
+    return 0;
+  }
+  
+  char name[LINE_LEN];
+  LogoStringResult result;
+  for (short i=0; i<_varcount; i++) {
+    getstring(&result, _variables[i]._name, _variables[i]._namelen);
+    result.ncpy(name, sizeof(name));
+    stringstream s;
+    s << name << endl;
+    strncat(buf, s.str().c_str(), min(len, s.str().length()));
+  }
+
+  return _varcount;
+  
+}
+
+#endif // !ARDUINO
 
 #if defined(LOGO_DEBUG) && !defined(ARDUINO)
 
-#ifdef HAS_VARIABLES
 void Logo::dumpvars(const LogoCompiler *compiler) const {
 
   cout << "vars: " << endl;
@@ -1325,16 +1440,42 @@ void Logo::dumpvars(const LogoCompiler *compiler) const {
   }
   
 }
-#endif // HAS_VARIABLES
+
+void Logo::dumpstaticwords(const LogoCompiler *compiler) const {
+
+  if (_staticcode) {
+    cout << "static words:" << endl;
+
+    char name[32];
+    int word = 0;
+    for (short i=0; i<MAX_CODE; i++) {
+      short type = instField(i, FIELD_OPTYPE);
+      if (type == SCOPTYPE_WORD) {
+        short op = instField(i, FIELD_OP);
+        short opand = instField(i, FIELD_OPAND);
+        LogoStringResult result;
+        getfixed(&result, word);
+        result.ncpy(name);
+        compiler->entab(1);
+        cout << name << " (" << op << ") "<< opand << endl;
+        word++;
+      }
+    }
+  }
+  
+}
 
 void Logo::dumpcode(const LogoCompiler *compiler, bool all) const {
 
-  if (_acode) {
+  if (_staticcode) {
     cout << "static code: pc (" << (short)_pc << ")" << endl;
     
     for (short i=0; i<MAX_CODE; i++) {
-      cout << i;
       short type = instField(i, FIELD_OPTYPE);
+      if (type == SCOPTYPE_WORD) {
+        break;
+      }
+      cout << i;
       short op = instField(i, FIELD_OP);
       short opand = instField(i, FIELD_OPAND);
       if (type == OPTYPE_JUMP) {
@@ -1356,6 +1497,7 @@ void Logo::dumpcode(const LogoCompiler *compiler, bool all) const {
   if (!_nextcode) {
     compiler->entab(1);
     cout << "empty" << endl;
+    return;
   }
 
   for (short i=0; i<(all ? MAX_CODE : _nextcode); i++) {
@@ -1411,19 +1553,22 @@ void LogoWords::err(Logo &logo) {
   
 }
 
-#ifdef HAS_VARIABLES
 short LogoWords::makeArity = 2;
 
 void LogoWords::make(Logo &logo) {
 
   short n = logo.popint();
-  char s[WORD_LEN];
-  logo.popstring(s, sizeof(s));
-  LogoSimpleString str(s);
-  logo.defineintvar2(&str, 0, str.length(), n);
-  
+  LogoStringResult result;
+  logo.popstring(&result);
+  short var = logo.findvariable(&result);
+  if (var < 0) {
+    var = logo.newintvar(logo.addstring(&result), result.length(), n);
+  }
+  else {
+    logo.setintvar(var, n);    
+  }
+
 }
-#endif
 
 short LogoWords::foreverArity = 0;
 
@@ -1445,7 +1590,6 @@ void LogoWords::repeat(Logo &logo) {
 
 }
 
-#ifdef HAS_IFELSE
 bool LogoWords::pushliterals(Logo &logo, short rel) {
 
   if (logo.codeisint(rel)) {
@@ -1531,8 +1675,6 @@ void LogoWords::ifelse(Logo &logo) {
 //  logo.dumpstack(false);
   
 }
-
-#endif
 
 short LogoWords::waitArity = 1;
 

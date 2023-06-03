@@ -7,7 +7,7 @@
 		<string>0FFA9C2F-42E6-41F1-8AF8-4FAEBB7B8AFB</string>
 		<string>9D2C926E-5F45-4713-944C-EF42B726A4AD</string>
 		<string>69D3D806-5777-4DF6-97E1-40712B10CABC</string>
-		<string>84F92782-67FF-4848-9641-7AF2B039DF95</string>
+		<string>1C2FC101-37E7-4613-A38E-26FF4F265652</string>
 		<string>0F252CB5-3EF5-4B07-A53C-1CA3A730BC8E</string>
 		<string>2C76D6E0-1404-4FDD-A3EF-1FB730E2887A</string>
 		<string>2B2DDF54-11C4-4418-82DC-5548E914358E</string>
@@ -17,13 +17,65 @@
 		<string>48D9D3DF-432B-45C6-904E-B3812486B0E6</string>
 		<string>5C76B986-8637-4C38-BF38-D708DAEA4DCA</string>
 		<string>D063C381-B469-4753-BBFA-B036DEAED28A</string>
+		<string>028B513D-82C6-49F5-B4BF-22AB2B3A027A</string>
 		<string>898005D8-D6FB-4F4D-9D4A-A37B38B31F32</string>
+		<string>9E4D950E-C162-4451-90E3-D5FF659A2553</string>
 		<string>D3DA77D0-0731-4D90-B371-0EAF21A13745</string>
 		<string>D71FF120-7961-4F38-956D-C487D3A9F6E3</string>
 		<string>212CDED6-6F93-4E19-863C-3996F7DBC9A4</string>
 	</array>
 	<key>ProjectItems</key>
 	<dict>
+		<key>028B513D-82C6-49F5-B4BF-22AB2B3A027A</key>
+		<dict>
+			<key>ItemData</key>
+			<dict>
+				<key>BookmarkData</key>
+				<data>
+				Ym9vaygDAAAAAAQQMAAAAFuHk3EFNzO3Iul3AhFZH3X6
+				Z9/5ST8/XaPb1jY9GiB2JAIAAAQAAAADAwAAAAgAKAUA
+				AAABAQAAVXNlcnMAAAAEAAAAAQEAAHBhdWwDAAAAAQEA
+				AERldgAHAAAAAQEAAEFyZHVpbm8ACQAAAAEBAABsaWJy
+				YXJpZXMAAAAIAAAAAQEAAHRpbnlsb2dvBQAAAAEBAAB0
+				b29scwAAABwAAAABBgAAEAAAACAAAAAsAAAAOAAAAEgA
+				AABcAAAAbAAAAAgAAAAEAwAA2FoAAAAAAAAIAAAABAMA
+				ALwyBAAAAAAACAAAAAQDAABGgxYAAAAAAAgAAAAEAwAA
+				QZQmAAAAAAAIAAAABAMAAL+UJgAAAAAACAAAAAQDAAAl
+				wVAKAAAAAAgAAAAEAwAA4HxwCgAAAAAcAAAAAQYAAKAA
+				AACwAAAAwAAAANAAAADgAAAA8AAAAAABAAAIAAAAAAQA
+				AEHFFPe4n//eGAAAAAECAAACAAAAAAAAAA8AAAAAAAAA
+				AAAAAAAAAAAIAAAABAMAAAUAAAAAAAAABAAAAAMDAAD1
+				AQAACAAAAAEJAABmaWxlOi8vLwwAAAABAQAATWFjaW50
+				b3NoIEhECAAAAAQDAAAAkIKW5wAAAAgAAAAABAAAQcTs
+				S70AAAAkAAAAAQEAAEExNEU5RjM4LUFDQUQtNEVGQi05
+				NENBLTM0NDU3MUZFNUM2ORgAAAABAgAAgQAAAAEAAADv
+				EwAAAQAAAAAAAAAAAAAAAQAAAAEBAAAvAAAAAAAAAAEF
+				AADMAAAA/v///wEAAAAAAAAAEAAAAAQQAAB8AAAAAAAA
+				AAUQAAAQAQAAAAAAABAQAABEAQAAAAAAAEAQAAA0AQAA
+				AAAAAAIgAAAQAgAAAAAAAAUgAACAAQAAAAAAABAgAACQ
+				AQAAAAAAABEgAADEAQAAAAAAABIgAACkAQAAAAAAABMg
+				AAC0AQAAAAAAACAgAADwAQAAAAAAADAgAAAcAgAAAAAA
+				AAHAAABkAQAAAAAAABHAAAAgAAAAAAAAABLAAAB0AQAA
+				AAAAABDQAAAEAAAAAAAAAA==
+				</data>
+				<key>FileURL</key>
+				<string>file:///Users/paul/Dev/Arduino/libraries/tinylogo/tools/</string>
+				<key>HasSecurityScope</key>
+				<true/>
+				<key>RelativePath</key>
+				<string>./tools</string>
+				<key>TypeID</key>
+				<string>_CFileLocator</string>
+				<key>Version</key>
+				<integer>1</integer>
+			</dict>
+			<key>ItemName</key>
+			<string>tools</string>
+			<key>ItemType</key>
+			<string>FolderReference</string>
+			<key>UserOverrideItemName</key>
+			<true/>
+		</dict>
 		<key>0F252CB5-3EF5-4B07-A53C-1CA3A730BC8E</key>
 		<dict>
 			<key>ItemData</key>
@@ -125,6 +177,56 @@
 			<string>arduinodebug.hpp</string>
 			<key>ItemType</key>
 			<string>FileReference</string>
+			<key>UserOverrideItemName</key>
+			<true/>
+		</dict>
+		<key>1C2FC101-37E7-4613-A38E-26FF4F265652</key>
+		<dict>
+			<key>ItemData</key>
+			<dict>
+				<key>BookmarkData</key>
+				<data>
+				Ym9vayQDAAAAAAQQMAAAAKsgBcjrHbGe6w9yhMz8IUNn
+				IGh/HPa/UkwThPr8kCigIAIAAAQAAAADAwAAAAgAKAUA
+				AAABAQAAVXNlcnMAAAAEAAAAAQEAAHBhdWwDAAAAAQEA
+				AERldgAHAAAAAQEAAEFyZHVpbm8ACQAAAAEBAABsaWJy
+				YXJpZXMAAAAIAAAAAQEAAHRpbnlsb2dvAwAAAAEBAABs
+				ZWQAHAAAAAEGAAAQAAAAIAAAACwAAAA4AAAASAAAAFwA
+				AABsAAAACAAAAAQDAADYWgAAAAAAAAgAAAAEAwAAvDIE
+				AAAAAAAIAAAABAMAAEaDFgAAAAAACAAAAAQDAABBlCYA
+				AAAAAAgAAAAEAwAAv5QmAAAAAAAIAAAABAMAACXBUAoA
+				AAAACAAAAAQDAAD3TUIKAAAAABwAAAABBgAAnAAAAKwA
+				AAC8AAAAzAAAANwAAADsAAAA/AAAAAgAAAAABAAAQcUM
+				eAF1Q3gYAAAAAQIAAAIAAAAAAAAADwAAAAAAAAAAAAAA
+				AAAAAAgAAAAEAwAABQAAAAAAAAAEAAAAAwMAAPUBAAAI
+				AAAAAQkAAGZpbGU6Ly8vDAAAAAEBAABNYWNpbnRvc2gg
+				SEQIAAAABAMAAACQgpbnAAAACAAAAAAEAABBxOxLvQAA
+				ACQAAAABAQAAQTE0RTlGMzgtQUNBRC00RUZCLTk0Q0Et
+				MzQ0NTcxRkU1QzY5GAAAAAECAACBAAAAAQAAAO8TAAAB
+				AAAAAAAAAAAAAAABAAAAAQEAAC8AAAAAAAAAAQUAAMwA
+				AAD+////AQAAAAAAAAAQAAAABBAAAHgAAAAAAAAABRAA
+				AAwBAAAAAAAAEBAAAEABAAAAAAAAQBAAADABAAAAAAAA
+				AiAAAAwCAAAAAAAABSAAAHwBAAAAAAAAECAAAIwBAAAA
+				AAAAESAAAMABAAAAAAAAEiAAAKABAAAAAAAAEyAAALAB
+				AAAAAAAAICAAAOwBAAAAAAAAMCAAABgCAAAAAAAAAcAA
+				AGABAAAAAAAAEcAAACAAAAAAAAAAEsAAAHABAAAAAAAA
+				ENAAAAQAAAAAAAAA
+				</data>
+				<key>FileURL</key>
+				<string>file:///Users/paul/Dev/Arduino/libraries/tinylogo/led/</string>
+				<key>HasSecurityScope</key>
+				<true/>
+				<key>RelativePath</key>
+				<string>./led</string>
+				<key>TypeID</key>
+				<string>_CFileLocator</string>
+				<key>Version</key>
+				<integer>1</integer>
+			</dict>
+			<key>ItemName</key>
+			<string>led</string>
+			<key>ItemType</key>
+			<string>FolderReference</string>
 			<key>UserOverrideItemName</key>
 			<true/>
 		</dict>
@@ -465,11 +567,11 @@
 				AAAAABDQAAAEAAAAAAAAAA==
 				</data>
 				<key>FileURL</key>
-				<string>file:///Users/paul/Dev/Arduino/libraries/tinylogo/i2c_logo/</string>
+				<string>file:///Users/paul/.Trash/i2c_logo/</string>
 				<key>HasSecurityScope</key>
 				<true/>
 				<key>RelativePath</key>
-				<string>./i2c_logo</string>
+				<string>../../../../.Trash/i2c_logo</string>
 				<key>TypeID</key>
 				<string>_CFileLocator</string>
 				<key>Version</key>
@@ -529,56 +631,6 @@
 			<string>logocompiler.cpp</string>
 			<key>ItemType</key>
 			<string>FileReference</string>
-			<key>UserOverrideItemName</key>
-			<true/>
-		</dict>
-		<key>84F92782-67FF-4848-9641-7AF2B039DF95</key>
-		<dict>
-			<key>ItemData</key>
-			<dict>
-				<key>BookmarkData</key>
-				<data>
-				Ym9vazADAAAAAAQQMAAAAGIbNP6RoUl1xEPcOBSGBpT4
-				NmorKUqr3oBkntqBEKGSLAIAAAQAAAADAwAAAAgAKAUA
-				AAABAQAAVXNlcnMAAAAEAAAAAQEAAHBhdWwDAAAAAQEA
-				AERldgAHAAAAAQEAAEFyZHVpbm8ACQAAAAEBAABsaWJy
-				YXJpZXMAAAAIAAAAAQEAAHRpbnlsb2dvDwAAAAEBAABp
-				MmNfc2VyaWFsX2xvZ28AHAAAAAEGAAAQAAAAIAAAACwA
-				AAA4AAAASAAAAFwAAABsAAAACAAAAAQDAADYWgAAAAAA
-				AAgAAAAEAwAAvDIEAAAAAAAIAAAABAMAAEaDFgAAAAAA
-				CAAAAAQDAABBlCYAAAAAAAgAAAAEAwAAv5QmAAAAAAAI
-				AAAABAMAACXBUAoAAAAACAAAAAQDAAD3TUIKAAAAABwA
-				AAABBgAAqAAAALgAAADIAAAA2AAAAOgAAAD4AAAACAEA
-				AAgAAAAABAAAQcUMeAF1Q3gYAAAAAQIAAAIAAAAAAAAA
-				DwAAAAAAAAAAAAAAAAAAAAgAAAAEAwAABQAAAAAAAAAE
-				AAAAAwMAAPUBAAAIAAAAAQkAAGZpbGU6Ly8vDAAAAAEB
-				AABNYWNpbnRvc2ggSEQIAAAABAMAAACQgpbnAAAACAAA
-				AAAEAABBxOxLvQAAACQAAAABAQAAQTE0RTlGMzgtQUNB
-				RC00RUZCLTk0Q0EtMzQ0NTcxRkU1QzY5GAAAAAECAACB
-				AAAAAQAAAO8TAAABAAAAAAAAAAAAAAABAAAAAQEAAC8A
-				AAAAAAAAAQUAAMwAAAD+////AQAAAAAAAAAQAAAABBAA
-				AIQAAAAAAAAABRAAABgBAAAAAAAAEBAAAEwBAAAAAAAA
-				QBAAADwBAAAAAAAAAiAAABgCAAAAAAAABSAAAIgBAAAA
-				AAAAECAAAJgBAAAAAAAAESAAAMwBAAAAAAAAEiAAAKwB
-				AAAAAAAAEyAAALwBAAAAAAAAICAAAPgBAAAAAAAAMCAA
-				ACQCAAAAAAAAAcAAAGwBAAAAAAAAEcAAACAAAAAAAAAA
-				EsAAAHwBAAAAAAAAENAAAAQAAAAAAAAA
-				</data>
-				<key>FileURL</key>
-				<string>file:///Users/paul/Dev/Arduino/libraries/tinylogo/i2c_serial_logo/</string>
-				<key>HasSecurityScope</key>
-				<true/>
-				<key>RelativePath</key>
-				<string>./i2c_serial_logo</string>
-				<key>TypeID</key>
-				<string>_CFileLocator</string>
-				<key>Version</key>
-				<integer>1</integer>
-			</dict>
-			<key>ItemName</key>
-			<string>i2c_serial_logo</string>
-			<key>ItemType</key>
-			<string>FolderReference</string>
 			<key>UserOverrideItemName</key>
 			<true/>
 		</dict>
@@ -681,6 +733,56 @@
 			<string>arduinotimeprovider.hpp</string>
 			<key>ItemType</key>
 			<string>FileReference</string>
+			<key>UserOverrideItemName</key>
+			<true/>
+		</dict>
+		<key>9E4D950E-C162-4451-90E3-D5FF659A2553</key>
+		<dict>
+			<key>ItemData</key>
+			<dict>
+				<key>BookmarkData</key>
+				<data>
+				Ym9vayQDAAAAAAQQMAAAAAk73CvrBUStciwG8gjEoTRl
+				38eNijHbxn7NyaJr4PpOIAIAAAQAAAADAwAAAAgAKAUA
+				AAABAQAAVXNlcnMAAAAEAAAAAQEAAHBhdWwDAAAAAQEA
+				AERldgAHAAAAAQEAAEFyZHVpbm8ACQAAAAEBAABsaWJy
+				YXJpZXMAAAAIAAAAAQEAAHRpbnlsb2dvBAAAAAEBAABs
+				b2dvHAAAAAEGAAAQAAAAIAAAACwAAAA4AAAASAAAAFwA
+				AABsAAAACAAAAAQDAADYWgAAAAAAAAgAAAAEAwAAvDIE
+				AAAAAAAIAAAABAMAAEaDFgAAAAAACAAAAAQDAABBlCYA
+				AAAAAAgAAAAEAwAAv5QmAAAAAAAIAAAABAMAACXBUAoA
+				AAAACAAAAAQDAADfMG8KAAAAABwAAAABBgAAnAAAAKwA
+				AAC8AAAAzAAAANwAAADsAAAA/AAAAAgAAAAABAAAQcUU
+				0LfZq3UYAAAAAQIAAAIAAAAAAAAADwAAAAAAAAAAAAAA
+				AAAAAAgAAAAEAwAABQAAAAAAAAAEAAAAAwMAAPUBAAAI
+				AAAAAQkAAGZpbGU6Ly8vDAAAAAEBAABNYWNpbnRvc2gg
+				SEQIAAAABAMAAACQgpbnAAAACAAAAAAEAABBxOxLvQAA
+				ACQAAAABAQAAQTE0RTlGMzgtQUNBRC00RUZCLTk0Q0Et
+				MzQ0NTcxRkU1QzY5GAAAAAECAACBAAAAAQAAAO8TAAAB
+				AAAAAAAAAAAAAAABAAAAAQEAAC8AAAAAAAAAAQUAAMwA
+				AAD+////AQAAAAAAAAAQAAAABBAAAHgAAAAAAAAABRAA
+				AAwBAAAAAAAAEBAAAEABAAAAAAAAQBAAADABAAAAAAAA
+				AiAAAAwCAAAAAAAABSAAAHwBAAAAAAAAECAAAIwBAAAA
+				AAAAESAAAMABAAAAAAAAEiAAAKABAAAAAAAAEyAAALAB
+				AAAAAAAAICAAAOwBAAAAAAAAMCAAABgCAAAAAAAAAcAA
+				AGABAAAAAAAAEcAAACAAAAAAAAAAEsAAAHABAAAAAAAA
+				ENAAAAQAAAAAAAAA
+				</data>
+				<key>FileURL</key>
+				<string>file:///Users/paul/Dev/Arduino/libraries/tinylogo/logo/</string>
+				<key>HasSecurityScope</key>
+				<true/>
+				<key>RelativePath</key>
+				<string>./logo</string>
+				<key>TypeID</key>
+				<string>_CFileLocator</string>
+				<key>Version</key>
+				<integer>1</integer>
+			</dict>
+			<key>ItemName</key>
+			<string>logo</string>
+			<key>ItemType</key>
+			<string>FolderReference</string>
 			<key>UserOverrideItemName</key>
 			<true/>
 		</dict>
@@ -867,11 +969,11 @@
 				eAEAAAAAAAAQ0AAABAAAAAAAAAA=
 				</data>
 				<key>FileURL</key>
-				<string>file:///Users/paul/Dev/Arduino/libraries/tinylogo/serial_logo/</string>
+				<string>file:///Users/paul/.Trash/serial_logo/</string>
 				<key>HasSecurityScope</key>
 				<true/>
 				<key>RelativePath</key>
-				<string>./serial_logo</string>
+				<string>../../../../.Trash/serial_logo</string>
 				<key>TypeID</key>
 				<string>_CFileLocator</string>
 				<key>Version</key>

@@ -58,6 +58,69 @@ One nice feature of the LOGO code is that implements WAIT the correct way withou
 
 You can read more about logo here https://en.wikipedia.org/wiki/Logo_(programming_language)
 
+### Using in your sketch
+
+Declare Logo like this:
+
+You need to define your "primitives" which can do the various physical things your sketch needs to do.
+So to flash an LED on or off it might be:
+
+```
+void ledOn(Logo &logo) {
+  digitalWrite(LED_PIN, HIGH);
+}
+void ledOff(Logo &logo) {
+  digitalWrite(LED_PIN, LOW);
+}
+```
+
+Now you can declare the logo runtime and compiler ready to use.
+
+```
+LogoBuiltinWord builtins[] = {
+  { "ON", &ledOn },
+  { "OFF", &ledOff }
+};
+ArduinoTimeProvider time;
+Logo logo(builtins, sizeof(builtins), &time, Logo::core);
+LogoCompiler compiler(&logo);
+```
+
+Now in your "setup()", compile your LOGO program:
+
+```
+compiler.compiler("TO FLASH; ON WAIT 100 OFF WAIT 100; END;");
+compiler.compiler("TO GO; FOREVER FLASH; END;");
+compiler.compiler("TO STOP; OFF; END;");
+int err = logo.geterr();
+if (err) {
+  ... do something with the error.
+}
+```
+
+And then your loop would get the string "FLASH", "GO" or "STOP" and just feed it
+to logo someline like this:
+
+```
+  if (you have a command) {
+    logo.resetcode();
+    compiler.compile(command);
+    int err = logo.geterr();
+    if (err) {
+      ... do something with the error.
+    }
+  }
+```
+
+And near the bottom of your loop just "step" logo and it will "do" the code :-)
+
+```
+  int err = logo.step();
+  if (err && err != LG_STOP) {
+      ... do something with the error.
+  }
+```
+
 ### LOGO syntax
 
 #### word definitions
@@ -173,6 +236,40 @@ LITWORD := the name of a word
 
 +, -, * and / all work as usual but no parenthesis and just left to right.
 
+## Static code
+
+Using the compiler on the arduino takes a lot of program space up. There is a tool called "flashcode" that will
+take a logo program and outpu a compiled version of that program taht can exist entirely in the 
+flash memory of the Arduino.
+
+To build the tool see below in development.
+
+To use it:
+
+$ tools/build/flashcode logo/rgb.lgo --name rgb
+
+Which will output the runtime code and strings list as variables you simply include in your sketch. Then
+you can dispense with the compiler completely and use your code like this:
+
+```
+ArduinoFlashString strings(strings_led);
+ArduinoFlashCode code((const PROGMEM short *)code_led);
+Logo logo(builtins, sizeof(builtins), &time, Logo::core, &strings, &code);
+```
+
+And now instead of COMPILING your commands into the runtime in your loop, you can call any of the
+words your have defined or primitives directly with
+
+```
+    int err = logo.callword(cmdbuf);
+    if (err) {
+      ... do something with the error.
+    }
+```
+
+This will allow your to fit quite large programs into yoru arduino, and also allow the programs
+to come from an actual text file with comments etc.
+
 ## Development
 
 The development process for all of this code used a normal Linux environment with the BOOST
@@ -240,6 +337,17 @@ To turn on all the debugging for the various things, each header has something l
 
 That you can comment out BUT while it's commented out the code won't build on the Arduino.
 
+To build the tools, rather than the tests, just:
+
+```
+$ cd tools
+$ mkdir build
+$ cd build
+$ cmake ..
+$ make
+$ make test
+```
+
 This stuff is just for the development environment.
   
 ## Related discussions
@@ -248,23 +356,9 @@ https://forum.arduino.cc/t/how-to-properly-use-wire-onreceive/891195/12
 
 ## Current development focus
 
-### Moving code into flash memory.
-
-The RGB LED example is starting to be fleshed out and useful but 
-2K of dynamic memory isn't a whole lot :-)
-
-We can put the strings and the actual PROGRAM code into flash memory now, but I'm working
-on being able to put the actual code in flash memory.
-
-So the basic idea is you write your code incrementally and use a simple tool to compile the
-code to an array of data which you include in the sketch as Flash memory.
-
-Then you can still add new words which go into the variable space.
-
 ### OUTPUT from the Arduino to the PI
 
 Actually pretty simple, just need examples.
-
 
 ## Change Log
 
@@ -280,3 +374,6 @@ to allow strings and code to be in FLASH memory.
 
 ### 30 May 2023
 - Rewrite scanning to not need buffers in simple cases (still needed for sentences)
+
+### 3 Jun 2023
+- Major rewrite to allow compilation and storage of the program in the flash memory of the arduino.

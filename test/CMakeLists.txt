@@ -13,7 +13,7 @@
 
 cmake_minimum_required(VERSION 3.5)
 
-project (flashcmd)
+project (logotest)
   find_package(Boost COMPONENTS unit_test_framework REQUIRED)
   add_definitions(-DBOOST_ALL_DYN_LINK) 
   enable_testing()

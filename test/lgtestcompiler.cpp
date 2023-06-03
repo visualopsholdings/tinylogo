@@ -87,3 +87,17 @@ BOOST_AUTO_TEST_CASE( dosentencesStart )
   BOOST_CHECK_EQUAL(str, "&0 &1 &2 &3;bbbb");
   
 }
+
+BOOST_AUTO_TEST_CASE( findbuiltindef )
+{
+  cout << "=== findbuiltindef ===" << endl;
+  
+  Logo logo(0, 0, 0);
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("BUILTIN(ABC,DEFG)");
+  compiler.compile("DEFG");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+  
+}

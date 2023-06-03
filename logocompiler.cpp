@@ -28,11 +28,13 @@ void LogoCompiler::outstate() const {
 
 #ifndef ARDUINO
 #include <iostream>
+#include <sstream>
 using namespace std;
 #endif
 
 #include <stdlib.h>
 #include <ctype.h>
+#include <math.h>
 
 LogoCompiler::LogoCompiler(Logo * logo) :
   _logo(logo),
@@ -40,6 +42,8 @@ LogoCompiler::LogoCompiler(Logo * logo) :
   _jump(NO_JUMP),
   _sentencecount(0), _wordcount(0) {
 
+  _builtindef[0] = 0;
+  
 }
 
 void LogoCompiler::reset() {
@@ -89,11 +93,43 @@ short LogoString::find(char c, size_t offset, size_t len) {
   
 }
 
+void LogoCompiler::findbuiltindef(LogoString *stri, short wordstart, short wordlen, short *index, short *category) {
+
+  DEBUG_IN_ARGS(LogoCompiler, "findbuiltindef", "%i%i", wordstart, wordlen);
+
+#ifdef LOGO_DEBUG
+  stri->dump("findbuiltindef", wordstart, wordlen);
+#endif
+  
+  *index = -1;
+  *category = 0;
+
+  short i = 0;
+  const char *end = _builtindef;
+  while (*end) {
+    const char *start = end;
+    while (*end && *end != ',') {
+      end++;
+    }
+    if (*end == ',' || !(*end)) {
+      if (stri->ncmp(start, wordstart, wordlen) == 0) {
+        *category = 0;
+        *index = i;
+        DEBUG_OUT(" found %i", *index);
+      }
+      if (*end) {
+        end++;
+      }
+    }
+    i++;
+  }
+}
+
 void LogoCompiler::compileword(tJump *next, LogoString *stri, short wordstart, short wordlen, short op) {
 
   DEBUG_IN_ARGS(LogoCompiler, "compileword", "%i%i%i", wordstart, wordlen, op);
 
-#ifdef DEBUG_LOGO  
+#ifdef LOGO_DEBUG  
   stri->dump("word", wordstart, wordlen);
 #endif
 
@@ -103,8 +139,13 @@ void LogoCompiler::compileword(tJump *next, LogoString *stri, short wordstart, s
     return;
   }
   
-  short index, category;
-  _logo->findbuiltin(stri, wordstart, wordlen, &index, &category);
+  short index = -1, category = 0;
+  if (_builtindef[0]) {
+    findbuiltindef(stri, wordstart, wordlen, &index, &category);
+  }
+  if (index == -1) {
+    _logo->findbuiltin(stri, wordstart, wordlen, &index, &category);
+  }
   
   if (index >= 0) {
     _logo->addop(next, OPTYPE_BUILTIN, index, category);
@@ -129,7 +170,6 @@ void LogoCompiler::compileword(tJump *next, LogoString *stri, short wordstart, s
     return;
   }
   
-#ifdef HAS_VARIABLES
   if ((*stri)[wordstart] == ':') {
     short len = wordlen - 1;
     short str = _logo->addstring(stri, wordstart+1, len);
@@ -141,7 +181,6 @@ void LogoCompiler::compileword(tJump *next, LogoString *stri, short wordstart, s
     _logo->addop(next, OPTYPE_REF, str, len);
     return;
   }
-#endif
 
   if (isnum(stri, wordstart, wordlen)) {
     _logo->addop(next, OPTYPE_INT, stri->toi(wordstart, wordlen));
@@ -191,6 +230,17 @@ short LogoCompiler::findword(LogoString *str, short wordstart, short wordlen) co
   return -1;
 }
 
+short LogoCompiler::findword(LogoStringResult *str) const {
+
+  for (short i=0; i<_wordcount; i++) {
+    if (_logo->stringcmp(str, _words[i]._name, _words[i]._namelen)) {
+      return i;
+    }
+  }
+  
+  return -1;
+}
+
 void LogoCompiler::finishword(short word, short wordlen, short jump, short arity) {
 
   DEBUG_IN_ARGS(LogoCompiler, "finishword", "%i%i%i%i", word, wordlen, jump, arity);
@@ -205,9 +255,7 @@ void LogoCompiler::finishword(short word, short wordlen, short jump, short arity
   _words[_wordcount]._name = word;
   _words[_wordcount]._namelen = wordlen;
   _words[_wordcount]._jump = jump;
-#ifdef HAS_VARIABLES
   _words[_wordcount]._arity = arity;
-#endif
   _wordcount++;
 
 }
@@ -251,9 +299,7 @@ void LogoCompiler::dosentences(char *buf, short len, const char *start) {
     _sentencecount++;
 
     LogoSimpleString str1(_sentencebuf);
-//    short wlen = strlen(_sentencebuf);
     short wlen = str1.length();
-//    short word = _logo->addstring(_sentencebuf, wlen);
     short word = _logo->addstring(&str1, 0, wlen);
     if (word < 0) {
       _logo->error(LG_OUT_OF_STRINGS);
@@ -294,8 +340,48 @@ void LogoCompiler::dosentences(char *buf, short len, const char *start) {
   }
 }
 
-#ifdef DEBUG_LOGO  
-void LogoString::dump(const char *msg, short start, short len) {
+void LogoSimpleString::ncpy(char *to, size_t offset, size_t len) const { 
+  strncpy(to, _code + offset, len);
+  to[len] = 0;
+}
+
+int LogoSimpleString::ncmp(const char *to, size_t offset, size_t len) const { 
+  return strncmp(to, _code + offset, len);
+}
+
+double LogoSimpleString::tof() {
+  return atof(_code);
+}
+
+short LogoString::ncmp2(LogoString *to, short offsetto, short offset, short len) const {
+
+//    to->dump("ncmp2 to", 0, to->length());
+//    dump("ncmp2", offset, len);
+  
+	if (len == 0 || to->length() == 0) {
+		return 0;
+	}
+	short i = offset, j=offsetto;
+	short imax = length();
+	short jmax = to->length();
+	do {
+		if ((*this)[i] != (*to)[j]) {
+      return -1;
+		}
+		if ((*this)[i++] == 0) {
+			break;
+		}
+		j++;
+		if (i > imax || j > jmax) {
+      return -1;
+		}
+	} while (--len != 0);
+	
+	return 0;
+}
+
+#ifdef LOGO_DEBUG
+void LogoString::dump(const char *msg, short start, short len) const {
   cout << msg << " {";
   for (int i=0, j=start; i<len; i++, j++) {
     cout << (*this)[j];
@@ -314,16 +400,18 @@ void LogoCompiler::compile(LogoString *str) {
   while (nextline >= 0) {
     nextline = scanfor(&linestart, &linelen, str, nextline, (len-nextline), true);
     
-    if (nextline == -2) {
-      _logo->error(LG_LINE_TOO_LONG);
-      break;
-    }
     if (linelen == 0) {
       break;
     }
-#ifdef DEBUG_LOGO  
+#ifdef LOGO_DEBUG  
     str->dump("line", linestart, linelen);
 #endif
+
+    // skip comments.
+    if ((*str)[linestart] == '#') {
+      continue;
+    }
+    
     // build and replace sentences in the line.
     if ((*str)[linestart] == '[') {
       // replacing sentences COULD modify the line.
@@ -346,7 +434,7 @@ void LogoCompiler::compilewords(LogoString *str, short start, short len, bool de
 
   DEBUG_IN_ARGS(LogoCompiler, "compilewords", "%i%i%b", start, len, define);
   
-#ifdef DEBUG_LOGO  
+#ifdef LOGO_DEBUG  
   str->dump("compiling", start, len);
 #endif
   
@@ -366,10 +454,6 @@ void LogoCompiler::compilewords(LogoString *str, short start, short len, bool de
     }
     
     nextword = scanfor(&wordstart, &wordlen, str, nextword, (start+len)-nextword, false);
-    if (nextword == -2) {
-      _logo->error(LG_LINE_TOO_LONG);
-      return;
-    }
     if (define) {
       if (!dodefine(str, wordstart, wordlen, nextword == -1)) {
         if (_logo->_nextcode >= START_JCODE) {
@@ -394,7 +478,7 @@ bool LogoCompiler::dodefine(LogoString *str, short wordstart, short wordlen, boo
 
   DEBUG_IN_ARGS(LogoCompiler, "dodefine", "%i%i%b%b%b", wordstart, wordlen, _inword, _inwordargs, eol);
   
-#ifdef DEBUG_LOGO  
+#ifdef LOGO_DEBUG  
   str->dump("defining", wordstart, wordlen);
 #endif
   
@@ -403,6 +487,12 @@ bool LogoCompiler::dodefine(LogoString *str, short wordstart, short wordlen, boo
     return false;
   }
   
+  if (str->ncmp("BUILTIN", wordstart, wordstart+7) == 0) {
+    str->ncpy(_builtindef, wordstart+8, wordlen-9);
+    DEBUG_RETURN(" builtin %b", true);
+    return true;
+  }
+
   if (str->ncmp("TO", wordstart, wordlen) == 0) {
     _inword = true;
     _inwordargs = false;
@@ -465,9 +555,14 @@ bool LogoCompiler::dodefine(LogoString *str, short wordstart, short wordlen, boo
   }
   
   if (_inwordargs) {
-#ifdef HAS_VARIABLES
     if ((*str)[wordstart] == ':') {
-      short var = _logo->defineintvar2(str, wordstart+1, wordlen-1, 0);
+      short var = _logo->findvariable(str, wordstart+1, wordlen-1);
+      if (var < 0) {
+        var = _logo->newintvar(_logo->addstring(str, wordstart+1, wordlen-1), wordlen-1, 0);
+      }
+      else {
+        _logo->setintvar(var, 0);
+      }
       _logo->addop(&_logo->_nextjcode, OPTYPE_POPREF, var);
       _wordarity++;
       if (eol) {
@@ -476,7 +571,6 @@ bool LogoCompiler::dodefine(LogoString *str, short wordstart, short wordlen, boo
       DEBUG_RETURN(" %b", true);
       return true;
     }
-#endif
     _logo->error(LG_EXTRA_IN_DEFINE);
     DEBUG_RETURN(" too many in define %b", true);
     return true;
@@ -501,7 +595,7 @@ short LogoCompiler::scanfor(short *strstart, short *strsize, LogoString *str, sh
 
   DEBUG_IN_ARGS(LogoCompiler, "scanfor", "%i%i%b", start, len, newline);
   
-#ifdef DEBUG_LOGO  
+#ifdef LOGO_DEBUG  
   str->dump("scanning", start, len);
 #endif  
   // skip ws
@@ -514,11 +608,6 @@ short LogoCompiler::scanfor(short *strstart, short *strsize, LogoString *str, sh
   // find end of line
   while (end < (start+len) && (*str)[end] && !istoken((*str)[end], newline)) {
     end++;
-  }
-  
-  if ((end - start) > LINE_LEN) {
-    DEBUG_RETURN(" too long ", -2);
-    return -2;
   }
   
   if (end < (start+len-1)) {
@@ -551,11 +640,15 @@ void LogoCompiler::dumpwordscode(short offset) const {
     return;
   }
   
-  char name[32];
+  char name[LINE_LEN];
   for (short i=0; i<_wordcount; i++) {
-    _logo->getstring(name, sizeof(name), _words[i]._name, _words[i]._namelen);
+    LogoStringResult result;
+    _logo->getstring(&result, _words[i]._name, _words[i]._namelen);
+    result.ncpy(name, sizeof(name));
     cout << "\t{ SCOPTYPE_WORD, " << (short)_words[i]._jump + offset << ", " << (short)_words[i]._arity << " }, " << endl;
   }
+  
+  _logo->dumpvarscode(this);
   
 }
 
@@ -565,40 +658,118 @@ void LogoCompiler::entab(short indent) const {
   }
 }
 
-void LogoCompiler::printwordcode(const LogoWord &word) const {
-  char name[32];
-  _logo->getstring(name, sizeof(name), word._name, word._namelen);
+void LogoCompiler::printwordstring(const LogoWord &word) const {
+  char name[LINE_LEN];
+  LogoStringResult result;
+  _logo->getstring(&result, word._name, word._namelen);
+  result.ncpy(name, sizeof(name));
   cout << "\t\"" << name << "\\n\"";
 }
 
-#ifdef HAS_VARIABLES
 void LogoCompiler::printvarcode(const LogoVar &var) const {
 
-  char name[32];
-  _logo->getstring(name, sizeof(name), var._name, var._namelen);
+  char name[LINE_LEN];
+  LogoStringResult result;
+  _logo->getstring(&result, var._name, var._namelen);
+  result.ncpy(name, sizeof(name));
+  cout << "\t{ SCOPTYPE_VAR, " << var._value << ", " << (short)var._valuelen << " }, " << endl;
+  
+}
+void LogoCompiler::printvarstring(const LogoVar &var) const {
+
+  char name[LINE_LEN];
+  LogoStringResult result;
+  _logo->getstring(&result, var._name, var._namelen);
+  result.ncpy(name, sizeof(name));
   cout << "\t\"" << name << "\\n\"";
 
 }
-#endif // HAS_VARIABLES
 
-void LogoCompiler::dumpwordnamescode() const {
+void LogoCompiler::dumpwordstrings() const {
 
   if (!_wordcount) {
     return;
   }
   
   for (short i=0; i<_wordcount; i++) {
-    printwordcode(_words[i]);
+    printwordstring(_words[i]);
     cout << endl;
   }
   
 }
-#endif // ARDUINO
+
+int LogoCompiler::wordstringslist(char *buf, int len) const {
+
+  if (!_wordcount) {
+    return 0;
+  }
+  
+  char name[LINE_LEN];
+  LogoStringResult result;
+  for (short i=0; i<_wordcount; i++) {
+    _logo->getstring(&result, _words[i]._name, _words[i]._namelen);
+    result.ncpy(name, sizeof(name));
+    stringstream s;
+    s << name << endl;
+    strncat(buf, s.str().c_str(), min(len, s.str().length()));
+  }
+  
+  return _wordcount;
+  
+}
+
+int LogoCompiler::compile(fstream &file, Logo *logo) {
+  file.clear();
+  file.seekg(0, ios::beg);
+  string line;
+  while (getline(file, line)) {
+    line += "\n";
+    compile(line.c_str());
+    int err = logo->geterr();
+    if (err) {
+      cout << "got err " << err << " while compiling" << endl;
+      return err;
+    }
+  }
+  return 0;
+}
+
+void LogoCompiler::compile(fstream &file, const string &name) {
+
+  // first compile the code so we can dump the strings from it in 
+  // the correct order
+  Logo logo(0, 0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
+  compiler.compile(file, &logo);
+  
+  // can dump the strings code.
+  logo.dumpstringscode(&compiler, ("strings_" + name).c_str());
+
+  // now gather the strings and specify them for the new compile
+  char list[128];
+  list[0] = 0;
+  int count = logo.stringslist(&compiler, list, sizeof(list));
+  LogoSimpleString strings(list);
+  {
+    // build a new engine with these strings and compile again.
+    Logo logo2(0, 0, 0, Logo::core, &strings);
+    LogoCompiler compiler2(&logo2);
+    compiler2.compile(file, &logo2);
+    
+    // ready to dump the code now.
+    logo2.dumpinst(&compiler2, ("code_" + name).c_str());
+  }
+  
+}
+
+#endif // !ARDUINO
 
 #if defined(LOGO_DEBUG) && !defined(ARDUINO)
 
 void LogoCompiler::dumpwordnames() const {
 
+  _logo->dumpstaticwords(this);
+  
   cout << "words: " << endl;
   
   if (!_wordcount) {
@@ -616,8 +787,10 @@ void LogoCompiler::dumpwordnames() const {
 }
 
 void LogoCompiler::printword(const LogoWord &word) const {
-  char name[32];
-  _logo->getstring(name, sizeof(name), word._name, word._namelen);
+  char name[LINE_LEN];
+  LogoStringResult result;
+  _logo->getstring(&result, word._name, word._namelen);
+  result.ncpy(name);
   cout << name << " (" << (short)word._jump << ")";
   if (word._arity) {
     cout << " " << (short)word._arity;
@@ -639,6 +812,7 @@ void LogoCompiler::dump(short indent, short type, short op, short opand) const {
 
   entab(indent);
   char str[128];
+  LogoStringResult result;
   switch (type) {
     case OPTYPE_NOOP:
       cout << "noop";
@@ -650,13 +824,19 @@ void LogoCompiler::dump(short indent, short type, short op, short opand) const {
       cout << "halt";
       break;
     case OPTYPE_BUILTIN:
-      cout << "builtin " << _logo->getbuiltin(op, opand)->_name;
+      if (_builtindef[0]) {
+        cout << "builtindef " << op;
+      }
+      else {
+        cout << "builtin " << _logo->getbuiltin(op, opand)->_name;
+      }
       break;
     case OPTYPE_JUMP:
       searchword(op);
       break;
     case OPTYPE_STRING:
-      _logo->getstring(str, sizeof(str), op, opand);
+      _logo->getstring(&result, op, opand);
+      result.ncpy(str);
       cout << "string " << str;
       break;
     case OPTYPE_INT:
@@ -665,9 +845,10 @@ void LogoCompiler::dump(short indent, short type, short op, short opand) const {
     case OPTYPE_DOUBLE:
       cout << "double " << _logo->joindouble(op, opand);
       break;
-#ifdef HAS_VARIABLES
+#ifdef G
     case OPTYPE_REF:
-      _logo->getstring(str, sizeof(str), op, opand);
+      _logo->getstring(&result, op, opand);
+      result.ncpy(str);
       cout << "ref " << str;
       break;
     case OPTYPE_POPREF:
@@ -700,30 +881,31 @@ void LogoCompiler::dump(short indent, short type, short op, short opand) const {
 
 void LogoCompiler::markword(tJump jump) const {
 
+  LogoStringResult result;
   for (short i=0; i<_wordcount; i++) {
-    char name[WORD_LEN];
-    _logo->getstring(name, sizeof(name), _words[i]._name, _words[i]._namelen);
-    LogoSimpleString str(name);
-    short word = findword(&str, 0, str.length());
+    _logo->getstring(&result, _words[i]._name, _words[i]._namelen);
+    short word = findword(&result);
     if (word >= 0) {
       if (_words[word]._jump == jump) {
-         cout << name;
+        char name[LINE_LEN];
+        result.ncpy(name);
+        cout << name;
       }
     }
   }
   
 }
 
-#ifdef HAS_VARIABLES
 void LogoCompiler::printvar(const LogoVar &var) const {
 
-  char name[32];
-  _logo->getstring(name, sizeof(name), var._name, var._namelen);
+  char name[LINE_LEN];
+  LogoStringResult result;
+  _logo->getstring(&result, var._name, var._namelen);
+  result.ncpy(name);
   cout << name;
   dump(2, var._type, var._value, var._valuelen);
   
 }
-#endif
 
 void LogoCompiler::dump(const char *msg, bool all) const {
   cout << msg << endl;
@@ -736,9 +918,7 @@ void LogoCompiler::dump(bool all) const {
   dumpwordnames();
   _logo->dumpcode(this, all);
   _logo->dumpstack(this, all);
-#ifdef HAS_VARIABLES
   _logo->dumpvars(this);
-#endif  
 }
 
 void LogoCompiler::mark(short i, short mark, const char *name) const {

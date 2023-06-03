@@ -294,9 +294,10 @@ BOOST_AUTO_TEST_CASE( sentences )
 
 void sarg(Logo &logo) {
 
-  char s[WORD_LEN];
-  logo.popstring(s, sizeof(s));
-//  logo.execword(s);
+  char s[LINE_LEN];
+  LogoStringResult result;
+  logo.popstring(&result);
+  result.ncpy(s, sizeof(s));
 
   strstream str;
   str << "SARG " << s;
@@ -374,8 +375,12 @@ BOOST_AUTO_TEST_CASE( arityWord1 )
 }
 
 void args2(Logo &logo) {
-  char s[32];
-  logo.popstring(s, sizeof(s));
+
+  char s[LINE_LEN];
+  LogoStringResult result;
+  logo.popstring(&result);
+  result.ncpy(s, sizeof(s));
+
   int n = logo.popint();
   strstream str;
   str << "ARGS2 " << n << ", " << s;
@@ -383,6 +388,7 @@ void args2(Logo &logo) {
 #ifdef PRINT_RESULT
   cout << gCmds.back() << endl;
 #endif
+
 }
 
 BOOST_AUTO_TEST_CASE( arityLiteral )
@@ -564,16 +570,10 @@ BOOST_AUTO_TEST_CASE( sizes )
   // half this size on an arduino
   BOOST_CHECK_EQUAL(sizeof(LogoBuiltinWord), 24);
   BOOST_CHECK_EQUAL(sizeof(tLogoInstruction), 6);
-#ifdef HAS_VARIABLES
   BOOST_CHECK_EQUAL(sizeof(LogoWord), 4);
   BOOST_CHECK_EQUAL(sizeof(LogoVar), 6);
-#else
-  BOOST_CHECK_EQUAL(sizeof(LogoWord), 3);
-#endif
   
 }
-
-#ifdef HAS_VARIABLES
 
 BOOST_AUTO_TEST_CASE( arguments )
 {
@@ -597,8 +597,6 @@ BOOST_AUTO_TEST_CASE( arguments )
   DEBUG_DUMP(false);
   
 }
-
-#endif // HAS_VARIABLES
 
 #include "../arduinoflashstring.hpp"
 
@@ -628,11 +626,11 @@ BOOST_AUTO_TEST_CASE( flash )
   
 }
 
-static const char strings_fixedStrings[] PROGMEM = 
+static const char strings_fixedStrings[] PROGMEM = {
 	"MULT\n"
 	"A\n"
 	"B\n"
-  ;
+};
   
 static const char program_fixedStrings[] PROGMEM = 
   "TO MULT :A :B; :A * :B; END;"
@@ -645,9 +643,10 @@ BOOST_AUTO_TEST_CASE( fixedStrings )
 {
   cout << "=== fixedStrings ===" << endl;
   
-  ArduinoFlashString strings(strings_fixedStrings);
   LogoBuiltinWord empty[] = {};
+  ArduinoFlashString strings(strings_fixedStrings);
   Logo logo(empty, 0, 0, Logo::core, &strings);
+//  Logo logo(empty, 0, 0, Logo::core);
   LogoCompiler compiler(&logo);
 
   ArduinoFlashString program(program_fixedStrings);
@@ -655,7 +654,7 @@ BOOST_AUTO_TEST_CASE( fixedStrings )
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
-//  logo.dumpstringscode(&compiler);
+//  logo.dumpstringscode(&compiler, "strings_fixedStrings");
   
   gCmds.clear();
   DEBUG_STEP_DUMP(20, false);
@@ -677,17 +676,17 @@ BOOST_AUTO_TEST_CASE( getstring )
   short len1 = ss1.length();
   short str1 = logo.addstring(&ss1, 0, len1);
 
-   const char *s2 = "YYY";
+  const char *s2 = "YYY";
   LogoSimpleString ss2(s2);
   short len2 = ss2.length();
   short str2 = logo.addstring(&ss2, 0, len2);
 
-  char name[32];
-  logo.getstring(name, sizeof(name), str1, len1);
-  BOOST_CHECK_EQUAL(name, s1);
+  LogoStringResult result;
+  logo.getstring(&result, str1, len1);
+  BOOST_CHECK_EQUAL(result.ncmp(s1), 0);
   
-  logo.getstring(name, sizeof(name), str2, len2);
-  BOOST_CHECK_EQUAL(name, s2);
+  logo.getstring(&result, str2, len2);
+  BOOST_CHECK_EQUAL(result.ncmp(s2), 0);
   
 }
 
@@ -729,29 +728,11 @@ BOOST_AUTO_TEST_CASE( stringcmp )
   
 }
 
-BOOST_AUTO_TEST_CASE( staticCodeDump )
-{
-  cout << "=== staticCodeDump ===" << endl;
-  
-  LogoBuiltinWord builtins[] = {
-    { "ON", &ledOn },
-    { "OFF", &ledOff },
-    { "WAIT", &wait, 1 }
-  };
-  Logo logo(builtins, sizeof(builtins));
-  LogoCompiler compiler(&logo);
-
-  compiler.compile("TO TEST1; ON WAIT 10 OFF WAIT 20; END;");
-  compiler.compile("TO TEST2; OFF WAIT 30 ON WAIT 40; END;");
-  compiler.compile("TEST1;");
-  BOOST_CHECK_EQUAL(logo.geterr(), 0);
-  DEBUG_DUMP(false);
-
-  logo.dumpinst(&compiler, "code_staticCode");
-  logo.dumpstringscode(&compiler, "strings_staticCode");
-    
-}
-
+static const char static_program[] PROGMEM = 
+  "TO TEST1; ON WAIT 10 OFF WAIT 20; END;"
+  "TO TEST2; OFF WAIT 30 ON WAIT 40; END;"
+  "TEST1;"
+  ;
 static const short code_staticCode[][INST_LENGTH] PROGMEM = {
 	{ OPTYPE_JUMP, 2, 0 },		// 0
 	{ OPTYPE_HALT, 0, 0 },		// 1
@@ -778,6 +759,29 @@ static const char strings_staticCode[] PROGMEM = {
 	"TEST2\n"
 };
 
+BOOST_AUTO_TEST_CASE( staticProgUse )
+{
+  cout << "=== staticProgUse ===" << endl;
+  
+  LogoBuiltinWord builtins[] = {
+    { "ON", &ledOn },
+    { "OFF", &ledOff },
+    { "WAIT", &wait, 1 }
+  };
+  Logo logo(builtins, sizeof(builtins), 0);
+  LogoCompiler compiler(&logo);
+  
+  compiler.compile(static_program);
+  
+  gCmds.clear();
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(gCmds.size(), 4);
+  BOOST_CHECK_EQUAL(gCmds[0], "LED ON");
+  BOOST_CHECK_EQUAL(gCmds[1], "WAIT 10");
+  BOOST_CHECK_EQUAL(gCmds[2], "LED OFF");
+  BOOST_CHECK_EQUAL(gCmds[3], "WAIT 20");
+  
+}
 BOOST_AUTO_TEST_CASE( staticCodeUse )
 {
   cout << "=== staticCodeUse ===" << endl;
@@ -791,6 +795,7 @@ BOOST_AUTO_TEST_CASE( staticCodeUse )
   ArduinoFlashString strings(strings_staticCode);
   Logo logo(builtins, sizeof(builtins), 0, 0, &strings, &code);
 
+  gCmds.clear();
   BOOST_CHECK_EQUAL(logo.run(), 0);
   BOOST_CHECK_EQUAL(gCmds.size(), 4);
   BOOST_CHECK_EQUAL(gCmds[0], "LED ON");

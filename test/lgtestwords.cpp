@@ -45,7 +45,6 @@ void ledOff(Logo &logo) {
 #endif
 }
 
-#ifdef HAS_VARIABLES
 BOOST_AUTO_TEST_CASE( make )
 {
   cout << "=== make ===" << endl;
@@ -89,7 +88,6 @@ BOOST_AUTO_TEST_CASE( makeChange )
   BOOST_CHECK_EQUAL(gCmds[0], "WAIT 200");
   
 }
-#endif
 
 BOOST_AUTO_TEST_CASE( forever )
 {
@@ -177,8 +175,6 @@ BOOST_AUTO_TEST_CASE( eqWord )
   
   BOOST_CHECK(logo.stackempty());
 }
-
-#ifdef HAS_IFELSE
 
 BOOST_AUTO_TEST_CASE( ifelseFalse )
 {
@@ -352,9 +348,9 @@ BOOST_AUTO_TEST_CASE( ifelseTrueLiteralStringBranches )
 
   DEBUG_STEP_DUMP(10, false);
   BOOST_CHECK_EQUAL(logo.run(), 0);
-  char str[32];
-  logo.popstring(str, sizeof(str));  
-  BOOST_CHECK_EQUAL(str, "A");
+  LogoStringResult str;
+  logo.popstring(&str);  
+  BOOST_CHECK_EQUAL(str.ncmp("A"), 0);
   BOOST_CHECK(logo.stackempty());
 
 }
@@ -373,14 +369,12 @@ BOOST_AUTO_TEST_CASE( ifelseFalseLiteralStringBranches )
 
   DEBUG_STEP_DUMP(10, false);
   BOOST_CHECK_EQUAL(logo.run(), 0);
-  char str[32];
-  logo.popstring(str, sizeof(str));  
-  BOOST_CHECK_EQUAL(str, "B");
+  LogoStringResult str;
+  logo.popstring(&str);  
+  BOOST_CHECK_EQUAL(str.ncmp("B"), 0);
   BOOST_CHECK(logo.stackempty());
 
 }
-
-#ifdef HAS_VARIABLES
 
 BOOST_AUTO_TEST_CASE( ifelseVarRef )
 {
@@ -397,9 +391,9 @@ BOOST_AUTO_TEST_CASE( ifelseVarRef )
 
   DEBUG_STEP_DUMP(10, false);
   BOOST_CHECK_EQUAL(logo.run(), 0);
-  char str[32];
-  logo.popstring(str, sizeof(str));  
-  BOOST_CHECK_EQUAL(str, "A");
+  LogoStringResult str;
+  logo.popstring(&str);  
+  BOOST_CHECK_EQUAL(str.ncmp("A"), 0);
   BOOST_CHECK(logo.stackempty());
 
 }
@@ -418,16 +412,12 @@ BOOST_AUTO_TEST_CASE( ifelseMissingVar )
 
   DEBUG_STEP_DUMP(10, false);
   BOOST_CHECK_EQUAL(logo.run(), 0);
-  char str[32];
-  logo.popstring(str, sizeof(str));  
-  BOOST_CHECK_EQUAL(str, "B");
+  LogoStringResult str;
+  logo.popstring(&str);  
+  BOOST_CHECK_EQUAL(str.ncmp("B"), 0);
   BOOST_CHECK(logo.stackempty());
 
 }
-
-#endif // HAS_VARIABLES
-
-#endif // HAS_IFELSE
 
 class TestWordTimeProvider: public LogoTimeProvider {
 

@@ -84,3 +84,20 @@ BOOST_AUTO_TEST_CASE( strFind )
 
 }
 
+BOOST_AUTO_TEST_CASE( fixedStrings )
+{
+  cout << "=== fixedStrings ===" << endl;
+  
+  LogoSimpleString strings("MULT\nA\nB\n");
+  LogoSimpleString str1(";A");
+  BOOST_CHECK_EQUAL(strings.ncmp2(&str1, 1, 5, 1), 0);
+  LogoSimpleString str2("MULTxxxxx");
+  BOOST_CHECK_EQUAL(strings.ncmp2(&str2, 0, 0, 4), 0);
+  LogoSimpleString str3("B");
+  BOOST_CHECK_EQUAL(strings.ncmp2(&str3, 0, 7, 1), 0);
+  LogoSimpleString str4("MULTX");
+  BOOST_CHECK_EQUAL(strings.ncmp2(&str4, 0, 5, 1), -1);
+  BOOST_CHECK_EQUAL(strings.ncmp2(&str4, 0, 3, 1), -1);
+
+}
+

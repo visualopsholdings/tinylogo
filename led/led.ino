@@ -11,12 +11,18 @@
   https://github.com/visualopsholdings/tinylogo
 */
 
+#define FLASH_CODE
+
 #include "ringbuffer.hpp"
 #include "cmd.hpp"
 #include "logo.hpp"
-#include "logocompiler.hpp"
 #include "arduinotimeprovider.hpp"
 #include "arduinoflashstring.hpp"
+#ifdef FLASH_CODE
+#include "arduinoflashcode.hpp"
+#else
+#include "logocompiler.hpp"
+#endif
 
 #include <Wire.h>
 
@@ -35,19 +41,54 @@ RingBuffer buffer;
 Cmd cmd;
 char cmdbuf[64];
 
+#ifdef FLASH_CODE
+static const char strings_led[] PROGMEM = {
+	"FLASH\n"
+	"GO\n"
+	"STOP\n"
+};
+static const short code_led[][INST_LENGTH] PROGMEM = {
+	{ OPTYPE_NOOP, 0, 0 },		// 0
+	{ OPTYPE_HALT, 0, 0 },		// 1
+	{ OPTYPE_BUILTIN, 0, 0 },		// 2
+	{ OPTYPE_BUILTIN, 5, 1 },		// 3
+	{ OPTYPE_INT, 100, 0 },		// 4
+	{ OPTYPE_BUILTIN, 1, 0 },		// 5
+	{ OPTYPE_BUILTIN, 5, 1 },		// 6
+	{ OPTYPE_INT, 1000, 0 },		// 7
+	{ OPTYPE_RETURN, 0, 0 },		// 8
+	{ OPTYPE_BUILTIN, 2, 1 },		// 9
+	{ OPTYPE_JUMP, 2, 0 },		// 10
+	{ OPTYPE_RETURN, 0, 0 },		// 11
+	{ OPTYPE_BUILTIN, 1, 0 },		// 12
+	{ OPTYPE_RETURN, 0, 0 },		// 13
+	{ SCOPTYPE_WORD, 2, 0 }, 
+	{ SCOPTYPE_WORD, 9, 0 }, 
+	{ SCOPTYPE_WORD, 12, 0 }, 
+	{ SCOPTYPE_END, 0, 0 } 
+};
+#else
+static const char program_led[] PROGMEM = 
+  "TO FLASH; ON WAIT 100 OFF WAIT 1000; END;"
+  "TO GO; FOREVER FLASH; END;"
+  "TO STOP; OFF; END;"
+  ;
+#endif
+
 LogoBuiltinWord builtins[] = {
   { "ON", &ledOn },
   { "OFF", &ledOff },
 };
 ArduinoTimeProvider time;
+#ifdef FLASH_CODE
+ArduinoFlashString strings(strings_led);
+ArduinoFlashCode code((const PROGMEM short *)code_led);
+Logo logo(builtins, sizeof(builtins), &time, Logo::core, &strings, &code);
+#else
 Logo logo(builtins, sizeof(builtins), &time, Logo::core);
 LogoCompiler compiler(&logo);
+#endif
 
-static const char program_flash[] PROGMEM = 
-  "TO FLASH; ON WAIT 100 OFF WAIT 1000; END;"
-  "TO GO; FOREVER FLASH; END;"
-  "TO STOP; OFF; END;"
-  ;
 
 void flashErr(int mode, int n) {
   Serial.println(n);
@@ -74,7 +115,7 @@ void setup() {
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
 
-  // Setup the serial port
+   // Setup the serial port
   Serial.begin(9600);
 
   // Setup I2C bus address
@@ -83,8 +124,9 @@ void setup() {
   // Register handler for when data comes in
   Wire.onReceive(receiveEvent);
 
-  // Compile a little program into the LOGO interpreter :-)
-  ArduinoFlashString str(program_flash);
+#ifndef FLASH_CODE
+ // Compile a little program into the LOGO interpreter :-)
+  ArduinoFlashString str(program_led);
   compiler.compile(&str);
   int err = logo.geterr();
   if (err) {
@@ -93,6 +135,8 @@ void setup() {
  
   // this would make it just run straight away
 //  compiler.compile("GO");
+#endif
+
 }
 
 // recieve data on I2C and write it into the buffer
@@ -114,25 +158,29 @@ void loop() {
 
   // accept the buffer into the command parser
   cmd.accept(&buffer);
-  
+ 
   // when there is a valid command
   if (cmd.ready()) {
   
     // read it in
     cmd.read(cmdbuf, sizeof(cmdbuf));
-
+ 
     // reset the code but keep all our words we have defined.
     logo.resetcode();
     
-    // compile whatever it is into the LOGO interpreter and if there's
-    // a compile error flash the LED
+#ifdef FLASH_CODE
+    int err = logo.callword(cmdbuf);
+ #else
+     // // compile whatever it is into the LOGO interpreter and if there's
+    // // a compile error flash the LED
     compiler.compile(cmdbuf);
     int err = logo.geterr();
+ #endif
     if (err) {
       flashErr(1, err);
     }
-  }
-  
+}
+
   // just execute each LOGO word
   int err = logo.step();
   
