@@ -13,7 +13,7 @@ to the Arduino AFTER you've left it on the Moon!
 
 That's where the whole "TinyLogo" project that is a part of this is for. It's only in
 early days with very simple syntax and capabilities, but just for a teaser take
-a look at the source for i2c.ino and search down to "#idef I2C_LOGO" and you
+a look at the source for led/led.ino and you
 can see some cool code that takes this LOGO program:
 
 ```
@@ -28,7 +28,7 @@ TO STOP
 END
 ```
 
-And then when you get an I2C string that says "GO;" it will flash the LEDs on and off.
+And then when you get an I2C string or serial command that says "GO;" (or "GOT\n" it will flash the LEDs on and off.
 
 You can send it any of that code ON THE FLY, so even word definitions.
 
@@ -49,7 +49,7 @@ variables or it just won't work!!
 To free more space, go into the top of logo.hpp and change the sizes of various data structures
 until you free more up.
 
-Open "i2c.ino" and you can flash that example right onto your Arduino and try it out.
+Open "led/led.ino" and you can flash that example right onto your Arduino and try it out.
 
 There are about 5 different examples in there of various other things to get you started using
 the various ways you might use this stuff.
@@ -155,6 +155,14 @@ Is functionally equivalent to:
 ```
 TO MULT; :A * :B; END;
 MAKE \"A 10 MAKE \"B 20 MULT
+```
+
+Note: There is a bg where the arguments are pushed in reverse order of the call :-( so the 
+code above is really:
+
+```
+TO MULT :B :A; :A * :B; END;
+MULT 10 20
 ```
 
 ### LOGO words
