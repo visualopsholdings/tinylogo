@@ -260,8 +260,8 @@ Which will output the runtime code and strings list as variables you simply incl
 you can dispense with the compiler completely and use your code like this:
 
 ```
-ArduinoFlashString strings(strings_led);
-ArduinoFlashCode code((const PROGMEM short *)code_led);
+ArduinoFlashString strings(strings_rgb);
+ArduinoFlashCode code((const PROGMEM short *)code_rgb);
 Logo logo(builtins, sizeof(builtins), &time, Logo::core, &strings, &code);
 ```
 
