@@ -25,6 +25,7 @@
 #define BLUE_PIN    2
 #define RED_PIN     3
 #define GREEN_PIN   4
+#define BUTTON_PIN  7
 
 void ledOn(Logo &logo) {
   digitalWrite(LED_PIN, HIGH);
@@ -49,6 +50,9 @@ void blueRaw(Logo &logo) {
 RingBuffer buffer;
 Cmd cmd;
 char cmdbuf[64];
+
+int buttonValue = 0;
+int buttonState = 0;
 
 // the strings for the program in flash
 static const char strings_rgb[] PROGMEM = {
@@ -156,7 +160,8 @@ LogoBuiltinWord builtins[] = {
 ArduinoTimeProvider time;
 ArduinoFlashString strings(strings_rgb);
 ArduinoFlashCode code((const PROGMEM short *)code_rgb);
-Logo logo(builtins, sizeof(builtins), &time, Logo::core, &strings, &code);
+LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
+Logo logo(&primitives, &time, Logo::core, &strings, &code);
 
 void flashErr(int mode, int n) {
 
@@ -196,6 +201,9 @@ void setup() {
   pinMode(GREEN_PIN, OUTPUT);
   analogWrite(GREEN_PIN, 255);
  
+  // the button pin
+  pinMode(BUTTON_PIN, INPUT);
+
   Serial.begin(9600);
  
   // Setup I2C bus address
@@ -204,6 +212,10 @@ void setup() {
   // Register handler for when data comes in
   Wire.onReceive(receiveEvent);
 
+  int err = logo.callword("RED");
+  if (err && err != LG_STOP) {
+    flashErr(2, err);
+  }
 }
 
 // recieve data on I2C and write it into the buffer
@@ -241,6 +253,32 @@ void loop() {
     }
   }
   
+  int newValue = digitalRead(BUTTON_PIN);
+  if (newValue != buttonValue) {
+    buttonValue = newValue;
+    if (buttonValue == HIGH) {
+      buttonState++;
+      if (buttonState > 2) {
+        buttonState = 0;
+      }
+      logo.resetcode();
+      int err = 0;
+      switch (buttonState) {
+      case 0:
+        err = logo.callword("RED");
+        break;
+      case 1:
+        err = logo.callword("GREEN");
+        break;
+      default:
+        err = logo.callword("AMBER");
+      }
+      if (err && err != LG_STOP) {
+        flashErr(2, err);
+      }
+    }
+  }
+
   // just execute each LOGO word
   int err = logo.step();
   
@@ -249,6 +287,6 @@ void loop() {
   if (err && err != LG_STOP) {
     flashErr(2, err);
   }
-
+  
 }
 

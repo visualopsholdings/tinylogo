@@ -17,6 +17,10 @@
 #define H_logocompiler
 
 #include "logo.hpp"
+#include "logostring.hpp"
+
+// Sentences are painful to make word so we just remove them for now.
+//#define LOGO_SENTENCES
 
 #ifndef ARDUINO
 #include <fstream>
@@ -31,6 +35,27 @@ typedef struct {
  tByte      _arity; // smaller than 256?
 } LogoWord;
 
+class LogoStaticPrimitives: public LogoPrimitives {
+
+public:
+  LogoStaticPrimitives() {
+    _builtindef[0] = 0;
+  }
+  
+  // LogoPrimitives
+  virtual short find(LogoString *str, short start, short slen);
+  virtual void name(short index, char *s, int len);
+  virtual short arity(short index);
+  virtual void exec(short index, Logo *logo);
+  virtual void set(LogoString *str, short start, short slen);
+
+private:
+  char _builtindef[LINE_LEN];
+  
+  void str(short index, char *s, int len);
+  
+};
+
 class LogoCompiler {
 
 public:
@@ -44,10 +69,13 @@ public:
   void compile(LogoString *str);
   
   // main execution
-  void reset(); // reset the sentences
+  void reset();
 
 #ifdef LOGO_DEBUG
-  void outstate() const;
+ void outstate() const;
+#endif
+
+#ifndef ARDUINO
   void dump(const char *msg, bool all=true) const;
   void dump(bool all=true) const;
   short stepdump(short n, bool all=true);
@@ -58,9 +86,6 @@ public:
   void printword(const LogoWord &word) const;
   void dumpwordnames() const;
   void printvar(const LogoVar &var) const;
-#endif
-
-#ifndef ARDUINO
   void dumpwordscode(short offset) const;
   void dumpwordstrings() const;
   int wordstringslist(char *buf, int len) const;
@@ -69,12 +94,15 @@ public:
   void printwordstring(const LogoWord &word) const;
   void printvarstring(const LogoVar &var) const;
   void printvarcode(const LogoVar &var) const;
-  static void compile(std::fstream &file, const std::string &name);
+  static void generatecode(std::fstream &file, const std::string &name);
+  int compile(std::fstream &file);
 #endif
 
   // public for testing.
   short scanfor(short *strstart, short *strsize, LogoString *str, short start, short len, bool newline);
+#ifdef LOGO_SENTENCES
   void dosentences(char *buf, short len, const char *start);
+#endif
 
 private:
   
@@ -99,9 +127,6 @@ private:
   // sentences
   short _sentencecount;
 
-  // builtin definition
-  char _builtindef[LINE_LEN];
-  
   // parser
   bool dodefine(LogoString *str, short wordstart, short wordlen, bool eol);
   void compilewords(LogoString *str, short start, short len, bool define);
@@ -111,12 +136,7 @@ private:
   void finishword(short word, short wordlen, short jump, short arity);
   short findword(LogoString *str, short wordstart, short wordlen) const;
   short findword(LogoStringResult *str) const;
-  void findbuiltindef(LogoString *stri, short wordstart, short wordlen, short *index, short *category);
   
-#ifndef ARDUINO
-  int compile(std::fstream &file, Logo *logo);
-#endif
-
 };
 
 #endif // H_logocompiler

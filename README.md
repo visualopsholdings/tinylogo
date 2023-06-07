@@ -131,15 +131,6 @@ Words need to be defined on 3 lines like this:
 TO wordname; BLOCK; END
 ```
 
-#### Sentences
-
-Sentences can be used and they are implemented as actual "unnamed words", like anonymous
-closures or lambas.
-
-```
-[WORD WORD WORD]
-```
-
 #### Arguments
 
 Argumemts to functions work BUT it is just a lexical trick, not scoped so recursion won't
@@ -278,6 +269,16 @@ words your have defined or primitives directly with
 This will allow your to fit quite large programs into yoru arduino, and also allow the programs
 to come from an actual text file with comments etc.
 
+## Running a .lgo file and seeing what it does.
+
+You can run one of the LOGO source files directly with the "run" tool provided.
+
+To build the tool see below in development.
+
+To use it:
+
+$ tools/build/run logo/rgb.lgo
+
 ## Development
 
 The development process for all of this code used a normal Linux environment with the BOOST
@@ -385,3 +386,8 @@ to allow strings and code to be in FLASH memory.
 
 ### 3 Jun 2023
 - Major rewrite to allow compilation and storage of the program in the flash memory of the arduino.
+
+### 6 Jun 2023
+- Rewrote the way primitive code works and a new tool which can run an .lgo file.
+- Removed sentence support until it's far more robust.
+

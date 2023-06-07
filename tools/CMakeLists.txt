@@ -15,8 +15,13 @@ cmake_minimum_required(VERSION 3.5)
 
 project (tinylogo)
   find_package(Boost COMPONENTS program_options unit_test_framework REQUIRED)
-  add_definitions(-DBOOST_ALL_DYN_LINK) 
+  add_definitions(-DBOOST_ALL_DYN_LINK -DMAX_CODE=200 -DSTART_JCODE=50 -DSTRING_POOL_SIZE=256) 
   enable_testing()
 
-add_executable(flashcode flashcode.cpp ../logo.cpp ../logocompiler.cpp ../arduinoflashcode.cpp)
-  target_link_libraries(flashcode ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY})
+add_library (Logo STATIC ../logo.cpp ../logocompiler.cpp ../logostring.cpp ../arduinoflashcode.cpp)
+
+add_executable(flashcode flashcode.cpp realtimeprovider.cpp)
+  target_link_libraries(flashcode Logo ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY})
+
+add_executable(run run.cpp realtimeprovider.cpp)
+  target_link_libraries(run Logo ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY})

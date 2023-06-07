@@ -20,10 +20,11 @@
 
   LogoBuiltinWord builtins[] = {
     { "ON", &ledOn },
-    { "OFF", &ledOff ,
+    { "OFF", &ledOff },
   };
   ArduinoTimeProvider time;
-  Logo logo(builtins, sizeof(builtins), &time, &Logo::core);
+  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
+  Logo logo(&primitives, &time, &Logo::core);
   LogoCompiler compiler(&logo);
   
   compiler.compile("TO GO; FOREVER [ON WAIT 100 OFF WAIT 1000]; END;");
@@ -76,14 +77,27 @@
 // on some Arduinos this could be MUCH larger.
 // if you run out of space, take a look at using flash memory to store your strings 
 // and even code.
+#ifndef STRING_POOL_SIZE
 #define STRING_POOL_SIZE    128       // these number of bytes
+#endif
+#ifndef MAX_WORDS
+#define MAX_WORDS           20        // 4 bytes each
+#endif
+#ifndef MAX_CODE
+#define MAX_CODE            100       // 6 bytes each
+#endif
+#ifndef START_JCODE
+#define START_JCODE         30        // the start of where the JCODE lies (the words)
+#endif
+#ifndef MAX_STACK
+#define MAX_STACK           16        // 6 bytes each
+#endif
+#ifndef MAX_VARS
+#define MAX_VARS             8        // 6 bytes each
+#endif
+
 #define NUM_LEN             12        // these number of bytes
 #define SENTENCE_LEN        4         // & and 3 more digits
-#define MAX_WORDS           20        // 4 bytes each
-#define MAX_CODE            100       // 6 bytes each
-#define START_JCODE         30        // the start of where the JCODE lies (the words)
-#define MAX_STACK           16        // 6 bytes each
-#define MAX_VARS             8        // 6 bytes each
 
 #include <string.h>
 #include <stdio.h>
@@ -222,6 +236,18 @@ public:
   static void eq(Logo &logo);
   static short eqArity;
 
+  static void gt(Logo &logo);
+  static short gtArity;
+
+  static void gte(Logo &logo);
+  static short gteArity;
+
+  static void lt(Logo &logo);
+  static short ltArity;
+
+  static void lte(Logo &logo);
+  static short lteArity;
+
 private:
 
   static bool pushliterals(Logo &logo, short rel);
@@ -253,121 +279,44 @@ private:
 
 };
 
-// strings are in an abstract class to allow them
-// to be placed in FLASH memory if we need to.
-
-class LogoString {
-
-public:
-  
-  virtual size_t length() const = 0;
-  virtual char operator[](int index) const = 0;
-  virtual void ncpy(char *to, size_t offset, size_t len) const = 0;
-  virtual int ncmp(const char *to, size_t offset, size_t len) const = 0;
- 
-  short toi(size_t offset, size_t len);
-  short find(char c, size_t offset, size_t len);
-  short ncmp2(LogoString *to, short offsetto, short offset, short len) const;
-#ifdef LOGO_DEBUG
-  void dump(const char *msg, short start, short len) const;
-#endif
-
-};
-
-// just a simple string as a sequence of characters, null terminated.
-
-class LogoSimpleString: public LogoString {
-
-public:
-  LogoSimpleString(const char *code, short len): _code(code), _len(len) {}
-  LogoSimpleString(const char *code): _code(code) {
-    _len = strlen(_code);
-  }
-  LogoSimpleString(): _code(0), _len(0) {}
-  
-  void set(const char *code, short len) {
-    _code = code;
-    _len = len;
-  }
-  
-  size_t length() const { 
-    return _len; 
-  }
-  
-  char operator[](int index) const { 
-    return _code[index]; 
-  }
-  
-  void ncpy(char *to, size_t offset, size_t len) const ;
-  int ncmp(const char *to, size_t offset, size_t len) const;
-  double tof();
-    
-private:
-  const char *_code;
-  short _len;
-  
-};
-
-class LogoStringResult {
-
-public:
-  LogoStringResult() : _fixed(0), _fixedstart(0), _fixedlen(0) {}
-  
-  void init() {
-    _simple.set(0, 0);
-    _fixed = 0;
-  }
-  
-  size_t length() const { 
-    if (_fixed) {
-      return _fixedlen;
-    }
-    return _simple.length();
-  }
-
-  int ncmp(const char *to) {
-    if (_fixed) {
-      return _fixed->ncmp(to, _fixedstart, _fixedlen);
-    }
-    return _simple.ncmp(to, 0, _simple.length());
-  }
-
-  void ncpy(char *to, int len) {
-    if (_fixed) {
-      _fixed->ncpy(to, _fixedstart, min(len, _fixedlen));
-      return;
-    }
-    _simple.ncpy(to, 0, min(len, _simple.length()));
-  }
-
-  short toi() {
-    if (_fixed) {
-      return _fixed->toi(_fixedstart, _fixedlen);
-    }
-    return _simple.toi(0, _simple.length());
-  }
-  
-  double tof() {
-    if (_fixed) {
-      // don't know how to do this yet...
-      return 0;
-    }
-    return _simple.tof();
-  }
-  
-  LogoSimpleString _simple;
-  LogoString *_fixed;
-  short _fixedstart;
-  short _fixedlen;
-};
-
 class LogoCompiler;
 class ArduinoFlashCode;
+class LogoString;
+class LogoStringResult;
+
+class LogoPrimitives {
+
+public:
+  
+  virtual short find(LogoString *str, short start, short slen) = 0;
+  virtual void name(short op, char *s, int len) = 0;
+  virtual short arity(short op) = 0;
+  virtual void exec(short index, Logo *logo) = 0;
+  virtual void set(LogoString *str, short start, short slen) = 0;
+  
+};
+
+class LogoFunctionPrimitives: public LogoPrimitives {
+
+public:
+  LogoFunctionPrimitives(LogoBuiltinWord *builtins, short size);
+  
+  // LogoPrimitives
+  virtual short find(LogoString *str, short start, short slen);
+  virtual void name(short index, char *s, int len);
+  virtual short arity(short index);
+  virtual void exec(short index, Logo *logo);
+  virtual void set(LogoString *str, short start, short slen) {}
+
+private:
+  LogoBuiltinWord *_builtins;
+  short _count;
+};
 
 class Logo {
 
 public:
-  Logo(LogoBuiltinWord *builtins, short size, LogoTimeProvider *time=0, LogoBuiltinWord *core=0, LogoString *strings=0, ArduinoFlashCode *code=0);
+  Logo(LogoPrimitives *primitives=0, LogoTimeProvider *time=0, LogoBuiltinWord *core=0, LogoString *strings=0, ArduinoFlashCode *code=0);
   ~Logo() {}
   
   // find any errors in the code.
@@ -397,7 +346,9 @@ public:
   bool stringcmp(LogoString *str, short start, short slen, tStrPool stri, tStrPool len) const;
   bool stringcmp(LogoStringResult *str, tStrPool stri, tStrPool len) const;
   const LogoBuiltinWord *getbuiltin(short op, short opand) const;
-
+  void getbuiltinname(short op, short opand, char *s, int len) const;
+  void setprimitives(LogoString *str, short start, short slen);
+  
   // compiler needs direct access to these?
   
   // the code
@@ -418,7 +369,7 @@ public:
   short findvariable(LogoString *str, short start, short slen) const;
   short findvariable(LogoStringResult *str) const;
   short newintvar(short str, short slen, short n);
-  void  setintvar(short var, short n);
+  void setintvar(short var, short n);
   
   // logo words can be self modifying code but be careful!
   void modifyreturn(short rel, short n);
@@ -432,13 +383,13 @@ public:
 
 #ifdef LOGO_DEBUG
   void outstate() const;
+#endif
+ 
+#ifndef ARDUINO
   void dumpcode(const LogoCompiler *compiler, bool all=true) const;
   void dumpstack(const LogoCompiler *compiler, bool all=true) const;
   void dumpvars(const LogoCompiler *compiler) const;
   void dumpstaticwords(const LogoCompiler *compiler) const;
-#endif
- 
-#ifndef ARDUINO
   int stringslist(LogoCompiler *compiler, char *buf, int len) const;
   int varstringslist(LogoCompiler *compiler, char *buf, int len) const;
   void dumpstringscode(LogoCompiler *compiler, const char *varname) const;
@@ -460,8 +411,7 @@ private:
   tStrPool _nextstring;
   
   // the builtin words.
-  LogoBuiltinWord *_builtins;
-  short _builtincount;
+  LogoPrimitives *_primitives;
   
   // the core words if needed.
   LogoBuiltinWord *_core;
@@ -505,6 +455,7 @@ private:
   short doarity();
   bool call(short jump, tByte opand2);
   short instField(short pc, short field) const;
+  bool handleskip();
   
 };
 

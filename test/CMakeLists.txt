@@ -18,31 +18,25 @@ project (logotest)
   add_definitions(-DBOOST_ALL_DYN_LINK) 
   enable_testing()
 
-add_executable(LGTestCompiler lgtestcompiler.cpp ../logo.cpp ../logocompiler.cpp ../arduinoflashcode.cpp)
-  target_link_libraries(LGTestCompiler ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_library (Logo STATIC ../logo.cpp ../logocompiler.cpp ../logostring.cpp ../arduinoflashcode.cpp)
 
-add_executable(LGTestString lgteststring.cpp ../logo.cpp ../logocompiler.cpp ../arduinoflashcode.cpp)
-  target_link_libraries(LGTestString ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_executable(LGTestCompiler lgtestcompiler.cpp)
+  target_link_libraries(LGTestCompiler Logo ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
-add_executable(LGTest lgtest.cpp ../logo.cpp ../logocompiler.cpp ../arduinoflashcode.cpp)
-  target_link_libraries(LGTest ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_executable(LGTestString lgteststring.cpp)
+  target_link_libraries(LGTestString Logo ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
-add_executable(LGTestErr lgtesterr.cpp ../logo.cpp ../logocompiler.cpp ../arduinoflashcode.cpp)
-  target_link_libraries(LGTestErr ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_executable(LGTest lgtest.cpp)
+  target_link_libraries(LGTest Logo ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
-add_executable(LGTestWords lgtestwords.cpp ../logo.cpp ../logocompiler.cpp ../arduinoflashcode.cpp)
-  target_link_libraries(LGTestWords ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_executable(LGTestErr lgtesterr.cpp)
+  target_link_libraries(LGTestErr Logo ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
-add_executable(LGTestLEDSketch lgtestledsketch.cpp ../logo.cpp ../logocompiler.cpp ../arduinoflashcode.cpp)
-  target_link_libraries(LGTestLEDSketch ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-
-add_executable(LGTestRGBSketch lgtestrgbsketch.cpp ../logo.cpp ../logocompiler.cpp ../arduinoflashcode.cpp)
-  target_link_libraries(LGTestRGBSketch ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_executable(LGTestWords lgtestwords.cpp)
+  target_link_libraries(LGTestWords Logo ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
 add_test(LGTestCompiler LGTestCompiler)
 add_test(LGTestString LGTestString)
 add_test(LGTest LGTest)
 add_test(LGTestErr LGTestErr)
 add_test(LGTestWords LGTestWords)
-add_test(LGTestLEDSketch LGTestLEDSketch)
-add_test(LGTestRGBSketch LGTestRGBSketch)

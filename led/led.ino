@@ -83,9 +83,10 @@ ArduinoTimeProvider time;
 #ifdef FLASH_CODE
 ArduinoFlashString strings(strings_led);
 ArduinoFlashCode code((const PROGMEM short *)code_led);
-Logo logo(builtins, sizeof(builtins), &time, Logo::core, &strings, &code);
+LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
+Logo logo(&primitives, &time, Logo::core, &strings, &code);
 #else
-Logo logo(builtins, sizeof(builtins), &time, Logo::core);
+Logo logo(&primitives, &time, Logo::core);
 LogoCompiler compiler(&logo);
 #endif
 

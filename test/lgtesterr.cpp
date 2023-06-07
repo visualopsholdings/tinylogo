@@ -33,8 +33,7 @@ BOOST_AUTO_TEST_CASE( unknownWord )
 {
   cout << "=== unknownWord ===" << endl;
   
-  LogoBuiltinWord empty[] = {};
-  Logo logo(empty, 0, 0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("XXXX");
@@ -47,8 +46,7 @@ BOOST_AUTO_TEST_CASE( unknownWordInWord )
 {
   cout << "=== unknownWordInWord ===" << endl;
   
-  LogoBuiltinWord empty[] = {};
-  Logo logo(empty, 0, 0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO TEST; ON; END;");
@@ -61,8 +59,7 @@ BOOST_AUTO_TEST_CASE( tooManyWords )
 {
   cout << "=== tooManyWords ===" << endl;
   
-  LogoBuiltinWord empty[] = {};
-  Logo logo(empty, 0, 0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   for (short i=1; i<MAX_WORDS+2; i++) {
@@ -78,8 +75,7 @@ BOOST_AUTO_TEST_CASE( outOfStrings )
 {
   cout << "=== outOfStrings ===" << endl;
   
-  LogoBuiltinWord empty[] = {};
-  Logo logo(empty, 0, 0);
+  Logo logo;
   LogoCompiler compiler(&logo);
   
   short segn = 16;
@@ -103,8 +99,7 @@ BOOST_AUTO_TEST_CASE( outOfCode )
 {
   cout << "=== outOfCode ===" << endl;
   
-  LogoBuiltinWord empty[] = {};
-  Logo logo(empty, 0, 0);
+  Logo logo;
   LogoCompiler compiler(&logo);
   
   strstream str;
@@ -125,8 +120,7 @@ BOOST_AUTO_TEST_CASE( tooManyVariables )
 {
   cout << "=== tooManyVariables ===" << endl;
   
-  LogoBuiltinWord empty[] = {};
-  Logo logo(empty, 0, 0, Logo::core);
+  Logo logo(0, 0, Logo::core);
   LogoCompiler compiler(&logo);
 
   for (short i=1; i<MAX_VARS+2; i++) {
@@ -157,7 +151,8 @@ BOOST_AUTO_TEST_CASE( notString )
   LogoBuiltinWord builtins[] = {
     { "WANTSSTRING", &wantsstring, 0 }
   };
-  Logo logo(builtins, sizeof(builtins), 0);
+  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
+  Logo logo(&primitives);
   LogoCompiler compiler(&logo);
 
   compiler.compile("WANTSSTRING 1");
@@ -172,8 +167,7 @@ BOOST_AUTO_TEST_CASE( extraAfterWord )
 {
   cout << "=== extraAfterWord ===" << endl;
   
-  LogoBuiltinWord empty[] = {};
-  Logo logo(empty, 0, 0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO TEST1 AND SOME MORE; END;");

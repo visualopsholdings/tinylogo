@@ -29,7 +29,7 @@ void Logo::outstate() const {
 #define DELAY_TIME  100
 #else
 #include "nodebug.hpp"
-#define DELAY_TIME  5 // must be non zero!
+#define DELAY_TIME  1 // must be non zero!
 #endif
 
 #ifndef ARDUINO
@@ -56,18 +56,27 @@ LogoBuiltinWord Logo::core[] = {
   { "+", LogoWords::add, LogoWords::addArity },
   { "/", LogoWords::divide, LogoWords::divideArity },
   { "*", LogoWords::multiply, LogoWords::multiplyArity },
+  { ">", LogoWords::gt, LogoWords::gtArity },
+  { ">=", LogoWords::gte, LogoWords::gteArity },
+  { "<", LogoWords::lt, LogoWords::ltArity },
+  { "<=", LogoWords::lte, LogoWords::lteArity },
 };
 
-Logo::Logo(LogoBuiltinWord *builtins, short size, LogoTimeProvider *time, LogoBuiltinWord *core, LogoString *strings, ArduinoFlashCode *code) : 
+LogoFunctionPrimitives::LogoFunctionPrimitives(LogoBuiltinWord *builtins, short size) : _builtins(builtins) {
+
+  _count = size / sizeof(LogoBuiltinWord);
+
+}
+
+Logo::Logo(LogoPrimitives *primitives, LogoTimeProvider *time, LogoBuiltinWord *core, LogoString *strings, ArduinoFlashCode *code) : 
   _nextcode(0), 
-  _builtins(builtins), 
+  _primitives(primitives), 
   _core(core), 
   _nextstring(0), _fixedstrings(strings), _fixedcount(0), 
   _pc(0), _tos(0), _schedule(time),
   _staticcode(code) {
   
   _varcount = 0;
-  _builtincount = size / sizeof(LogoBuiltinWord);
   _corecount = _core ? sizeof(Logo::core) / sizeof(LogoBuiltinWord) : 0;
   _nextjcode = START_JCODE;
 
@@ -363,6 +372,8 @@ void Logo::modifyreturn(short rel, short count) {
 
 bool Logo::parsestring(short type, short op, short opand, LogoStringResult *str) {
 
+  DEBUG_IN_ARGS(Logo, "parsestring", "%i%i%i", type, op, opand);
+  
   switch (type) {
   
   case OPTYPE_STRING:
@@ -580,6 +591,12 @@ int Logo::callword(const char *word) {
   short index = -1, category = 0;
   findbuiltin(&s, 0, s.length(), &index, &category);
   if (index >= 0) {
+  
+    if (category == 0 && _primitives) {
+      _primitives->exec(index, this);
+      return 0;
+    }
+    
     const LogoBuiltinWord *builtin = getbuiltin(index, category);
     if (!builtin) {
       // problem with the code, no actual builtin?
@@ -620,17 +637,54 @@ void Logo::schedulenext(short delay) {
   _schedule.schedule(delay); 
 }
 
+void Logo::getbuiltinname(short op, short opand, char *s, int len) const {
+  if (opand == 0 && _primitives) {
+    _primitives->name(op, s, len);
+  }
+  else {
+    int len = min(len, strlen(_core[opand == 1 ? op : 0]._name));
+    strncpy(s, _core[opand == 1 ? op : 0]._name, len);
+    s[len] = 0;
+  }
+}
+
 const LogoBuiltinWord *Logo::getbuiltin(short op, short opand) const {
 
-  if (opand == 0) {
-    return &_builtins[op];
-  }
-  else if (opand == 1) {
+  if (opand == 1) {
     return &_core[op];
   }
   else {
     return &Logo::core[0];
   }
+  
+}
+
+bool Logo::handleskip() {
+
+  DEBUG_IN(Logo, "handleskip");
+  
+  // make sure there are no return addresses.
+  short ret = _tos;
+  while (ret > 0 && _stack[ret][FIELD_OPTYPE] != SOPTYPE_RETADDR) {
+    ret--;
+  }
+  if (_stack[ret][FIELD_OPTYPE] == SOPTYPE_RETADDR) {
+    return false;
+  }
+  
+  if (_tos > 1 && _stack[_tos-2][FIELD_OPTYPE] == SOPTYPE_SKIP) {
+  
+    DEBUG_OUT(" skipping", 0);
+    
+    // shuffle the stack down to remove out skip but leave whatever
+    // is there after the return
+    memmove(_stack + _tos - 2, _stack + _tos - 1, 1 * sizeof(tLogoInstruction));
+    _tos--;
+    _pc++;
+    return true;
+  }
+  
+  return false;
   
 }
 
@@ -674,25 +728,29 @@ short Logo::step() {
   case OPTYPE_INT:
   case OPTYPE_DOUBLE:
     {
-      // push anything we find onto the stack.
-      if (!push(instField(_pc, FIELD_OPTYPE), instField(_pc, FIELD_OP), instField(_pc, FIELD_OPAND))) {
-        err = LG_STACK_OVERFLOW;
-      }
+      if (!handleskip()) {
+        // push anything we find onto the stack.
+        if (!push(instField(_pc, FIELD_OPTYPE), instField(_pc, FIELD_OP), instField(_pc, FIELD_OPAND))) {
+          err = LG_STACK_OVERFLOW;
+        }
+     }
     }
     break;
     
   case OPTYPE_REF:
     {
-      short var = getvarfromref(instField(_pc, FIELD_OP), instField(_pc, FIELD_OPAND));
-      if (var >= 0) {
-        if (!push(_variables[var]._type, _variables[var]._value, _variables[var]._valuelen)) {
-          err = LG_STACK_OVERFLOW;
+      if (!handleskip()) {
+        short var = getvarfromref(instField(_pc, FIELD_OP), instField(_pc, FIELD_OPAND));
+        if (var >= 0) {
+          if (!push(_variables[var]._type, _variables[var]._value, _variables[var]._valuelen)) {
+            err = LG_STACK_OVERFLOW;
+          }
         }
-      }
-      else {
-        // just push qa zero
-        if (!push(OPTYPE_INT, 0, 0)) {
-          err = LG_STACK_OVERFLOW;
+        else {
+          // just push qa zero
+          if (!push(OPTYPE_INT, 0, 0)) {
+            err = LG_STACK_OVERFLOW;
+          }
         }
       }
     }
@@ -700,18 +758,21 @@ short Logo::step() {
     
   case OPTYPE_POPREF:
   
-    // pop the value from the stack
-    if (!pop()) {
-      err = LG_STACK_OVERFLOW;
-      break;
-    }
-    if (_stack[_tos][FIELD_OPTYPE] != OPTYPE_INT) {
-      err = LG_NOT_INT;
-      break;
+    if (!handleskip()) {
+      // pop the value from the stack
+      if (!pop()) {
+        err = LG_STACK_OVERFLOW;
+        break;
+      }
+      if (_stack[_tos][FIELD_OPTYPE] != OPTYPE_INT) {
+        err = LG_NOT_INT;
+        break;
+      }
+    
+      // and set the variable to that value.
+      _variables[instField(_pc, FIELD_OP)]._value = _stack[_tos][FIELD_OP];
     }
     
-    // and set the variable to that value.
-    _variables[instField(_pc, FIELD_OP)]._value = _stack[_tos][FIELD_OP];
     break;
     
   case OPTYPE_JUMP:
@@ -765,8 +826,20 @@ short Logo::doarity() {
     memmove(_stack + ar, _stack + ar + 1, (_tos - ar + 1) * sizeof(tLogoInstruction));
     _tos--;
 
-    DEBUG_OUT("calling builtin %i", instField(pc, FIELD_OP));
-    getbuiltin(instField(pc, FIELD_OP), instField(pc, FIELD_OPAND))->_code(*this);
+    short op = instField(pc, FIELD_OP);
+    short opand = instField(pc, FIELD_OPAND);
+    
+    DEBUG_OUT("calling builtin %i%i", op, opand);
+    
+    if (_primitives && opand == 0) {
+      // call the primitive.
+       _primitives->exec(op, this);
+      return 0;
+    
+    }
+    else {
+      getbuiltin(op, opand)->_code(*this);
+    }
 
     return 0;
   }
@@ -791,17 +864,63 @@ short Logo::doarity() {
 
 }
 
+short LogoFunctionPrimitives::find(LogoString *str, short start, short slen) {
+
+  for (short i=0; i<_count; i++) {
+    if (strlen(_builtins[i]._name) == slen && str->ncmp(_builtins[i]._name, start, slen) == 0) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+short LogoFunctionPrimitives::arity(short index) {
+  return _builtins[index]._arity;
+}
+
+void LogoFunctionPrimitives::exec(short index, Logo *logo) {
+  if (_builtins) {
+    _builtins[index]._code(*logo);
+  }
+}
+
+void LogoFunctionPrimitives::name(short index, char *s, int len) {
+  if (_builtins) {
+    len = min(len, strlen(_builtins[index]._name));
+    strncpy(s, _builtins[index]._name, len);
+    s[len] = 0;
+  }
+}
+
 short Logo::dobuiltin() {
 
   DEBUG_IN(Logo, "dobuiltin");
 
-  // handle arity by pushing arguments onto the stack
-  
   // save away where we will call to.
   short call = _pc;
   
+  short opand = instField(call, FIELD_OPAND);
+  short op = instField(call, FIELD_OP);
+  if (_primitives && opand == 0) {
+    short arity = _primitives->arity(op);
+    
+    if (arity == 0) {
+      // call the primitive.
+      _primitives->exec(op, this);
+      return 0;
+    }
+    
+    // push arity. We need to wait for this many calls.
+    if (!push(SOPTYPE_ARITY, call, arity)) {
+      return LG_STACK_OVERFLOW;
+    }
+  
+    return 0;
+    
+  }
+  
   // get the builtin.
-  const LogoBuiltinWord *builtin = getbuiltin(instField(call, FIELD_OP), instField(call, FIELD_OPAND));
+  const LogoBuiltinWord *builtin = getbuiltin(op, opand);
   if (!builtin) {
       // problem with the code, no actual builtin?
       return LG_OUT_OF_CODE;
@@ -911,6 +1030,12 @@ short Logo::doreturn() {
     
 }
 
+void Logo::setprimitives(LogoString *str, short start, short slen) {
+  if (_primitives) {
+    _primitives->set(str, start, slen);
+  }
+}
+
 void Logo::addop(tJump *next, short type, short op, short opand) {
 
   DEBUG_IN_ARGS(Logo, "addop", "%i%i%i", type, op, opand);
@@ -928,21 +1053,22 @@ void Logo::findbuiltin(LogoString *str, short start, short slen, short *index, s
   
   *index = -1;
   *category = 0;
-  for (short i=0; i<_builtincount; i++) {
-   if (strlen(_builtins[i]._name) == slen && str->ncmp(_builtins[i]._name, start, slen) == 0) {
-      *index = i;
-      return;
+  if (_primitives) {
+    *index = _primitives->find(str, start, slen);
+  }
+
+  if (*index < 0) {
+    for (short i=0; i<_corecount; i++) {
+      if (strlen(_core[i]._name) == slen && str->ncmp(_core[i]._name, start, slen) == 0) {
+        *index = i;
+        *category = 1;
+        return;
+      }
     }
   }
   
-  for (short i=0; i<_corecount; i++) {
-    if (strlen(_core[i]._name) == slen && str->ncmp(_core[i]._name, start, slen) == 0) {
-      *index = i;
-      *category = 1;
-      return;
-    }
-  }
-  
+  DEBUG_RETURN(" %i%i", *index, *category);
+
 }
 
 short Logo::findfixed(LogoString *stri, short strstart, short slen) {
@@ -1419,10 +1545,6 @@ int Logo::varstringslist(LogoCompiler *compiler, char *buf, int len) const {
   
 }
 
-#endif // !ARDUINO
-
-#if defined(LOGO_DEBUG) && !defined(ARDUINO)
-
 void Logo::dumpvars(const LogoCompiler *compiler) const {
 
   cout << "vars: " << endl;
@@ -1455,7 +1577,7 @@ void Logo::dumpstaticwords(const LogoCompiler *compiler) const {
         short opand = instField(i, FIELD_OPAND);
         LogoStringResult result;
         getfixed(&result, word);
-        result.ncpy(name);
+        result.ncpy(name, sizeof(name));
         compiler->entab(1);
         cout << name << " (" << op << ") "<< opand << endl;
         word++;
@@ -1497,7 +1619,6 @@ void Logo::dumpcode(const LogoCompiler *compiler, bool all) const {
   if (!_nextcode) {
     compiler->entab(1);
     cout << "empty" << endl;
-    return;
   }
 
   for (short i=0; i<(all ? MAX_CODE : _nextcode); i++) {
@@ -1543,7 +1664,7 @@ void Logo::dumpstack(const LogoCompiler *compiler, bool all) const {
   
 }
 
-#endif // defined(LOGO_DEBUG) && !defined(ARDUINO)
+#endif // !defined(ARDUINO)
 
 short LogoWords::errArity = 0;
 
@@ -1693,10 +1814,55 @@ void LogoWords::eq(Logo &logo) {
   
 }
 
+short LogoWords::gtArity = 1;
+
+void LogoWords::gt(Logo &logo) {
+
+  // args are backwards.
+  double i1 = logo.popdouble();
+  double i2 = logo.popdouble();
+  logo.pushint(i2 > i1);
+  
+}
+
+short LogoWords::ltArity = 1;
+
+void LogoWords::lt(Logo &logo) {
+
+  // args are backwards.
+  double i1 = logo.popdouble();
+  double i2 = logo.popdouble();
+  logo.pushint(i2 < i1);
+  
+}
+
+short LogoWords::gteArity = 1;
+
+void LogoWords::gte(Logo &logo) {
+
+  // args are backwards.
+  double i1 = logo.popdouble();
+  double i2 = logo.popdouble();
+  logo.pushint(i2 >= i1);
+  
+}
+
+short LogoWords::lteArity = 1;
+
+void LogoWords::lte(Logo &logo) {
+
+  // args are backwards.
+  double i1 = logo.popdouble();
+  double i2 = logo.popdouble();
+  logo.pushint(i2 <= i1);
+  
+}
+
 short LogoWords::subtractArity = 1;
 
 void LogoWords::subtract(Logo &logo) {
 
+  // args are backwards.
   double a1 = logo.popdouble();
   double a2 = logo.popdouble();
   logo.pushdouble(a2 - a1);

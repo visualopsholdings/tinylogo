@@ -30,8 +30,7 @@ BOOST_AUTO_TEST_CASE( scanfor )
 {
   cout << "=== scanfor ===" << endl;
   
-  LogoBuiltinWord empty[] = {};
-  Logo logo(empty, 0, 0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   const char *str = "AAAA;BBBBC;";
@@ -57,12 +56,12 @@ BOOST_AUTO_TEST_CASE( scanfor )
 
 }
 
+#ifdef LOGO_SENTENCES
 BOOST_AUTO_TEST_CASE( dosentences )
 {
   cout << "=== dosentences ===" << endl;
   
-  LogoBuiltinWord empty[] = {};
-  Logo logo(empty, 0, 0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   char str[50];
@@ -77,8 +76,7 @@ BOOST_AUTO_TEST_CASE( dosentencesStart )
 {
   cout << "=== dosentencesStart ===" << endl;
   
-  LogoBuiltinWord empty[] = {};
-  Logo logo(empty, 0, 0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   char str[50];
@@ -87,17 +85,46 @@ BOOST_AUTO_TEST_CASE( dosentencesStart )
   BOOST_CHECK_EQUAL(str, "&0 &1 &2 &3;bbbb");
   
 }
+#endif
 
-BOOST_AUTO_TEST_CASE( findbuiltindef )
+BOOST_AUTO_TEST_CASE( staticPrimitivesfind )
 {
-  cout << "=== findbuiltindef ===" << endl;
+  cout << "=== staticPrimitivesfind ===" << endl;
   
-  Logo logo(0, 0, 0);
-  LogoCompiler compiler(&logo);
+  LogoStaticPrimitives primitives;
+  LogoSimpleString string("ABC,DEFG:2,DEF");
+  primitives.set(&string, 0, string.length());
 
-  compiler.compile("BUILTIN(ABC,DEFG)");
-  compiler.compile("DEFG");
-  BOOST_CHECK_EQUAL(logo.geterr(), 0);
-  DEBUG_DUMP(false);
+  LogoSimpleString string3("ABC");
+  BOOST_CHECK_EQUAL(primitives.find(&string3, 0, string3.length()), 0);
   
+  LogoSimpleString string2("DEFG");
+  BOOST_CHECK_EQUAL(primitives.find(&string2, 0, string2.length()), 1);
+  
+  LogoSimpleString string4("DEF");
+  BOOST_CHECK_EQUAL(primitives.find(&string4, 0, string4.length()), 2);
+  
+  LogoSimpleString string5("XYZ");
+  BOOST_CHECK_EQUAL(primitives.find(&string5, 0, string5.length()), -1);
+  
+}
+
+BOOST_AUTO_TEST_CASE( staticPrimitivesname )
+{
+  cout << "=== staticPrimitivesname ===" << endl;
+  
+  LogoStaticPrimitives primitives;
+  LogoSimpleString string("ABC,DEFG:2,DEF");
+  primitives.set(&string, 0, string.length());
+
+  char name[128];
+  primitives.name(0, name, sizeof(name));
+  BOOST_CHECK_EQUAL(name, "ABC");
+
+  primitives.name(1, name, sizeof(name));
+  BOOST_CHECK_EQUAL(name, "DEFG");
+
+  primitives.name(2, name, sizeof(name));
+  BOOST_CHECK_EQUAL(name, "DEF");
+
 }

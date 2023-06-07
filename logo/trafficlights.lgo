@@ -3,7 +3,7 @@
 #   Author: Paul Hamilton (paul@visualops.com)
 #   Date: 2-Jun-2023
 #
-#   allow colors to be set on an RGB LED
+#   Allow a button to change traffic lights.
 #
 #   This work is licensed under the Creative Commons Attribution 4.0 International License. 
 #   To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0/ or 
@@ -13,7 +13,7 @@
 #
 
 # send a raw analog value to an RGB LED's redm green and blue channel (0 is full on)
-BUILTIN(REDR:1,GREENR:1,BLUER:1)
+BUILTIN(REDR:1,GREENR:1,BLUER:1,BUTTON,HIGH)
 
 # scale a color to be between 1 and 100
 TO SCLR :C
@@ -49,13 +49,54 @@ TO GREEN
   SETALL 0 100 0
 END
 
-TO BLUE
-  SETALL 0 0 100
-END
-
 TO OFF
   SETALL 0 0 0
 END
 
-AMBER
+TO ISREDSTATE
+  :STATE = 0
+END
 
+TO ISGREENSTATE
+  :STATE = 1
+END
+
+TO ISMAXSTATE
+  :STATE > 2
+END
+
+TO NEXTSTATE
+  :STATE + 1
+END
+
+TO FIRSTSTATE
+  MAKE "STATE 0
+END
+
+TO NOOP
+END
+
+TO NOTRED
+  IFTEST ISGREENSTATE GREEN AMBER
+END
+
+TO PRESS
+  IFELSE ISMAXSTATE FIRSTSTATE NOOP
+  MAKE "STATE NEXTSTATE
+  IFELSE ISREDSTATE RED NOTRED
+END
+
+# TO TESTSTATE
+#   MAKE "OLDVALUE :VALUE
+#   IFELSE :VALUE = HIGH BUTTONPRESS []
+# END
+# 
+# TO TESTVALUE
+#   MAKE "VALUE BUTTON
+#   IFELSE :VALUE = :OLDVALUE [] TESTSTATE
+# RED
+
+# FOREVER TESTBUTTON
+MAKE "STATE 1
+PRESS
+#GREEN

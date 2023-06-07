@@ -49,8 +49,7 @@ BOOST_AUTO_TEST_CASE( make )
 {
   cout << "=== make ===" << endl;
   
-  LogoBuiltinWord empty[] = {};
-  Logo logo(empty, 0, 0, Logo::core);
+  Logo logo(0, 0, Logo::core);
   LogoCompiler compiler(&logo);
 
   compiler.compile("MAKE \"VAR 10");
@@ -72,7 +71,8 @@ BOOST_AUTO_TEST_CASE( makeChange )
   
   LogoBuiltinWord empty[] = {};
   TestTimeProvider time;
-  Logo logo(empty, 0, &time, Logo::core);
+  LogoFunctionPrimitives primitives(empty, 0);
+  Logo logo(&primitives, &time, Logo::core);
   LogoCompiler compiler(&logo);
 
   compiler.compile("MAKE \"num 100");
@@ -98,10 +98,12 @@ BOOST_AUTO_TEST_CASE( forever )
     { "OFF", &ledOff },
   };
   TestTimeProvider time;
-  Logo logo(builtins, sizeof(builtins), &time, Logo::core);
+  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
+  Logo logo(&primitives, &time, Logo::core);
   LogoCompiler compiler(&logo);
 
-  compiler.compile("1 2 FOREVER [ON WAIT 10 OFF WAIT 20];");
+  compiler.compile("TO DOIT;ON WAIT 10 OFF WAIT 20;END");
+  compiler.compile("1 2 FOREVER DOIT");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -128,10 +130,12 @@ BOOST_AUTO_TEST_CASE( repeat )
     { "OFF", &ledOff },
   };
   TestTimeProvider time;
-  Logo logo(builtins, sizeof(builtins), &time, Logo::core);
+  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
+  Logo logo(&primitives, &time, Logo::core);
   LogoCompiler compiler(&logo);
 
-  compiler.compile("REPEAT 3 [ON WAIT 10 OFF WAIT 20];");
+  compiler.compile("TO DOIT;ON WAIT 10 OFF WAIT 20;END");
+  compiler.compile("REPEAT 3 DOIT");
   DEBUG_DUMP(false);
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
 
@@ -153,8 +157,7 @@ BOOST_AUTO_TEST_CASE( eqWord )
 {
   cout << "=== eqWord ===" << endl;
   
-  LogoBuiltinWord empty[] = {};
-  Logo logo(empty, 0, 0, Logo::core);
+  Logo logo(0, 0, Logo::core);
   LogoCompiler compiler(&logo);
 
   compiler.compile("1 = 3");
@@ -176,19 +179,121 @@ BOOST_AUTO_TEST_CASE( eqWord )
   BOOST_CHECK(logo.stackempty());
 }
 
+BOOST_AUTO_TEST_CASE( gtWord )
+{
+  cout << "=== gtWord ===" << endl;
+  
+  Logo logo(0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("3 > 1");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popint(), 1);
+  
+  logo.reset();
+  compiler.reset();
+  compiler.compile("10 > 11");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+  
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popint(), 0);
+  
+  BOOST_CHECK(logo.stackempty());
+}
+
+BOOST_AUTO_TEST_CASE( gteWord )
+{
+  cout << "=== gteWord ===" << endl;
+  
+  Logo logo(0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("3 >= 1");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popint(), 1);
+  
+  logo.reset();
+  compiler.reset();
+  compiler.compile("10 >= 10");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+  
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popint(), 1);
+  
+  BOOST_CHECK(logo.stackempty());
+}
+
+BOOST_AUTO_TEST_CASE( ltWord )
+{
+  cout << "=== ltWord ===" << endl;
+  
+  Logo logo(0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("3 < 1");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popint(), 0);
+  
+  logo.reset();
+  compiler.reset();
+  compiler.compile("10 < 11");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+  
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popint(), 1);
+  
+  BOOST_CHECK(logo.stackempty());
+}
+
+BOOST_AUTO_TEST_CASE( lteWord )
+{
+  cout << "=== lteWord ===" << endl;
+  
+  Logo logo(0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("3 <= 1");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popint(), 0);
+  
+  logo.reset();
+  compiler.reset();
+  compiler.compile("10 <= 10");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+  
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popint(), 1);
+  
+  BOOST_CHECK(logo.stackempty());
+}
+
 BOOST_AUTO_TEST_CASE( ifelseFalse )
 {
   cout << "=== ifelseFalse ===" << endl;
   
-  LogoBuiltinWord empty[] = {};
-  Logo logo(empty, 0, 0, Logo::core);
+  Logo logo(0, 0, Logo::core);
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO TEST; 0; END");
   compiler.compile("TO THEN; 2; END");
   compiler.compile("TO ELSE; 3; END");
   compiler.compile("IFELSE TEST THEN ELSE");
-//  compiler.compile("IFELSE [1 = 1] [THIS] [THAT]");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -203,18 +308,17 @@ BOOST_AUTO_TEST_CASE( ifelseTrue )
 {
   cout << "=== ifelseTrue ===" << endl;
   
-  LogoBuiltinWord empty[] = {};
-  Logo logo(empty, 0, 0, Logo::core);
+  Logo logo(0, 0, Logo::core);
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO TEST; 1; END");
   compiler.compile("TO THEN; 2; END");
   compiler.compile("TO ELSE; 3; END");
   compiler.compile("IFELSE TEST THEN ELSE");
-//  compiler.compile("IFELSE [1 = 1] [THIS] [THAT]");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
+  DEBUG_STEP_DUMP(10, false);
   BOOST_CHECK_EQUAL(logo.run(), 0);
   BOOST_CHECK_EQUAL(logo.popint(), 2);
   BOOST_CHECK(logo.stackempty());
@@ -225,11 +329,11 @@ BOOST_AUTO_TEST_CASE( ifelseCond )
 {
   cout << "=== ifelseCond ===" << endl;
   
-  LogoBuiltinWord empty[] = {};
-  Logo logo(empty, 0, 0, Logo::core);
+  Logo logo(0, 0, Logo::core);
   LogoCompiler compiler(&logo);
 
-  compiler.compile("IFELSE [1 = 0] [2] [3]");
+  compiler.compile("TO COND;1 - 0;END");
+  compiler.compile("IFELSE COND 2 3");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -240,12 +344,13 @@ BOOST_AUTO_TEST_CASE( ifelseCond )
 
 }
 
+#ifdef LOGO_SENTENCES
+
 BOOST_AUTO_TEST_CASE( ifelseSentences )
 {
   cout << "=== ifelseSentences ===" << endl;
   
-  LogoBuiltinWord empty[] = {};
-  Logo logo(empty, 0, 0, Logo::core);
+  Logo logo(0, 0, Logo::core);
   LogoCompiler compiler(&logo);
 
   compiler.compile("IFELSE [1] [2] [3]");
@@ -257,16 +362,16 @@ BOOST_AUTO_TEST_CASE( ifelseSentences )
   BOOST_CHECK(logo.stackempty());
 
 }
+#endif
 
 BOOST_AUTO_TEST_CASE( ifelseLiteralTrueCond )
 {
   cout << "=== ifelseLiteralTrueCond ===" << endl;
   
-  LogoBuiltinWord empty[] = {};
-  Logo logo(empty, 0, 0, Logo::core);
+  Logo logo(0, 0, Logo::core);
   LogoCompiler compiler(&logo);
 
-  compiler.compile("IFELSE 1 [2] [3]");
+  compiler.compile("IFELSE 1 2 3");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -281,11 +386,10 @@ BOOST_AUTO_TEST_CASE( ifelseLiteralFalseCond )
 {
   cout << "=== ifelseLiteralFalseCond ===" << endl;
   
-  LogoBuiltinWord empty[] = {};
-  Logo logo(empty, 0, 0, Logo::core);
+  Logo logo(0, 0, Logo::core);
   LogoCompiler compiler(&logo);
 
-  compiler.compile("IFELSE 0 [2] [3]");
+  compiler.compile("IFELSE 0 2 3");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -300,8 +404,7 @@ BOOST_AUTO_TEST_CASE( ifelseTrueLiteralNumBranches )
 {
   cout << "=== ifelseTrueLiteralNumBranches ===" << endl;
   
-  LogoBuiltinWord empty[] = {};
-  Logo logo(empty, 0, 0, Logo::core);
+  Logo logo(0, 0, Logo::core);
   LogoCompiler compiler(&logo);
 
   compiler.compile("IFELSE 1 2 3");
@@ -319,8 +422,7 @@ BOOST_AUTO_TEST_CASE( ifelseFalseLiteralNumBranches )
 {
   cout << "=== ifelseFalseLiteralNumBranches ===" << endl;
   
-  LogoBuiltinWord empty[] = {};
-  Logo logo(empty, 0, 0, Logo::core);
+  Logo logo(0, 0, Logo::core);
   LogoCompiler compiler(&logo);
 
   compiler.compile("IFELSE 0 2 3");
@@ -338,8 +440,7 @@ BOOST_AUTO_TEST_CASE( ifelseTrueLiteralStringBranches )
 {
   cout << "=== ifelseTrueLiteralStringBranches ===" << endl;
   
-  LogoBuiltinWord empty[] = {};
-  Logo logo(empty, 0, 0, Logo::core);
+  Logo logo(0, 0, Logo::core);
   LogoCompiler compiler(&logo);
 
   compiler.compile("IFELSE 1 \"A \"B");
@@ -359,8 +460,7 @@ BOOST_AUTO_TEST_CASE( ifelseFalseLiteralStringBranches )
 {
   cout << "=== ifelseTrueLiteralStringBranches ===" << endl;
   
-  LogoBuiltinWord empty[] = {};
-  Logo logo(empty, 0, 0, Logo::core);
+  Logo logo(0, 0, Logo::core);
   LogoCompiler compiler(&logo);
 
   compiler.compile("IFELSE 0 \"A \"B");
@@ -380,8 +480,7 @@ BOOST_AUTO_TEST_CASE( ifelseVarRef )
 {
   cout << "=== ifelseVarRef ===" << endl;
   
-  LogoBuiltinWord empty[] = {};
-  Logo logo(empty, 0, 0, Logo::core);
+  Logo logo(0, 0, Logo::core);
   LogoCompiler compiler(&logo);
 
   compiler.compile("MAKE \"VAR 1");
@@ -398,12 +497,33 @@ BOOST_AUTO_TEST_CASE( ifelseVarRef )
 
 }
 
+BOOST_AUTO_TEST_CASE( ifelseCondVarRefStringRet )
+{
+  cout << "=== ifelseCondVarRefStringRet ===" << endl;
+  
+  Logo logo(0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("TO COND;:VAR;END");
+  compiler.compile("MAKE \"VAR 1");
+  compiler.compile("IFELSE COND \"A \"B");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  DEBUG_STEP_DUMP(10, false);
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  LogoStringResult str;
+  logo.popstring(&str);  
+  BOOST_CHECK_EQUAL(str.ncmp("A"), 0);
+  BOOST_CHECK(logo.stackempty());
+
+}
+
 BOOST_AUTO_TEST_CASE( ifelseMissingVar )
 {
   cout << "=== ifelseMissingVar ===" << endl;
   
-  LogoBuiltinWord empty[] = {};
-  Logo logo(empty, 0, 0, Logo::core);
+  Logo logo(0, 0, Logo::core);
   LogoCompiler compiler(&logo);
 
   compiler.compile("IFELSE :VAR \"A \"B");
@@ -415,6 +535,30 @@ BOOST_AUTO_TEST_CASE( ifelseMissingVar )
   LogoStringResult str;
   logo.popstring(&str);  
   BOOST_CHECK_EQUAL(str.ncmp("B"), 0);
+  BOOST_CHECK(logo.stackempty());
+
+}
+
+BOOST_AUTO_TEST_CASE( ifelseGT )
+{
+  cout << "=== ifelseGT ===" << endl;
+  
+  Logo logo(0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("TO COND;:VAR > 2;END");
+  compiler.compile("MAKE \"VAR 3");
+  compiler.compile("TO A;\"A;END");
+  compiler.compile("TO B;\"B;END");
+  compiler.compile("IFELSE COND A B");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  DEBUG_STEP_DUMP(10, false);
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  LogoStringResult str;
+  logo.popstring(&str);  
+  BOOST_CHECK_EQUAL(str.ncmp("A"), 0);
   BOOST_CHECK(logo.stackempty());
 
 }
@@ -455,7 +599,8 @@ BOOST_AUTO_TEST_CASE( waitWordFired )
     { "ON", &ledOn },
   };
   TestWordTimeProvider time;
-  Logo logo(builtins, sizeof(builtins), &time, Logo::core);
+  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
+  Logo logo(&primitives, &time, Logo::core);
   LogoCompiler compiler(&logo);
  
   compiler.compile("WAIT 1000 ON");
@@ -478,7 +623,8 @@ BOOST_AUTO_TEST_CASE( waitWordNotReady )
     { "ON", &ledOn },
   };
   TestWordTimeProvider time;
-  Logo logo(builtins, sizeof(builtins), &time, Logo::core);
+  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
+  Logo logo(&primitives, &time, Logo::core);
   LogoCompiler compiler(&logo);
  
   compiler.compile("WAIT 1000 ON");
@@ -499,8 +645,7 @@ BOOST_AUTO_TEST_CASE( arithmetic )
 {
   cout << "=== arithmetic ===" << endl;
   
-  LogoBuiltinWord empty[] = {};
-  Logo logo(empty, 0, 0, Logo::core);
+  Logo logo(0, 0, Logo::core);
   LogoCompiler compiler(&logo);
 
   compiler.compile("3 - 1 * 4 / 3");

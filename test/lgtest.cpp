@@ -60,7 +60,8 @@ BOOST_AUTO_TEST_CASE( builtin )
   LogoBuiltinWord builtins[] = {
     { "ON", &ledOn }
   };
-  Logo logo(builtins, sizeof(builtins), 0);
+  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
+  Logo logo(&primitives);
   LogoCompiler compiler(&logo);
 
   compiler.compile("ON");
@@ -83,7 +84,8 @@ BOOST_AUTO_TEST_CASE( compound )
     { "OFF", &ledOff },
     { "WAIT", &wait, 1 }
   };
-  Logo logo(builtins, sizeof(builtins), 0);
+  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
+  Logo logo(&primitives);
   LogoCompiler compiler(&logo);
 
   compiler.compile("ON WAIT 100 OFF WAIT 20");
@@ -108,7 +110,8 @@ BOOST_AUTO_TEST_CASE( defineSimpleWord )
     { "ON", &ledOn },
     { "OFF", &ledOff }
   };
-  Logo logo(builtins, sizeof(builtins), 0);
+  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
+  Logo logo(&primitives);
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO TURNON; ON; END;");
@@ -141,7 +144,8 @@ BOOST_AUTO_TEST_CASE( defineCompoundWord )
     { "OFF", &ledOff },
     { "WAIT", &wait, 1 }
   };
-  Logo logo(builtins, sizeof(builtins), 0);
+  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
+  Logo logo(&primitives);
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO TEST1; ON WAIT 100 OFF WAIT 20; END;");
@@ -173,7 +177,8 @@ BOOST_AUTO_TEST_CASE( nestedWord )
     { "OFF", &ledOff },
     { "WAIT", &wait, 1 }
   };
-  Logo logo(builtins, sizeof(builtins), 0);
+  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
+  Logo logo(&primitives);
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO TEST1; ON WAIT 100 OFF WAIT 20; END;");
@@ -201,7 +206,8 @@ BOOST_AUTO_TEST_CASE( defineCompoundWordRun1 )
     { "OFF", &ledOff },
     { "WAIT", &wait, 1 }
   };
-  Logo logo(builtins, sizeof(builtins), 0);
+  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
+  Logo logo(&primitives);
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO TEST1; ON WAIT 10 OFF WAIT 20; END;");
@@ -224,8 +230,7 @@ BOOST_AUTO_TEST_CASE( defineEmptyWord )
 {
   cout << "=== defineEmptyWord ===" << endl;
   
-  LogoBuiltinWord empty[] = {};
-  Logo logo(empty, 0, 0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO TEST1; END;");
@@ -239,6 +244,23 @@ BOOST_AUTO_TEST_CASE( defineEmptyWord )
   
 }
 
+void sarg(Logo &logo) {
+
+  char s[LINE_LEN];
+  LogoStringResult result;
+  logo.popstring(&result);
+  result.ncpy(s, sizeof(s));
+
+  strstream str;
+  str << "SARG " << s;
+  gCmds.push_back(str.str());
+#ifdef PRINT_RESULT
+  cout << gCmds.back() << endl;
+#endif  
+}
+
+#ifdef LOGO_SENTENCES
+
 BOOST_AUTO_TEST_CASE( sentence )
 {
   cout << "=== sentence ===" << endl;
@@ -248,7 +270,8 @@ BOOST_AUTO_TEST_CASE( sentence )
     { "OFF", &ledOff },
     { "WAIT", &wait, 1 }
   };
-  Logo logo(builtins, sizeof(builtins), 0);
+  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
+  Logo logo(&primitives);
   LogoCompiler compiler(&logo);
 
   compiler.compile("[ON WAIT 10 OFF WAIT 20];");
@@ -274,7 +297,8 @@ BOOST_AUTO_TEST_CASE( sentences )
     { "OFF", &ledOff },
     { "WAIT", &wait, 1 }
   };
-  Logo logo(builtins, sizeof(builtins), 0);
+  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
+  Logo logo(&primitives);
   LogoCompiler compiler(&logo);
 
   compiler.compile("[ON] [WAIT 10] [OFF] [WAIT 20];");
@@ -292,21 +316,6 @@ BOOST_AUTO_TEST_CASE( sentences )
   
 }
 
-void sarg(Logo &logo) {
-
-  char s[LINE_LEN];
-  LogoStringResult result;
-  logo.popstring(&result);
-  result.ncpy(s, sizeof(s));
-
-  strstream str;
-  str << "SARG " << s;
-  gCmds.push_back(str.str());
-#ifdef PRINT_RESULT
-  cout << gCmds.back() << endl;
-#endif  
-}
-
 BOOST_AUTO_TEST_CASE( sentenceInWord )
 {
   cout << "=== sentenceInWord ===" << endl;
@@ -314,7 +323,8 @@ BOOST_AUTO_TEST_CASE( sentenceInWord )
   LogoBuiltinWord builtins[] = {
     { "SARG", &sarg, 1 }
   };
-  Logo logo(builtins, sizeof(builtins), 0);
+  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
+  Logo logo(&primitives);
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO TEST; SARG [XXX]; END;");
@@ -330,6 +340,8 @@ BOOST_AUTO_TEST_CASE( sentenceInWord )
   
 }
 
+#endif // LOGO_SENTENCES
+
 BOOST_AUTO_TEST_CASE( arityLiteral1 )
 {
   cout << "=== arityLiteral1 ===" << endl;
@@ -337,7 +349,8 @@ BOOST_AUTO_TEST_CASE( arityLiteral1 )
   LogoBuiltinWord builtins[] = {
     { "WAIT", &wait, 1 }
   };
-  Logo logo(builtins, sizeof(builtins), 0);
+  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
+  Logo logo(&primitives);
   LogoCompiler compiler(&logo);
 
   compiler.compile("WAIT 20");
@@ -358,7 +371,8 @@ BOOST_AUTO_TEST_CASE( arityWord1 )
   LogoBuiltinWord builtins[] = {
     { "WAIT", &wait, 1 }
   };
-  Logo logo(builtins, sizeof(builtins), 0);
+  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
+  Logo logo(&primitives);
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO TIME; 20; END");
@@ -398,7 +412,8 @@ BOOST_AUTO_TEST_CASE( arityLiteral )
   LogoBuiltinWord builtins[] = {
     { "ARGS2", &args2, 2 }
   };
-  Logo logo(builtins, sizeof(builtins), 0);
+  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
+  Logo logo(&primitives);
   LogoCompiler compiler(&logo);
 
   compiler.compile("ARGS2 20 XXXX");
@@ -420,7 +435,8 @@ BOOST_AUTO_TEST_CASE( arityWord )
   LogoBuiltinWord builtins[] = {
     { "ARGS2", &args2, 2 }
   };
-  Logo logo(builtins, sizeof(builtins), 0);
+  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
+  Logo logo(&primitives);
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO TIME; 20; END");
@@ -444,11 +460,12 @@ BOOST_AUTO_TEST_CASE( seperateLines )
   LogoBuiltinWord builtins[] = {
     { "SARG", &sarg, 1 }
   };
-  Logo logo(builtins, sizeof(builtins), 0);
+  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
+  Logo logo(&primitives);
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO TEST\n");
-  compiler.compile("  SARG [XXX]\n");
+  compiler.compile("  SARG \"XXX\n");
   compiler.compile("END\n");
   compiler.compile("TEST");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
@@ -463,15 +480,16 @@ BOOST_AUTO_TEST_CASE( seperateLines )
 
 BOOST_AUTO_TEST_CASE( newLines )
 {
-  cout << "=== seperateLines ===" << endl;
+  cout << "=== newLines ===" << endl;
   
   LogoBuiltinWord builtins[] = {
     { "SARG", &sarg, 1 }
   };
-  Logo logo(builtins, sizeof(builtins), 0);
+  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
+  Logo logo(&primitives);
   LogoCompiler compiler(&logo);
 
-  compiler.compile("TO TEST\n\tSARG [XXX]\nEND\nTEST");
+  compiler.compile("TO TEST\n\tSARG \"XXX\nEND\nTEST");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -489,10 +507,11 @@ BOOST_AUTO_TEST_CASE( reset )
   LogoBuiltinWord builtins[] = {
     { "SARG", &sarg, 1 }
   };
-  Logo logo(builtins, sizeof(builtins), 0);
+  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
+  Logo logo(&primitives);
   LogoCompiler compiler(&logo);
 
-  compiler.compile("TO TEST\n\tSARG [XXX]\nEND\nTEST");
+  compiler.compile("TO TEST\n\tSARG \"XXX\nEND\nTEST");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -527,7 +546,8 @@ BOOST_AUTO_TEST_CASE( infix )
   LogoBuiltinWord builtins[] = {
     { "INFIX", &infixfn, 1 },
   };
-  Logo logo(builtins, sizeof(builtins), 0);
+  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
+  Logo logo(&primitives);
   LogoCompiler compiler(&logo);
 
   compiler.compile("1 INFIX 5");
@@ -546,8 +566,7 @@ BOOST_AUTO_TEST_CASE( literalsOnStack )
 {
   cout << "=== literalsOnStack ===" << endl;
   
-  LogoBuiltinWord empty[] = {};
-  Logo logo(empty, 0, 0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO NUM; 1 2 3; END; NUM");
@@ -579,8 +598,7 @@ BOOST_AUTO_TEST_CASE( arguments )
 {
   cout << "=== arguments ===" << endl;
   
-  LogoBuiltinWord empty[] = {};
-  Logo logo(empty, 0, 0, Logo::core);
+  Logo logo(0, 0, Logo::core);
   LogoCompiler compiler(&logo);
 
 //   compiler.compile("TO MULT; :A * :B; END;");
@@ -609,8 +627,7 @@ BOOST_AUTO_TEST_CASE( flash )
 {
   cout << "=== flash ===" << endl;
   
-  LogoBuiltinWord empty[] = {};
-  Logo logo(empty, 0, 0, Logo::core);
+  Logo logo(0, 0, Logo::core);
   LogoCompiler compiler(&logo);
 
   ArduinoFlashString program(program_flash);
@@ -643,10 +660,8 @@ BOOST_AUTO_TEST_CASE( fixedStrings )
 {
   cout << "=== fixedStrings ===" << endl;
   
-  LogoBuiltinWord empty[] = {};
   ArduinoFlashString strings(strings_fixedStrings);
-  Logo logo(empty, 0, 0, Logo::core, &strings);
-//  Logo logo(empty, 0, 0, Logo::core);
+  Logo logo(0, 0, Logo::core, &strings);
   LogoCompiler compiler(&logo);
 
   ArduinoFlashString program(program_fixedStrings);
@@ -668,8 +683,7 @@ BOOST_AUTO_TEST_CASE( getstring )
 {
   cout << "=== getstring ===" << endl;
   
-  LogoBuiltinWord empty[] = {};
-  Logo logo(empty, 0, 0, 0, 0);
+  Logo logo;
 
    const char *s1 = "XXX";
   LogoSimpleString ss1(s1);
@@ -695,8 +709,7 @@ BOOST_AUTO_TEST_CASE( stringcmp )
   cout << "=== stringcmp ===" << endl;
   
   ArduinoFlashString strings(strings_fixedStrings);
-  LogoBuiltinWord empty[] = {};
-  Logo logo(empty, 0, 0, 0, &strings);
+  Logo logo(0, 0, 0, &strings);
 
   LogoSimpleString s1("XXX");
   short len1 = s1.length();
@@ -768,7 +781,8 @@ BOOST_AUTO_TEST_CASE( staticProgUse )
     { "OFF", &ledOff },
     { "WAIT", &wait, 1 }
   };
-  Logo logo(builtins, sizeof(builtins), 0);
+  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
+  Logo logo(&primitives);
   LogoCompiler compiler(&logo);
   
   compiler.compile(static_program);
@@ -793,7 +807,8 @@ BOOST_AUTO_TEST_CASE( staticCodeUse )
   };
   ArduinoFlashCode code((const PROGMEM short *)code_staticCode);
   ArduinoFlashString strings(strings_staticCode);
-  Logo logo(builtins, sizeof(builtins), 0, 0, &strings, &code);
+  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
+  Logo logo(&primitives, 0, 0, &strings, &code);
 
   gCmds.clear();
   BOOST_CHECK_EQUAL(logo.run(), 0);
