@@ -372,6 +372,8 @@ https://forum.arduino.cc/t/how-to-properly-use-wire-onreceive/891195/12
 
 ## Current development focus
 
+### FOREVER seems to be broken now.
+
 ### OUTPUT from the Arduino to the PI
 
 Actually pretty simple, just need examples.
