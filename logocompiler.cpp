@@ -29,7 +29,11 @@ void LogoCompiler::outstate() const {
 #ifndef ARDUINO
 #include <iostream>
 #include <sstream>
+#include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
 using namespace std;
+using namespace boost::algorithm;
+namespace fs = boost::filesystem;
 #endif
 
 #include <stdlib.h>
@@ -618,7 +622,7 @@ void LogoStaticPrimitives::set(LogoString *str, short start, short slen) {
   str->ncpy(_builtindef, start, slen);
 }
 
-void LogoCompiler::dumpwordscode(short offset) const {
+void LogoCompiler::dumpwordscode(short offset, ostream &str) const {
 
   if (!_wordcount) {
     return;
@@ -629,10 +633,10 @@ void LogoCompiler::dumpwordscode(short offset) const {
     LogoStringResult result;
     _logo->getstring(&result, _words[i]._name, _words[i]._namelen);
     result.ncpy(name, sizeof(name));
-    cout << "\t{ SCOPTYPE_WORD, " << (short)_words[i]._jump + offset << ", " << (short)_words[i]._arity << " }, " << endl;
+    str << "\t{ SCOPTYPE_WORD, " << (short)_words[i]._jump + offset << ", " << (short)_words[i]._arity << " }, " << endl;
   }
   
-  _logo->dumpvarscode(this);
+  _logo->dumpvarscode(this, str);
   
 }
 
@@ -642,42 +646,23 @@ void LogoCompiler::entab(short indent) const {
   }
 }
 
-void LogoCompiler::printwordstring(const LogoWord &word) const {
+void LogoCompiler::printwordstring(const LogoWord &word, ostream &str) const {
   char name[LINE_LEN];
   LogoStringResult result;
   _logo->getstring(&result, word._name, word._namelen);
   result.ncpy(name, sizeof(name));
-  cout << "\t\"" << name << "\\n\"";
+  str << "\t\"" << name << "\\n\"";
 }
 
-void LogoCompiler::printvarcode(const LogoVar &var) const {
-
-  char name[LINE_LEN];
-  LogoStringResult result;
-  _logo->getstring(&result, var._name, var._namelen);
-  result.ncpy(name, sizeof(name));
-  cout << "\t{ SCOPTYPE_VAR, " << var._value << ", " << (short)var._valuelen << " }, " << endl;
-  
-}
-void LogoCompiler::printvarstring(const LogoVar &var) const {
-
-  char name[LINE_LEN];
-  LogoStringResult result;
-  _logo->getstring(&result, var._name, var._namelen);
-  result.ncpy(name, sizeof(name));
-  cout << "\t\"" << name << "\\n\"";
-
-}
-
-void LogoCompiler::dumpwordstrings() const {
+void LogoCompiler::dumpwordstrings(ostream &str) const {
 
   if (!_wordcount) {
     return;
   }
   
   for (short i=0; i<_wordcount; i++) {
-    printwordstring(_words[i]);
-    cout << endl;
+    printwordstring(_words[i], str);
+    str << endl;
   }
   
 }
@@ -718,7 +703,7 @@ int LogoCompiler::compile(fstream &file) {
   return 0;
 }
 
-void LogoCompiler::generatecode(fstream &file, const string &name) {
+void LogoCompiler::generatecode(fstream &file, const string &name, ostream &str) {
 
   // first compile the code so we can dump the strings from it in 
   // the correct order
@@ -728,7 +713,7 @@ void LogoCompiler::generatecode(fstream &file, const string &name) {
   compiler.compile(file);
   
   // can dump the strings code.
-  logo.dumpstringscode(&compiler, ("strings_" + name).c_str());
+  logo.dumpstringscode(&compiler, ("strings_" + name).c_str(), str);
 
   // now gather the strings and specify them for the new compile
   char list[128];
@@ -743,9 +728,83 @@ void LogoCompiler::generatecode(fstream &file, const string &name) {
     compiler2.compile(file);
     
     // ready to dump the code now.
-    logo2.dumpinst(&compiler2, ("code_" + name).c_str());
+    logo2.dumpinst(&compiler2, ("code_" + name).c_str(), str);
   }
   
+}
+
+int LogoCompiler::includelgo(const string &infn, const string &name, fstream &outfile) {
+
+  fstream file;
+  file.open(infn, ios::in);
+  if (!file) {
+    cout << "File not found " << infn << endl;
+    return 1;
+  }
+  
+  stringstream str;
+  LogoCompiler::generatecode(file, name, str);
+  outfile << str.str();
+  file.close();
+  
+  return 0;
+  
+}
+
+int LogoCompiler::updateino(const std::string &infn, std::fstream &infile, std::fstream &outfile) {
+
+  const string logo_directive = "//#LOGO";
+  const string file_directive = "FILE=";
+  const string endfile_directive = "ENDFILE";
+  const string name_directive = "NAME=";
+
+  string line;
+  bool including = false;
+  while (getline(infile, line)) {
+    size_t pos = line.find(logo_directive);
+    if (pos != string::npos) {
+      string rest = line.substr(pos + logo_directive.length());
+      trim(rest);
+      pos = rest.find(file_directive);
+      if (pos != string::npos) {
+        rest = rest.substr(pos + file_directive.length());
+        trim(rest);
+        pos = rest.find(name_directive);
+        if (pos != string::npos) {
+          string lfn = rest.substr(0, pos);
+          trim(lfn);
+          fs::path lgopath(lfn);
+          fs::path inpath(infn);
+          if (!lgopath.is_absolute()) {
+            lgopath = inpath.parent_path() / lgopath;
+          }
+          rest = rest.substr(pos + name_directive.length());
+          trim(rest);
+          including = true;
+          outfile << line << endl;
+          int err = includelgo(lgopath.string(), rest, outfile);
+          if (err) {
+            return err;
+          }
+        }
+      }
+      else {
+        pos = rest.find(endfile_directive);
+        if (pos != string::npos) {
+          outfile << line << endl;
+          including = false;
+        }
+      }
+    }
+    else {
+      if (!including) {
+        outfile << line << endl;
+      }
+    }
+  }
+  
+  return 0;
+
 }
 
 void LogoCompiler::dumpwordnames() const {
@@ -769,6 +828,7 @@ void LogoCompiler::dumpwordnames() const {
 }
 
 void LogoCompiler::printword(const LogoWord &word) const {
+
   char name[LINE_LEN];
   LogoStringResult result;
   _logo->getstring(&result, word._name, word._namelen);
@@ -792,72 +852,13 @@ void LogoCompiler::searchword(short op) const {
 
 void LogoCompiler::dump(short indent, short type, short op, short opand) const {
 
-  entab(indent);
-  char str[128];
-  LogoStringResult result;
-  switch (type) {
-    case OPTYPE_NOOP:
-      cout << "noop";
-      break;
-    case OPTYPE_RETURN:
-      cout << "ret";
-      break;
-    case OPTYPE_HALT:
-      cout << "halt";
-      break;
-    case OPTYPE_BUILTIN:
-//       if (_builtindef[0]) {
-//         cout << "builtindef " << op;
-//       }
-//       else {
-        _logo->getbuiltinname(op, opand, str, sizeof(str));
-//        cout << "builtin " << _logo->getbuiltin(op, opand)->_name;
-        cout << "builtin " << str;
-//      }
-      break;
-    case OPTYPE_JUMP:
-      searchword(op);
-      break;
-    case OPTYPE_STRING:
-      _logo->getstring(&result, op, opand);
-      result.ncpy(str, sizeof(str));
-      cout << "string " << str;
-      break;
-    case OPTYPE_INT:
-      cout << "integer " << op;
-      break;
-    case OPTYPE_DOUBLE:
-      cout << "double " << _logo->joindouble(op, opand);
-      break;
-    case OPTYPE_REF:
-      _logo->getstring(&result, op, opand);
-      result.ncpy(str, sizeof(str));
-      cout << "ref " << str;
-      break;
-    case OPTYPE_POPREF:
-       cout << "pop ref " << op;
-      break;
-    case OPTYPE_ERR:
-      cout << "err " << op;
-      break;
-    case SOPTYPE_ARITY:
-      cout << "(stack) arity pc " << op << " to go " << opand;
-      break;
-    case SOPTYPE_MRETADDR:
-      cout << "(stack) mod ret by " << op << " " << opand << " times";
-      break;
-    case SOPTYPE_RETADDR:
-      cout << "(stack) ret to " << op;
-      break;
-    case SOPTYPE_CONDRET:
-      cout << "(stack) cond ret to " << op;
-      break;
-    case SOPTYPE_SKIP:
-      cout << "(stack) skip ";
-      break;
-    default:
-      cout << "unknown optype " << type;
+  if (type == OPTYPE_JUMP) {
+    entab(indent);
+    searchword(op);
   }
+  else {
+    _logo->dump(indent, type, op, opand);
+ }
 
 }
 
@@ -897,17 +898,10 @@ void LogoCompiler::dump(const char *msg, bool all) const {
 void LogoCompiler::dump(bool all) const {
 
   cout << "------" << endl;
-  dumpwordnames();
+//  dumpwordnames();
   _logo->dumpcode(this, all);
   _logo->dumpstack(this, all);
   _logo->dumpvars(this);
-}
-
-void LogoCompiler::mark(short i, short mark, const char *name) const {
-  if (i == mark) {
-    entab(2);
-    cout << "(" << name << ")";
-  }
 }
 
 short LogoCompiler::stepdump(short n, bool all) {

@@ -133,10 +133,6 @@ BOOST_AUTO_TEST_CASE( tooManyVariables )
   
 }
 
-void condret(Logo &logo) {
-  logo.condreturn(0);
-}
-
 void wantsstring(Logo &logo) {
   
   tStrPool s, l;

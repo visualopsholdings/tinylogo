@@ -81,7 +81,7 @@
 #define STRING_POOL_SIZE    128       // these number of bytes
 #endif
 #ifndef MAX_WORDS
-#define MAX_WORDS           20        // 4 bytes each
+#define MAX_WORDS           20        // 6 bytes each
 #endif
 #ifndef MAX_CODE
 #define MAX_CODE            100       // 6 bytes each
@@ -93,7 +93,7 @@
 #define MAX_STACK           16        // 6 bytes each
 #endif
 #ifndef MAX_VARS
-#define MAX_VARS             8        // 6 bytes each
+#define MAX_VARS             8        // 10 bytes each
 #endif
 
 #define NUM_LEN             12        // these number of bytes
@@ -102,6 +102,10 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
+
+#ifndef ARDUINO
+#include <ostream>
+#endif
 
 #ifndef min
 #define min(a,b)            (((a) < (b)) ? (a) : (b))
@@ -141,8 +145,7 @@
 #define SOPTYPE_ARITY         SOP_START + 1 // FIELD_OP = the arity of the builtin function
 #define SOPTYPE_RETADDR       SOP_START + 2 // FIELD_OP = the return address. These are just on the stack
 #define SOPTYPE_MRETADDR      SOP_START + 3 // FIELD_OP = the offset to modify by
-#define SOPTYPE_CONDRET       SOP_START + 4 // FIELD_OP = the return address of if true, otherwise _op + 1
-#define SOPTYPE_SKIP          SOP_START + 5 // skip the next instruction if on the stack under a return
+#define SOPTYPE_SKIP          SOP_START + 4 // skip the next instruction if on the stack under a return
 
 // only in static code
 #define SCOP_START            200
@@ -155,14 +158,8 @@ class Logo;
 
 typedef void (*tLogoFp)(Logo &logo);
 
-// allow indexes to strings to be chars if the stringpool is small.
-#if STRING_POOL_SIZE <= 256
-typedef unsigned char tStrPool;
-#else
-typedef short tStrPool;
-#endif
-
 // types are predefinced and small.
+typedef short tStrPool;
 typedef short tType;
 typedef unsigned char tVarType;
 typedef unsigned char tByte;
@@ -209,6 +206,9 @@ public:
   static void ifelse(Logo &logo);
   static short ifelseArity;
   
+  static void ifWord(Logo &logo);
+  static short ifArity;
+  
   static void repeat(Logo &logo);
   static short repeatArity;
   
@@ -236,6 +236,9 @@ public:
   static void eq(Logo &logo);
   static short eqArity;
 
+  static void neq(Logo &logo);
+  static short neqArity;
+
   static void gt(Logo &logo);
   static short gtArity;
 
@@ -247,6 +250,12 @@ public:
 
   static void lte(Logo &logo);
   static short lteArity;
+
+  static void dumpvars(Logo &logo);
+  static short dumpvarsArity;
+
+  static void print(Logo &logo);
+  static short printArity;
 
 private:
 
@@ -379,24 +388,30 @@ public:
   void codetostring(short rel, tStrPool *s, tStrPool *len);
   void jumpskip(short rel);
   void jump(short rel);
-  void condreturn(short rel);
 
 #ifdef LOGO_DEBUG
   void outstate() const;
 #endif
  
 #ifndef ARDUINO
+  void entab(short indent) const;
   void dumpcode(const LogoCompiler *compiler, bool all=true) const;
   void dumpstack(const LogoCompiler *compiler, bool all=true) const;
   void dumpvars(const LogoCompiler *compiler) const;
+  void dumpvars() const;
   void dumpstaticwords(const LogoCompiler *compiler) const;
   int stringslist(LogoCompiler *compiler, char *buf, int len) const;
   int varstringslist(LogoCompiler *compiler, char *buf, int len) const;
-  void dumpstringscode(LogoCompiler *compiler, const char *varname) const;
-  void dumpinst(LogoCompiler *compiler, const char *varname) const;
-  void optypename(short optype) const;
-  void dumpvarsstrings(const LogoCompiler *compiler) const;
-  void dumpvarscode(const LogoCompiler *compiler) const;
+  void dumpstringscode(LogoCompiler *compiler, const char *varname, std::ostream &str) const;
+  void dumpinst(LogoCompiler *compiler, const char *varname, std::ostream &str) const;
+  void optypename(short optype, std::ostream &str) const;
+  void printvarstring(const LogoVar &var, std::ostream &str) const;
+  void dumpvarsstrings(const LogoCompiler *compiler, std::ostream &str) const;
+  void dumpvarscode(const LogoCompiler *compiler, std::ostream &str) const;
+  void printvar(const LogoVar &var) const;
+  void printvarcode(const LogoVar &var, std::ostream &str) const;
+  void dump(short indent, short type, short op, short opand) const;
+  void mark(short i, short mark, const char *name) const;
 #endif
 
   static LogoBuiltinWord core[];
@@ -452,10 +467,10 @@ private:
   double parsedouble(short type, short op, short opand);
   short doreturn();
   short dobuiltin();
-  short doarity();
+  bool doarity();
+  bool doinfix();
   bool call(short jump, tByte opand2);
   short instField(short pc, short field) const;
-  bool handleskip();
   
 };
 

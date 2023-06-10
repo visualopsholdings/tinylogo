@@ -50,8 +50,10 @@ LogoBuiltinWord Logo::core[] = {
   { "FOREVER", LogoWords::forever, LogoWords::foreverArity },
   { "REPEAT", LogoWords::repeat, LogoWords::repeatArity },
   { "IFELSE", LogoWords::ifelse, LogoWords::ifelseArity },
+  { "IF", LogoWords::ifWord, LogoWords::ifArity },
   { "WAIT", LogoWords::wait, LogoWords::waitArity },
   { "=", LogoWords::eq, LogoWords::eqArity },
+  { "!=", LogoWords::neq, LogoWords::neqArity },
   { "-", LogoWords::subtract, LogoWords::subtractArity },
   { "+", LogoWords::add, LogoWords::addArity },
   { "/", LogoWords::divide, LogoWords::divideArity },
@@ -60,6 +62,8 @@ LogoBuiltinWord Logo::core[] = {
   { ">=", LogoWords::gte, LogoWords::gteArity },
   { "<", LogoWords::lt, LogoWords::ltArity },
   { "<=", LogoWords::lte, LogoWords::lteArity },
+  { "DUMPVARS", LogoWords::dumpvars, LogoWords::dumpvarsArity },
+  { "PRINT", LogoWords::print, LogoWords::printArity },
 };
 
 LogoFunctionPrimitives::LogoFunctionPrimitives(LogoBuiltinWord *builtins, short size) : _builtins(builtins) {
@@ -543,19 +547,9 @@ void Logo::jump(short rel) {
   
 }
 
-void Logo::condreturn(short rel) {
-
-  DEBUG_IN_ARGS(Logo, "condreturn", "%i", rel);
-  
-  if (!push(SOPTYPE_CONDRET, _pc + rel)) {
-    error(LG_STACK_OVERFLOW);
-  }
-    
-}
-
 bool Logo::call(short jump, tByte arity) {
 
-  DEBUG_IN(Logo, "call");
+  DEBUG_IN_ARGS(Logo, "call", "%i%i", jump, (short)arity);
   
   if (jump == NO_JUMP) {
     DEBUG_RETURN(" word ignored", 0);
@@ -659,35 +653,6 @@ const LogoBuiltinWord *Logo::getbuiltin(short op, short opand) const {
   
 }
 
-bool Logo::handleskip() {
-
-  DEBUG_IN(Logo, "handleskip");
-  
-  // make sure there are no return addresses.
-  short ret = _tos;
-  while (ret > 0 && _stack[ret][FIELD_OPTYPE] != SOPTYPE_RETADDR) {
-    ret--;
-  }
-  if (_stack[ret][FIELD_OPTYPE] == SOPTYPE_RETADDR) {
-    return false;
-  }
-  
-  if (_tos > 1 && _stack[_tos-2][FIELD_OPTYPE] == SOPTYPE_SKIP) {
-  
-    DEBUG_OUT(" skipping", 0);
-    
-    // shuffle the stack down to remove out skip but leave whatever
-    // is there after the return
-    memmove(_stack + _tos - 2, _stack + _tos - 1, 1 * sizeof(tLogoInstruction));
-    _tos--;
-    _pc++;
-    return true;
-  }
-  
-  return false;
-  
-}
-
 short Logo::step() {
 
 //  DEBUG_IN(Logo, "step");
@@ -695,9 +660,9 @@ short Logo::step() {
   if (!_schedule.next()) {
     return 0;
   }
-  short err = doarity();
-  if (err) {
-    return err;
+  
+  if (doarity()) {
+    return 0;
   }
   
   // just in case arity ACTUALLY called a builtin.
@@ -705,11 +670,17 @@ short Logo::step() {
     return 0;
   }
   
+  short type = instField(_pc, FIELD_OPTYPE);
+  
   // make sure stack ops don't make it onto here.
-  if (instField(_pc, FIELD_OPTYPE) >= SOP_START) {
+  if (type >= SOP_START) {
+//    cout << (short)_pc << " " << type << endl;
     return LG_UNHANDLED_OP_TYPE;
   }
-  switch (instField(_pc, FIELD_OPTYPE)) {
+  
+  short err = 0;
+  
+  switch (type) {
   
   case OPTYPE_HALT:
     return LG_STOP;
@@ -728,29 +699,25 @@ short Logo::step() {
   case OPTYPE_INT:
   case OPTYPE_DOUBLE:
     {
-      if (!handleskip()) {
-        // push anything we find onto the stack.
-        if (!push(instField(_pc, FIELD_OPTYPE), instField(_pc, FIELD_OP), instField(_pc, FIELD_OPAND))) {
-          err = LG_STACK_OVERFLOW;
-        }
-     }
+      // push anything we find onto the stack.
+      if (!push(type, instField(_pc, FIELD_OP), instField(_pc, FIELD_OPAND))) {
+        err = LG_STACK_OVERFLOW;
+      }
     }
     break;
     
   case OPTYPE_REF:
     {
-      if (!handleskip()) {
-        short var = getvarfromref(instField(_pc, FIELD_OP), instField(_pc, FIELD_OPAND));
-        if (var >= 0) {
-          if (!push(_variables[var]._type, _variables[var]._value, _variables[var]._valuelen)) {
-            err = LG_STACK_OVERFLOW;
-          }
+      short var = getvarfromref(instField(_pc, FIELD_OP), instField(_pc, FIELD_OPAND));
+      if (var >= 0) {
+        if (!push(_variables[var]._type, _variables[var]._value, _variables[var]._valuelen)) {
+          err = LG_STACK_OVERFLOW;
         }
-        else {
-          // just push qa zero
-          if (!push(OPTYPE_INT, 0, 0)) {
-            err = LG_STACK_OVERFLOW;
-          }
+      }
+      else {
+        // just push qa zero
+        if (!push(OPTYPE_INT, 0, 0)) {
+          err = LG_STACK_OVERFLOW;
         }
       }
     }
@@ -758,24 +725,23 @@ short Logo::step() {
     
   case OPTYPE_POPREF:
   
-    if (!handleskip()) {
-      // pop the value from the stack
-      if (!pop()) {
-        err = LG_STACK_OVERFLOW;
-        break;
-      }
-      if (_stack[_tos][FIELD_OPTYPE] != OPTYPE_INT) {
-        err = LG_NOT_INT;
-        break;
-      }
-    
-      // and set the variable to that value.
-      _variables[instField(_pc, FIELD_OP)]._value = _stack[_tos][FIELD_OP];
+    // pop the value from the stack
+    if (!pop()) {
+      err = LG_STACK_OVERFLOW;
+      break;
     }
-    
+    if (_stack[_tos][FIELD_OPTYPE] != OPTYPE_INT) {
+      err = LG_NOT_INT;
+      break;
+    }
+  
+    // and set the variable to that value.
+    _variables[instField(_pc, FIELD_OP)]._value = _stack[_tos][FIELD_OP];
+
     break;
     
   case OPTYPE_JUMP:
+  
     if (!call(instField(_pc, FIELD_OP), instField(_pc, FIELD_OPAND))) {
       err = LG_STACK_OVERFLOW;
     }
@@ -795,7 +761,50 @@ short Logo::step() {
   
 }
 
-short Logo::doarity() {
+// this is not quite sufficient for nested infixes. Still work to do.
+bool Logo::doinfix() {
+
+  DEBUG_IN(Logo, "doinfix");
+
+  if (instField(_pc, FIELD_OPTYPE) == OPTYPE_BUILTIN) {
+  
+    short op = instField(_pc, FIELD_OP);
+    short opand = instField(_pc, FIELD_OPAND);
+    
+    // find the arity of the builtin.
+    short arity = 0;
+    if (_primitives && opand == 0) {
+      arity = _primitives->arity(op);
+    }
+    else {
+      const LogoBuiltinWord *builtin = getbuiltin(op, opand);
+      if (builtin) {
+        arity = builtin->_arity;
+      }
+    }
+    
+    if (arity == 255) {
+    
+      // open up a spot in the stack with the current whatever it is.
+      memmove(_stack + _tos, _stack + _tos - 1, (1) * sizeof(tLogoInstruction));
+      
+      // put a final arity in there.
+      _stack[_tos-1][FIELD_OPTYPE] = SOPTYPE_ARITY;
+      _stack[_tos-1][FIELD_OP] = _pc;          
+      _stack[_tos-1][FIELD_OPAND] = 0;          
+      _tos++;
+      _pc++;
+      DEBUG_RETURN(" true", 0);
+      return true;
+    }
+
+  }
+  
+  DEBUG_RETURN(" false", 0);
+  return false;
+}
+
+bool Logo::doarity() {
 
   DEBUG_IN(Logo, "doarity");
 
@@ -805,24 +814,36 @@ short Logo::doarity() {
   }
   if (ar < 0) {
     DEBUG_RETURN(" no arity", 0);
-    return 0;
+    return false;
   }
   
   if (_stack[ar][FIELD_OPTYPE] == SOPTYPE_RETADDR) {
     DEBUG_RETURN(" found return address before arity", 0);
-    return 0;
+    return false;
   }
   
+  if (_stack[ar][FIELD_OPAND] == 255) {
+    _stack[ar][FIELD_OPAND] = 0;
+    DEBUG_RETURN(" going once more for infix", 0);
+    return false;
+  }
+
   if (_stack[ar][FIELD_OPAND] > 0) {
     _stack[ar][FIELD_OPAND]--;
     DEBUG_RETURN(" going again", 0);
-    return 0;
+    return false;
   }
 
   DEBUG_OUT("finished", 0);
 
   short pc = _stack[ar][FIELD_OP];
   if (instField(pc, FIELD_OPTYPE) == OPTYPE_BUILTIN) {
+  
+    if (doinfix()) {
+      DEBUG_RETURN(" found infix", 0);
+      return false;
+    }
+    
     memmove(_stack + ar, _stack + ar + 1, (_tos - ar + 1) * sizeof(tLogoInstruction));
     _tos--;
 
@@ -831,17 +852,18 @@ short Logo::doarity() {
     
     DEBUG_OUT("calling builtin %i%i", op, opand);
     
+//    dumpstack(0, false);
     if (_primitives && opand == 0) {
       // call the primitive.
-       _primitives->exec(op, this);
-      return 0;
-    
+      _primitives->exec(op, this);
     }
     else {
       getbuiltin(op, opand)->_code(*this);
     }
-
-    return 0;
+//    dumpstack(0, false);
+    
+    DEBUG_RETURN(" called builtin", 0);
+    return true;
   }
   
   if (instField(pc, FIELD_OPTYPE) == OPTYPE_JUMP) {
@@ -856,12 +878,11 @@ short Logo::doarity() {
     // and go.
     _pc = instField(pc, FIELD_OP);
     
-    return 0;
+    DEBUG_RETURN(" jumping", 0);
+    return false;
   }
 
-  DEBUG_RETURN(" not a builtin or word", 0);
-  return LG_NOT_CALLABLE;
-
+  return false;
 }
 
 short LogoFunctionPrimitives::find(LogoString *str, short start, short slen) {
@@ -901,6 +922,7 @@ short Logo::dobuiltin() {
   
   short opand = instField(call, FIELD_OPAND);
   short op = instField(call, FIELD_OP);
+  
   if (_primitives && opand == 0) {
     short arity = _primitives->arity(op);
     
@@ -965,25 +987,6 @@ short Logo::doreturn() {
 //   dump(3, _stack[ret]); cout << endl;
   
   if (ret > 0) {
-  
-    if (_stack[ret-1][FIELD_OPTYPE] == SOPTYPE_CONDRET) {
-  
-      if (_stack[ret+1][FIELD_OPTYPE] == OPTYPE_INT && _stack[ret+1][FIELD_OP]) {
-        // condition was true
-        DEBUG_OUT("condition true", 0);
-        _pc = _stack[ret-1][FIELD_OP];
-        _tos = ret;
-        _stack[_tos-1][FIELD_OPTYPE] = SOPTYPE_SKIP;
-        _stack[_tos-1][FIELD_OP] = 0;
-      }
-      else {
-        // condition is false (or not a number)
-        DEBUG_OUT("conditional false", 0);
-        _pc = _stack[ret-1][FIELD_OP] + 1;
-        _tos = ret-1;
-      }
-      return 0;
-    }
   
     if (_stack[ret-1][FIELD_OPTYPE] == SOPTYPE_SKIP) {
   
@@ -1364,7 +1367,7 @@ bool LogoScheduler::next() {
 }
 
 #ifndef ARDUINO
-void Logo::dumpinst(LogoCompiler *compiler, const char *varname) const {
+void Logo::dumpinst(LogoCompiler *compiler, const char *varname, ostream &str) const {
 
   // find the start of the jump code.
   short jstart = 0;
@@ -1380,37 +1383,37 @@ void Logo::dumpinst(LogoCompiler *compiler, const char *varname) const {
   
   short offset = 2 - jstart;
   bool haswords = compiler->haswords();
-  cout << "static const short " << varname << "[][INST_LENGTH] PROGMEM = {" << endl;
+  str << "static const short " << varname << "[][INST_LENGTH] PROGMEM = {" << endl;
   for (int i=0; i<codeend; i++) {
-    cout << "\t{ ";
-    optypename(_code[i][0]);
-    cout << ", ";
+    str << "\t{ ";
+    optypename(_code[i][0], str);
+    str << ", ";
     if (_code[i][0] == OPTYPE_JUMP) {
-      cout << _code[i][1] + offset;
+      str << _code[i][1] + offset;
     }
     else {
-      cout << _code[i][1];
+      str << _code[i][1];
     }
-    cout  << ", " << _code[i][2] << " },\t\t// " << i << endl;
+    str  << ", " << _code[i][2] << " },\t\t// " << i << endl;
   }
-  cout << "\t{ OPTYPE_HALT, 0, 0 },\t\t// " << codeend << endl;
+  str << "\t{ OPTYPE_HALT, 0, 0 },\t\t// " << codeend << endl;
   for (int i=jstart; _code[i][0] != OPTYPE_NOOP && i<MAX_CODE; i++) {
-    cout << "\t{ ";
-    optypename(_code[i][0]);
-    cout << ", ";
+    str << "\t{ ";
+    optypename(_code[i][0], str);
+    str << ", ";
     if (_code[i][0] == OPTYPE_JUMP) {
-      cout << _code[i][1] + offset;
+      str << _code[i][1] + offset;
     }
     else {
-      cout << _code[i][1];
+      str << _code[i][1];
     }
-    cout << ", " << _code[i][2] << " },\t\t// " << i + offset << endl;
+    str << ", " << _code[i][2] << " },\t\t// " << i + offset << endl;
   }
   if (haswords) {
-    compiler->dumpwordscode(offset);
+    compiler->dumpwordscode(offset, str);
   }
-  cout << "\t{ SCOPTYPE_END, 0, 0 } " << endl;
-  cout << "};" << endl;
+  str << "\t{ SCOPTYPE_END, 0, 0 } " << endl;
+  str << "};" << endl;
 
 }
 
@@ -1423,12 +1426,12 @@ int Logo::stringslist(LogoCompiler *compiler, char *buf, int len) const {
   
 }
 
-void Logo::dumpstringscode(LogoCompiler *compiler, const char *varname) const {
+void Logo::dumpstringscode(LogoCompiler *compiler, const char *varname, ostream &str) const {
 
-  cout << "static const char "<< varname << "[] PROGMEM = {" << endl;
+  str << "static const char "<< varname << "[] PROGMEM = {" << endl;
   // these are in a particuar order
-  compiler->dumpwordstrings();
-  dumpvarsstrings(compiler);
+  compiler->dumpwordstrings(str);
+  dumpvarsstrings(compiler, str);
   char name[32];
   for (short i=0; i<_nextcode; i++) {
     switch (_code[i][FIELD_OPTYPE]) {
@@ -1437,90 +1440,107 @@ void Logo::dumpstringscode(LogoCompiler *compiler, const char *varname) const {
       LogoStringResult result;
       getstring(&result, _code[i][FIELD_OP], _code[i][FIELD_OPAND]);
       result.ncpy(name, sizeof(name));
-      cout << "\t\"" << name << "\\n\"" << endl;
+      str << "\t\"" << name << "\\n\"" << endl;
       break;
     }
   }
-  cout << "};" << endl;
+  str << "};" << endl;
 }
 
-void Logo::optypename(short optype) const {
+void Logo::optypename(short optype, ostream &str) const {
 
   switch (optype) {
   case OPTYPE_NOOP:
-    cout << "OPTYPE_NOOP";
+    str << "OPTYPE_NOOP";
     break;
   case OPTYPE_RETURN:
-    cout << "OPTYPE_RETURN";
+    str << "OPTYPE_RETURN";
     break;
   case OPTYPE_HALT:
-    cout << "OPTYPE_HALT";
+    str << "OPTYPE_HALT";
     break;
   case OPTYPE_BUILTIN:
-    cout << "OPTYPE_BUILTIN";
+    str << "OPTYPE_BUILTIN";
     break;
   case OPTYPE_ERR:
-    cout << "OPTYPE_ERR";
+    str << "OPTYPE_ERR";
     break;
   case OPTYPE_JUMP:
-    cout << "OPTYPE_JUMP";
+    str << "OPTYPE_JUMP";
     break;
   case OPTYPE_STRING:
-    cout << "OPTYPE_STRING";
+    str << "OPTYPE_STRING";
     break;
   case OPTYPE_INT:
-    cout << "OPTYPE_INT";
+    str << "OPTYPE_INT";
     break;
   case OPTYPE_DOUBLE:
-    cout << "OPTYPE_DOUBLE";
+    str << "OPTYPE_DOUBLE";
     break;
   case OPTYPE_REF:
-    cout << "OPTYPE_REF";
+    str << "OPTYPE_REF";
     break;
   case OPTYPE_POPREF:
-    cout << "OPTYPE_POPREF";
+    str << "OPTYPE_POPREF";
     break;
   case SOPTYPE_ARITY:
-    cout << "SOPTYPE_ARITY";
+    str << "SOPTYPE_ARITY";
     break;
   case SOPTYPE_RETADDR:
-    cout << "SOPTYPE_RETADDR";
+    str << "SOPTYPE_RETADDR";
     break;
   case SOPTYPE_MRETADDR:
-    cout << "SOPTYPE_MRETADDR";
-    break;
-  case SOPTYPE_CONDRET:
-    cout << "SOPTYPE_CONDRET";
+    str << "SOPTYPE_MRETADDR";
     break;
   case SOPTYPE_SKIP:
-    cout << "SOPTYPE_SKIP";
+    str << "SOPTYPE_SKIP";
     break;
   default:
-    cout << "BAD_OP_" << optype;
+    str << "BAD_OP_" << optype;
   }
   
 }
 
-void Logo::dumpvarscode(const LogoCompiler *compiler) const {
+void Logo::printvarcode(const LogoVar &var, ostream &str) const {
+
+  char name[LINE_LEN];
+  LogoStringResult result;
+  getstring(&result, var._name, var._namelen);
+  result.ncpy(name, sizeof(name));
+  str << "\t{ SCOPTYPE_VAR, " << var._value << ", " << (short)var._valuelen << " }, " << endl;
+  
+}
+
+void Logo::dumpvarscode(const LogoCompiler *compiler, ostream &str) const {
 
   if (!_varcount) {
     return;
   }
   
   for (short i=0; i<_varcount; i++) {
-    compiler->printvarcode(_variables[i]);
+    printvarcode(_variables[i], str);
   }
 }
 
-void Logo::dumpvarsstrings(const LogoCompiler *compiler) const {
+void Logo::printvarstring(const LogoVar &var, ostream &str) const {
+
+  char name[LINE_LEN];
+  LogoStringResult result;
+  getstring(&result, var._name, var._namelen);
+  result.ncpy(name, sizeof(name));
+  str << "\t\"" << name << "\\n\"";
+
+}
+
+void Logo::dumpvarsstrings(const LogoCompiler *compiler, ostream &str) const {
 
   if (!_varcount) {
     return;
   }
   
   for (short i=0; i<_varcount; i++) {
-    compiler->printvarstring(_variables[i]);
-    cout << endl;
+    printvarstring(_variables[i], str);
+    str << endl;
   }
   
 }
@@ -1550,14 +1570,111 @@ void Logo::dumpvars(const LogoCompiler *compiler) const {
   cout << "vars: " << endl;
   
   if (!_varcount) {
-    compiler->entab(1);
+    entab(1);
     cout << "empty" << endl;
     return;
   }
   
   for (short i=0; i<_varcount; i++) {
-    compiler->entab(1);
+    entab(1);
     compiler->printvar(_variables[i]);
+    cout << endl;
+  }
+  
+}
+
+void Logo::entab(short indent) const {
+  for (short i=0; i<indent; i++) {
+    cout << "\t";
+  }
+}
+
+void Logo::dump(short indent, short type, short op, short opand) const {
+
+  entab(indent);
+  char str[128];
+  LogoStringResult result;
+  switch (type) {
+    case OPTYPE_NOOP:
+      cout << "noop";
+      break;
+    case OPTYPE_RETURN:
+      cout << "ret";
+      break;
+    case OPTYPE_HALT:
+      cout << "halt";
+      break;
+    case OPTYPE_BUILTIN:
+      getbuiltinname(op, opand, str, sizeof(str));
+      cout << "builtin " << str;
+      break;
+    case OPTYPE_JUMP:
+      cout << "jump " << op;
+      break;
+    case OPTYPE_STRING:
+      getstring(&result, op, opand);
+      result.ncpy(str, sizeof(str));
+      cout << "string " << str;
+      break;
+    case OPTYPE_INT:
+      cout << "integer " << op;
+      break;
+    case OPTYPE_DOUBLE:
+      cout << "double " << joindouble(op, opand);
+      break;
+    case OPTYPE_REF:
+      getstring(&result, op, opand);
+      result.ncpy(str, sizeof(str));
+      cout << "ref " << str;
+      break;
+    case OPTYPE_POPREF:
+       cout << "pop ref " << op;
+      break;
+    case OPTYPE_ERR:
+      cout << "err " << op;
+      break;
+    case SOPTYPE_ARITY:
+      cout << "(stack) arity pc " << op << " to go " << opand;
+      break;
+    case SOPTYPE_MRETADDR:
+      cout << "(stack) mod ret by " << op << " " << opand << " times";
+      break;
+    case SOPTYPE_RETADDR:
+      cout << "(stack) ret to " << op;
+      break;
+    case SOPTYPE_SKIP:
+      cout << "(stack) skip ";
+      break;
+    default:
+      cout << "unknown optype " << type;
+  }
+
+}
+
+void Logo::printvar(const LogoVar &var) const {
+
+  char name[LINE_LEN];
+  LogoStringResult result;
+  getstring(&result, var._name, var._namelen);
+  result.ncpy(name, sizeof(name));
+  cout << name;
+  dump(2, var._type, var._value, var._valuelen);
+  
+}
+
+void Logo::dumpvars() const {
+
+  cout << "vars: " << endl;
+  
+  if (!_varcount) {
+    entab(1);
+    cout << "empty" << endl;
+    return;
+  }
+  
+  for (short i=0; i<_varcount; i++) {
+    entab(1);
+    printvar(_variables[i]);
     cout << endl;
   }
   
@@ -1578,7 +1695,7 @@ void Logo::dumpstaticwords(const LogoCompiler *compiler) const {
         LogoStringResult result;
         getfixed(&result, word);
         result.ncpy(name, sizeof(name));
-        compiler->entab(1);
+        entab(1);
         cout << name << " (" << op << ") "<< opand << endl;
         word++;
       }
@@ -1601,14 +1718,19 @@ void Logo::dumpcode(const LogoCompiler *compiler, bool all) const {
       short op = instField(i, FIELD_OP);
       short opand = instField(i, FIELD_OPAND);
       if (type == OPTYPE_JUMP) {
-        compiler->entab(1);
+        entab(1);
         cout << "jump (" << op << ")";
       }
-      compiler->dump(1, type, op, opand);
-      compiler->mark(i,  _pc, "pc");
+      if (compiler) {
+        compiler->dump(1, type, op, opand);
+      }
+      else {
+        dump(1, type, op, opand);
+      }
+      mark(i,  _pc, "pc");
       if (all) {
-        compiler->mark(i, START_JCODE, "startjcode");
-        compiler->mark(i, _nextjcode, "nextjcode");
+        mark(i, START_JCODE, "startjcode");
+        mark(i, _nextjcode, "nextjcode");
       }
       cout << endl;
     }
@@ -1617,17 +1739,23 @@ void Logo::dumpcode(const LogoCompiler *compiler, bool all) const {
   cout << "code: pc (" << (short)_pc << ")" << endl;
 
   if (!_nextcode) {
-    compiler->entab(1);
+    entab(1);
     cout << "empty" << endl;
   }
 
   for (short i=0; i<(all ? MAX_CODE : _nextcode); i++) {
-    compiler->markword(i);
-    compiler->dump(1, instField(i, FIELD_OPTYPE), instField(i, FIELD_OP), instField(i, FIELD_OPAND));
-    compiler->mark(i,  _pc, "pc");
+    if (compiler) {
+      compiler->markword(i);
+      compiler->dump(1, instField(i, FIELD_OPTYPE), instField(i, FIELD_OP), instField(i, FIELD_OPAND));
+    }
+    else {
+      cout << i;
+      dump(1, instField(i, FIELD_OPTYPE), instField(i, FIELD_OP), instField(i, FIELD_OPAND));
+    }
+    mark(i, _pc, "pc");
     if (all) {
-      compiler->mark(i, START_JCODE, "startjcode");
-      compiler->mark(i, _nextjcode, "nextjcode");
+      mark(i, START_JCODE, "startjcode");
+      mark(i, _nextjcode, "nextjcode");
     }
     cout << endl;
   }
@@ -1635,21 +1763,40 @@ void Logo::dumpcode(const LogoCompiler *compiler, bool all) const {
   if (!all) {
     if (_pc >  _nextcode && _pc < START_JCODE) {
       for (short i= _nextcode; i<=_pc; i++) {
-        compiler->dump(1, instField(i, FIELD_OPTYPE), instField(i, FIELD_OP), instField(i, FIELD_OPAND));
-        compiler->mark(i,  _pc, "pc");
+       if (compiler) {
+          compiler->dump(1, instField(i, FIELD_OPTYPE), instField(i, FIELD_OP), instField(i, FIELD_OPAND));
+        }
+        else {
+          cout << i;
+          dump(1, instField(i, FIELD_OPTYPE), instField(i, FIELD_OP), instField(i, FIELD_OPAND));
+        }
+        mark(i, _pc, "pc");
         cout << endl;
       }
     }
     cout << "\t..." << endl;
     for (short i=START_JCODE; i<_nextjcode; i++) {
-      compiler->markword(i);
-      compiler->dump(1, instField(i, FIELD_OPTYPE), instField(i, FIELD_OP), instField(i, FIELD_OPAND));
-      compiler->mark(i,  _pc, "pc");
-      compiler->mark(i, START_JCODE, "startjcode");
+      if (compiler) {
+        compiler->markword(i);
+        compiler->dump(1, instField(i, FIELD_OPTYPE), instField(i, FIELD_OP), instField(i, FIELD_OPAND));
+      }
+      else {
+        cout << i;
+        dump(1, instField(i, FIELD_OPTYPE), instField(i, FIELD_OP), instField(i, FIELD_OPAND));
+      }
+      mark(i, _pc, "pc");
+      mark(i, START_JCODE, "startjcode");
       cout << endl;
     }
   }
 
+}
+
+void Logo::mark(short i, short mark, const char *name) const {
+  if (i == mark) {
+    entab(2);
+    cout << "(" << name << ")";
+  }
 }
 
 void Logo::dumpstack(const LogoCompiler *compiler, bool all) const {
@@ -1657,8 +1804,13 @@ void Logo::dumpstack(const LogoCompiler *compiler, bool all) const {
   cout << "stack: (" << _tos << ")" << endl;
   
   for (short i=0; i<(all ? MAX_STACK : _tos); i++) {
-    compiler->dump(1 ,_stack[i][FIELD_OPTYPE] ,_stack[i][FIELD_OP] ,_stack[i][FIELD_OPAND]);
-    compiler->mark(i, _tos, "tos");
+    if (compiler) {
+      compiler->dump(1 ,_stack[i][FIELD_OPTYPE] ,_stack[i][FIELD_OP] ,_stack[i][FIELD_OPAND]);
+    }
+    else {
+      dump(1 ,_stack[i][FIELD_OPTYPE] ,_stack[i][FIELD_OP] ,_stack[i][FIELD_OPAND]);
+    }
+    mark(i, _tos, "tos");
     cout << endl;
   }
   
@@ -1731,39 +1883,11 @@ bool LogoWords::pushliterals(Logo &logo, short rel) {
   
 }
 
-short LogoWords::ifelseArity = 0;
+short LogoWords::ifelseArity = 1;
 
 void LogoWords::ifelse(Logo &logo) {
 
 //  logo.dump("ifelse", false);
-  
-  if (logo.codeisint(1)) {
-  
-    // handle numeric literal argument.
-    if (logo.codetoint(1)) {  
-    
-      // true
-      if (pushliterals(logo, 2)) {
-        logo.jump(4);
-      }
-      else {
-        logo.jumpskip(2);
-      }
-    }
-    else {
-    
-      // false
-      if (pushliterals(logo, 3)) {
-        logo.jump(4);
-      }
-      else {
-        logo.jump(3);
-      }
-      
-    }
-    
-    return;
-  }
   
   // this is a very special trick to allow us to manipulate the PC
   // based on the value of the stack.
@@ -1774,27 +1898,48 @@ void LogoWords::ifelse(Logo &logo) {
 	//  THEN
 	//  ELSE
 	//
-  // we push a "condreturn" onto the stack telling
-  // use to go to "2"
+  int cond = logo.popint();
+  if (cond) {
+    if (pushliterals(logo, 0)) {
+      logo.jump(3);
+    }
+    else {
+      logo.jumpskip(1);
+    }
+  }
+  else {
+    if (pushliterals(logo, 1)) {
+      logo.jump(3);
+    }
+    else {
+      logo.jump(2);
+    }
+  }
+    
+}
+
+short LogoWords::ifArity = 1;
+
+void LogoWords::ifWord(Logo &logo) {
+
+  // this is a very special trick to allow us to manipulate the PC
+  // based on the value of the stack.
   //
-  // then when we hit a return for the TEST
-  //
-  // our stack looks like:
-  //
-  //  cond return 2 (relative to the )
-  //  ret 3 (or whatever the address of THEN is)
-  //  num 1
-  //
-  //  when we return we look back and find the cond return and 
-  //  then pop the top of the stack and test if it and
-  // if true we go to THEN, otherwise we go to ELSE
-  //
-  //  Then we clean the stack up
-  
-//  logo.dump(false);
-  logo.condreturn(2);
-//  logo.dumpstack(false);
-  
+  // our code looks like:
+	//  builtin IF		(pc)
+	//  TEST
+	//  THEN
+	//
+  int cond = logo.popint();
+  if (cond) {
+    if (pushliterals(logo, 0)) {
+      logo.jump(2);
+    }
+  }
+  else {
+    logo.jump(2);
+  }
+
 }
 
 short LogoWords::waitArity = 1;
@@ -1806,7 +1951,7 @@ void LogoWords::wait(Logo &logo) {
   
 }
 
-short LogoWords::eqArity = 1;
+short LogoWords::eqArity = 255;
 
 void LogoWords::eq(Logo &logo) {
 
@@ -1814,7 +1959,15 @@ void LogoWords::eq(Logo &logo) {
   
 }
 
-short LogoWords::gtArity = 1;
+short LogoWords::neqArity = 255;
+
+void LogoWords::neq(Logo &logo) {
+
+  logo.pushint(logo.popint() != logo.popint());
+  
+}
+
+short LogoWords::gtArity = 255;
 
 void LogoWords::gt(Logo &logo) {
 
@@ -1825,7 +1978,7 @@ void LogoWords::gt(Logo &logo) {
   
 }
 
-short LogoWords::ltArity = 1;
+short LogoWords::ltArity = 255;
 
 void LogoWords::lt(Logo &logo) {
 
@@ -1836,7 +1989,7 @@ void LogoWords::lt(Logo &logo) {
   
 }
 
-short LogoWords::gteArity = 1;
+short LogoWords::gteArity = 255;
 
 void LogoWords::gte(Logo &logo) {
 
@@ -1847,7 +2000,7 @@ void LogoWords::gte(Logo &logo) {
   
 }
 
-short LogoWords::lteArity = 1;
+short LogoWords::lteArity = 255;
 
 void LogoWords::lte(Logo &logo) {
 
@@ -1858,7 +2011,7 @@ void LogoWords::lte(Logo &logo) {
   
 }
 
-short LogoWords::subtractArity = 1;
+short LogoWords::subtractArity = 255;
 
 void LogoWords::subtract(Logo &logo) {
 
@@ -1869,7 +2022,7 @@ void LogoWords::subtract(Logo &logo) {
   
 }
 
-short LogoWords::addArity = 1;
+short LogoWords::addArity = 255;
 
 void LogoWords::add(Logo &logo) {
 
@@ -1879,7 +2032,7 @@ void LogoWords::add(Logo &logo) {
   
 }
 
-short LogoWords::divideArity = 1;
+short LogoWords::divideArity = 255;
 
 void LogoWords::divide(Logo &logo) {
 
@@ -1889,7 +2042,7 @@ void LogoWords::divide(Logo &logo) {
   
 }
 
-short LogoWords::multiplyArity = 1;
+short LogoWords::multiplyArity = 255;
 
 void LogoWords::multiply(Logo &logo) {
 
@@ -1898,4 +2051,29 @@ void LogoWords::multiply(Logo &logo) {
   logo.pushdouble(a2 * a1);
   
 }
+
+short LogoWords::dumpvarsArity = 0;
+
+void LogoWords::dumpvars(Logo &logo) {
+
+#ifndef ARDUINO
+  logo.dumpvars();
+#endif
+    
+}
+
+short LogoWords::printArity = 1;
+
+void LogoWords::print(Logo &logo) {
+
+#ifndef ARDUINO
+  LogoStringResult result;
+  logo.popstring(&result);
+  char s[256];
+  result.ncpy(s, sizeof(s));
+  cout << "=== " << s << endl;
+#endif
+  
+}
+
 

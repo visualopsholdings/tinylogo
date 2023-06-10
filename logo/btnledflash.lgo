@@ -1,0 +1,33 @@
+#   btnledflash.lgo
+#
+#   Author: Paul Hamilton (paul@visualops.com)
+#   Date: 2-Jun-2023
+#
+#   Flash a LED with a button
+#
+#   This work is licensed under the Creative Commons Attribution 4.0 International License. 
+#   To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0/ or 
+#   send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+#
+#   https://github.com/visualopsholdings/tinylogo  
+#
+
+# turn an LED on or off
+BUILTIN(ON,OFF,BUTTON)
+
+TO FLASH
+  ON WAIT 1000 OFF WAIT 500
+END
+
+# TO TESTSTATE
+#   MAKE "OLDVALUE :VALUE
+#   IF :VALUE = 1 FLASH
+# END
+# 
+# TO TESTVALUE
+#   MAKE "VALUE BUTTON
+#   IF :VALUE != :OLDVALUE TESTSTATE 
+# END
+
+#FOREVER TESTVALUE
+FOREVER FLASH

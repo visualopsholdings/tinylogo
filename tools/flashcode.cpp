@@ -19,11 +19,52 @@
 
 #include <iostream>
 #include <boost/program_options.hpp> 
+#include <boost/filesystem.hpp>
 #include <fstream>
 #include <strstream>
 
 namespace po = boost::program_options;
+namespace fs = boost::filesystem;
+
 using namespace std;
+
+int process_ino(const string &infn) {
+
+  fs::path inpath(infn);
+  fstream infile;
+  infile.open(infn, ios::in);
+  if (!infile) {
+    cout << "Input file not found " << infn << endl;
+    return 1;
+  }
+  string outfn = infn + ".txt";
+  fstream outfile;
+  outfile.open(outfn, ios::out);
+  int err = LogoCompiler::updateino(infn, infile, outfile);
+  infile.close();
+  outfile.close();
+  
+  if (!err) {
+    fs::rename(infn, infn + ".old");
+    fs::rename(outfn, infn);
+  }
+  
+  return err;
+  
+}
+
+int process_lgo(const string &infn, const string &name) {
+  fstream file;
+  file.open(infn, ios::in);
+  if (!file) {
+    cout << "File not found " << infn << endl;
+    return 1;
+  }
+  LogoCompiler::generatecode(file, name, cout);
+  file.close();
+  return 0;
+  
+}
 
 int main(int argc, char *argv[]) {
 
@@ -46,17 +87,16 @@ int main(int argc, char *argv[]) {
     return 1;
   }
   if (vm.count("input-file") && vm.count("name")) {
-    fstream file;
-    file.open(vm["input-file"].as< string >(), ios::in);
-    if (!file) {
-		  cout << "File not found" << endl;
+    string infn = vm["input-file"].as< string >();
+    fs::path inpath(infn);
+    if (inpath.extension() == ".ino") {
+      return process_ino(infn);
     }
-    else {
-      LogoCompiler::generatecode(file, vm["name"].as< string >());
-      file.close();
+    else if (inpath.extension() == ".lgo") {
+      return process_lgo(infn, vm["name"].as< string >());
     }
-    return 0;
   }
   
   cout << desc << endl;
+  return 1;
 }

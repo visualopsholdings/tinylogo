@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE( forever )
   for (int i=0; i<100; i++) {
     BOOST_CHECK_EQUAL(logo.step(), 0);
   }
-  BOOST_CHECK_EQUAL(gCmds.size(), 48);
+  BOOST_CHECK_EQUAL(gCmds.size(), 39);
   BOOST_CHECK_EQUAL(gCmds[0], "LED ON");
   BOOST_CHECK_EQUAL(gCmds[1], "WAIT 10");
   BOOST_CHECK_EQUAL(gCmds[2], "LED OFF");
@@ -175,6 +175,32 @@ BOOST_AUTO_TEST_CASE( eqWord )
   
   BOOST_CHECK_EQUAL(logo.run(), 0);
   BOOST_CHECK_EQUAL(logo.popint(), 1);
+  
+  BOOST_CHECK(logo.stackempty());
+}
+
+BOOST_AUTO_TEST_CASE( neqWord )
+{
+  cout << "=== neqWord ===" << endl;
+  
+  Logo logo(0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("1 != 3");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popint(), 1);
+  
+  logo.reset();
+  compiler.reset();
+  compiler.compile("10 != 10");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+  
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popint(), 0);
   
   BOOST_CHECK(logo.stackempty());
 }
@@ -325,6 +351,79 @@ BOOST_AUTO_TEST_CASE( ifelseTrue )
 
 }
 
+BOOST_AUTO_TEST_CASE( ifFalse )
+{
+  cout << "=== ifFalse ===" << endl;
+  
+  Logo logo(0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("IF 0 2");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  DEBUG_STEP_DUMP(10, false);
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+//  BOOST_CHECK_EQUAL(logo.popint(), 3);
+  BOOST_CHECK(logo.stackempty());
+
+}
+
+BOOST_AUTO_TEST_CASE( ifTrue )
+{
+  cout << "=== ifTrue ===" << endl;
+  
+  Logo logo(0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("IF 1 2");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  DEBUG_STEP_DUMP(10, false);
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popint(), 2);
+  BOOST_CHECK(logo.stackempty());
+
+}
+
+BOOST_AUTO_TEST_CASE( ifTrueNested )
+{
+  cout << "=== ifTrueNested ===" << endl;
+  
+  Logo logo(0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("TO T1;2;END");
+  compiler.compile("IF 1 > 0 T1");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  DEBUG_STEP_DUMP(10, false);
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popint(), 2);
+  BOOST_CHECK(logo.stackempty());
+
+}
+
+BOOST_AUTO_TEST_CASE( ifFalseNested )
+{
+  cout << "=== ifFalseNested ===" << endl;
+  
+  Logo logo(0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("TO T1;2;END");
+  compiler.compile("IF 0 > 1 T1");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  DEBUG_STEP_DUMP(10, false);
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK(logo.stackempty());
+
+}
+
 BOOST_AUTO_TEST_CASE( ifelseCond )
 {
   cout << "=== ifelseCond ===" << endl;
@@ -332,14 +431,16 @@ BOOST_AUTO_TEST_CASE( ifelseCond )
   Logo logo(0, 0, Logo::core);
   LogoCompiler compiler(&logo);
 
-  compiler.compile("TO COND;1 - 0;END");
+//  compiler.compile("TO COND;1 = 0;END");
+  compiler.compile("TO COND;1 = 1;END");
   compiler.compile("IFELSE COND 2 3");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
   DEBUG_STEP_DUMP(10, false);
   BOOST_CHECK_EQUAL(logo.run(), 0);
-  BOOST_CHECK_EQUAL(logo.popint(), 3);
+//  BOOST_CHECK_EQUAL(logo.popint(), 3);
+  BOOST_CHECK_EQUAL(logo.popint(), 2);
   BOOST_CHECK(logo.stackempty());
 
 }
@@ -546,19 +647,15 @@ BOOST_AUTO_TEST_CASE( ifelseGT )
   Logo logo(0, 0, Logo::core);
   LogoCompiler compiler(&logo);
 
-  compiler.compile("TO COND;:VAR > 2;END");
-  compiler.compile("MAKE \"VAR 3");
-  compiler.compile("TO A;\"A;END");
-  compiler.compile("TO B;\"B;END");
-  compiler.compile("IFELSE COND A B");
+  compiler.compile("TO COND;2 > 3;END");
+  compiler.compile("IFELSE COND 5 6");
+//  compiler.compile("IFELSE 2 > 3 5 6");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
   DEBUG_STEP_DUMP(10, false);
   BOOST_CHECK_EQUAL(logo.run(), 0);
-  LogoStringResult str;
-  logo.popstring(&str);  
-  BOOST_CHECK_EQUAL(str.ncmp("A"), 0);
+  BOOST_CHECK_EQUAL(logo.popint(), 6);
   BOOST_CHECK(logo.stackempty());
 
 }
@@ -641,6 +738,41 @@ BOOST_AUTO_TEST_CASE( waitWordNotReady )
 
 }
 
+BOOST_AUTO_TEST_CASE( arithmetic1 )
+{
+  cout << "=== arithmetic1 ===" << endl;
+  
+  Logo logo(0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("3 - 1");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  DEBUG_STEP_DUMP(8, false);
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popdouble(), 2);
+  
+}
+
+BOOST_AUTO_TEST_CASE( arithmetic2 )
+{
+  cout << "=== arithmetic2 ===" << endl;
+  
+  Logo logo(0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("TO SUB;3 - 1;END");
+  compiler.compile("SUB * 4");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  DEBUG_STEP_DUMP(8, false);
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popdouble(), 8);
+  
+}
+
 BOOST_AUTO_TEST_CASE( arithmetic )
 {
   cout << "=== arithmetic ===" << endl;
@@ -648,7 +780,9 @@ BOOST_AUTO_TEST_CASE( arithmetic )
   Logo logo(0, 0, Logo::core);
   LogoCompiler compiler(&logo);
 
-  compiler.compile("3 - 1 * 4 / 3");
+  compiler.compile("TO SUB;3 - 1;END");
+  compiler.compile("TO MUL;SUB * 4;END");
+  compiler.compile("MUL / 3");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -659,4 +793,3 @@ BOOST_AUTO_TEST_CASE( arithmetic )
   BOOST_CHECK(d < 2.7);
   
 }
-

@@ -28,7 +28,7 @@ using namespace std;
 
 vector<string> gCmds;
 
-//#define PRINT_RESULT
+#define PRINT_RESULT
 
 void ledOn(Logo &logo) {
   gCmds.push_back("LED ON");
@@ -453,6 +453,53 @@ BOOST_AUTO_TEST_CASE( arityWord )
   
 }
 
+void ar1(Logo &logo) {
+  strstream str;
+  str << "AR1 " << logo.popint();
+  gCmds.push_back(str.str());
+#ifdef PRINT_RESULT
+  cout << gCmds.back() << endl;
+#endif
+}
+
+void ar2(Logo &logo) {
+
+  int val = logo.popint();
+  logo.pushint(val * 2);
+  
+  strstream str;
+  str << "AR2 " << val;
+  gCmds.push_back(str.str());
+#ifdef PRINT_RESULT
+  cout << gCmds.back() << endl;
+#endif
+}
+
+BOOST_AUTO_TEST_CASE( arityNested )
+{
+  cout << "=== arityNested ===" << endl;
+  
+  LogoBuiltinWord builtins[] = {
+    { "AR1", &ar1, 1 },
+    { "AR2", &ar2, 1 }
+  };
+  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
+  Logo logo(&primitives);
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("AR1 AR2 20");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  gCmds.clear();
+  DEBUG_STEP_DUMP(10, false);
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(gCmds.size(), 2);
+  BOOST_CHECK_EQUAL(gCmds[0], "AR2 20");
+  BOOST_CHECK_EQUAL(gCmds[1], "AR1 40");
+  
+}
+
 BOOST_AUTO_TEST_CASE( seperateLines )
 {
   cout << "=== seperateLines ===" << endl;
@@ -531,7 +578,10 @@ BOOST_AUTO_TEST_CASE( reset )
 void infixfn(Logo &logo) {
 
   strstream str;
-  str << "INFIX " << logo.popint() << ", " << logo.popint();
+  int v1 = logo.popint();
+  int v2 = logo.popint();
+  str << "INFIX " << v1 << ", " << v2;
+  logo.pushint(v1 + v2);
   gCmds.push_back(str.str());
 #ifdef PRINT_RESULT
   cout << gCmds.back() << endl;
@@ -544,7 +594,7 @@ BOOST_AUTO_TEST_CASE( infix )
   cout << "=== infix ===" << endl;
   
   LogoBuiltinWord builtins[] = {
-    { "INFIX", &infixfn, 1 },
+    { "INFIX", &infixfn, 255 },
   };
   LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
   Logo logo(&primitives);
@@ -557,9 +607,46 @@ BOOST_AUTO_TEST_CASE( infix )
   gCmds.clear();
   DEBUG_STEP_DUMP(5, false);
   BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popint(), 6);
   BOOST_CHECK_EQUAL(gCmds.size(), 1);
   BOOST_CHECK_EQUAL(gCmds[0], "INFIX 5, 1");
 
+}
+
+void ar3(Logo &logo) {
+  strstream str;
+  str << "AR3 " << logo.popint();
+  gCmds.push_back(str.str());
+#ifdef PRINT_RESULT
+  cout << gCmds.back() << endl;
+#endif
+}
+
+BOOST_AUTO_TEST_CASE( infixArityNested )
+{
+  cout << "=== infixArityNested ===" << endl;
+  
+  LogoBuiltinWord builtins[] = {
+    { "AR3", &ar3, 1 },
+    { "+", &infixfn, 255 },
+  };
+  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
+  Logo logo(&primitives);
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("TO A;1;END");
+//  compiler.compile("AR3 1 + 5 3 A");
+  compiler.compile("AR3 1 + 5 A");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  gCmds.clear();
+  DEBUG_STEP_DUMP(10, false);
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(gCmds.size(), 2);
+  BOOST_CHECK_EQUAL(gCmds[0], "INFIX 5, 1");
+  BOOST_CHECK_EQUAL(gCmds[1], "AR3 6");
+ 
 }
 
 BOOST_AUTO_TEST_CASE( literalsOnStack )
@@ -589,8 +676,8 @@ BOOST_AUTO_TEST_CASE( sizes )
   // half this size on an arduino
   BOOST_CHECK_EQUAL(sizeof(LogoBuiltinWord), 24);
   BOOST_CHECK_EQUAL(sizeof(tLogoInstruction), 6);
-  BOOST_CHECK_EQUAL(sizeof(LogoWord), 4);
-  BOOST_CHECK_EQUAL(sizeof(LogoVar), 6);
+  BOOST_CHECK_EQUAL(sizeof(LogoWord), 6);
+  BOOST_CHECK_EQUAL(sizeof(LogoVar), 10);
   
 }
 

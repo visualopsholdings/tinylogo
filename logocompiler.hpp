@@ -80,21 +80,20 @@ public:
   void dump(bool all=true) const;
   short stepdump(short n, bool all=true);
   void dump(short indent, short type, short op, short opand) const;
-  void mark(short i, short mark, const char *name) const;
   void searchword(short op) const;
   void markword(tJump jump) const;
   void printword(const LogoWord &word) const;
   void dumpwordnames() const;
   void printvar(const LogoVar &var) const;
-  void dumpwordscode(short offset) const;
-  void dumpwordstrings() const;
+  void dumpwordscode(short offset, std::ostream &str) const;
+  void dumpwordstrings(std::ostream &str) const;
   int wordstringslist(char *buf, int len) const;
   bool haswords() { return _wordcount > 0; }
   void entab(short indent) const;
-  void printwordstring(const LogoWord &word) const;
-  void printvarstring(const LogoVar &var) const;
-  void printvarcode(const LogoVar &var) const;
-  static void generatecode(std::fstream &file, const std::string &name);
+  void printwordstring(const LogoWord &word, std::ostream &str) const;
+  static void generatecode(std::fstream &file, const std::string &name, std::ostream &str);
+  static int updateino(const std::string &infn, std::fstream &infile, std::fstream &outfile);
+  static int includelgo(const std::string &infn, const std::string &name, std::fstream &outfile);
   int compile(std::fstream &file);
 #endif
 

@@ -16,8 +16,14 @@
 BUILTIN(REDR:1,GREENR:1,BLUER:1)
 
 # scale a color to be between 1 and 100
+TO SUBC :C
+  100 - :C
+END
+TO DIVC :C
+  SUBC :C / 100
+END
 TO SCLR :C
-  100 - :C / 100 * 255
+  DIVC :C * 255
 END
 
 TO REDC :N

@@ -173,8 +173,7 @@ Repeat the next word forever. The syntax is:
 
 ```
 REPEAT WORD
-WORD := [wordname | SENTENCE]
-SENTENCE := "[" LITWORD ... "]"
+WORD := [wordname]
 LITWORD := the name of a word
 ```
 
@@ -186,10 +185,9 @@ Repeat the next word a number of times. The syntax is:
 REPEAT NUM WORD
 NUM := [number | VAR]
 VAR := :varname
-WORD := [wordname | SENTENCE | LITERAL]
+WORD := [wordname | LITERAL]
 LITERAL := [number | string } VAR] 
 VAR := :varname
-SENTENCE := "[" LITWORD ... "]"
 LITWORD := the name of a word
 ```
 
@@ -199,12 +197,11 @@ Test an expression, it true put the first word on the stack else the second. The
 
 ```
 IFELSE EXPR THEN ELSE
-EXPR := [wordname | SENTENCE | LITERAL]
+EXPR := [wordname | LITERAL]
 LITERAL := [number | string } VAR] 
 VAR := :varname
-THEN := [wordname | SENTENCE | LITERAL]
-ELSE := [wordname | SENTENCE | LITERAL]
-SENTENCE := "[" LITWORD ... "]"
+THEN := [wordname | LITERAL]
+ELSE := [wordname | LITERAL]
 LITWORD := the name of a word
 ```
 
@@ -214,8 +211,7 @@ Push a 1 on the stack if the operands are the same. The syntax is:
 
 ```
 WORD = WORD
-WORD := [wordname | SENTENCE | LITERAL]
-SENTENCE := "[" LITWORD ... "]"
+WORD := [wordname | LITERAL]
 LITWORD := the name of a word
 ```
 
@@ -226,14 +222,25 @@ Wait for milliseconds before executing the next word. The syntax is:
 ```
 WAIT NUM WORD
 NUM := [number | VAR]
-WORD := [wordname | SENTENCE]
-SENTENCE := "[" LITWORD ... "]"
+WORD := [wordname]
 LITWORD := the name of a word
 ```
 
 ## Arithmetic
 
-+, -, * and / all work as usual but no parenthesis and just left to right.
++, -, * and / all work but changing them doesn't work.
+
+So the expression ((3 - 1) * 4) / 3
+
+Needs to be written like:
+
+TO SUB
+  3 -1
+END
+TO MUL
+  SUB * 4
+END
+MUL / 3
 
 ## Static code
 
@@ -390,4 +397,11 @@ to allow strings and code to be in FLASH memory.
 ### 6 Jun 2023
 - Rewrote the way primitive code works and a new tool which can run an .lgo file.
 - Removed sentence support until it's far more robust.
+
+### 7 Jun 2023
+- Rewrote the ifelse works to be simpler.
+
+### 10 Jun 2023
+- Add code to flashcode to allow it to inline process an LOGO file.
+
 
