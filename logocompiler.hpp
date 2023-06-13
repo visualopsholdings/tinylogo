@@ -26,6 +26,12 @@
 #include <fstream>
 #endif
 
+#ifdef USE_FLASH_CODE
+#define MAX_WORDS           100       // 6 bytes each
+#else
+#define MAX_WORDS           16        // 6 bytes each
+#endif
+
 #define LINE_LEN            64        // these number of bytes
 
 typedef struct {

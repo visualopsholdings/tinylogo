@@ -11,7 +11,8 @@
   https://github.com/visualopsholdings/tinylogo
 */
 
-#define FLASH_CODE
+// if you uncomment this, also uncomment the USE_FLASH_CODE in logo.hpp
+//#define FLASH_CODE
 
 #include "ringbuffer.hpp"
 #include "cmd.hpp"
@@ -50,11 +51,11 @@ static const char strings_led[] PROGMEM = {
 	"STOP\n"
 };
 static const short code_led[][INST_LENGTH] PROGMEM = {
-	{ OPTYPE_JUMP, 2, 0 },		// 0
+	{ OPTYPE_NOOP, 0, 0 },		// 0
 	{ OPTYPE_HALT, 0, 0 },		// 1
 	{ OPTYPE_BUILTIN, 0, 0 },		// 2
 	{ OPTYPE_BUILTIN, 6, 1 },		// 3
-	{ OPTYPE_INT, 100, 0 },		// 4
+	{ OPTYPE_INT, 500, 0 },		// 4
 	{ OPTYPE_BUILTIN, 1, 0 },		// 5
 	{ OPTYPE_BUILTIN, 6, 1 },		// 6
 	{ OPTYPE_INT, 1000, 0 },		// 7
@@ -73,7 +74,7 @@ static const short code_led[][INST_LENGTH] PROGMEM = {
 
 #else
 static const char program_led[] PROGMEM = 
-  "TO FLASH; ON WAIT 100 OFF WAIT 1000; END;"
+  "TO FLASH; ON WAIT 500 OFF WAIT 1000; END;"
   "TO GO; FOREVER FLASH; END;"
   "TO STOP; OFF; END;"
   ;
@@ -84,10 +85,10 @@ LogoBuiltinWord builtins[] = {
   { "OFF", &ledOff },
 };
 ArduinoTimeProvider time;
+LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
 #ifdef FLASH_CODE
 ArduinoFlashString strings(strings_led);
 ArduinoFlashCode code((const PROGMEM short *)code_led);
-LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
 Logo logo(&primitives, &time, Logo::core, &strings, &code);
 #else
 Logo logo(&primitives, &time, Logo::core);
@@ -96,6 +97,8 @@ LogoCompiler compiler(&logo);
 
 
 void flashErr(int mode, int n) {
+  Serial.print(mode);
+  Serial.print(", ");
   Serial.println(n);
   // it's ok to tie up the device with delays here.
   for (int i=0; i<mode; i++) {

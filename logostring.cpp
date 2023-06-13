@@ -137,13 +137,13 @@ double LogoStringResult::tof() {
   return _simple.tof();
 }
 
-#ifndef ARDUINO
 void LogoString::dump(const char *msg, short start, short len) const {
+#ifndef ARDUINO
   cout << msg << " {";
   for (int i=0, j=start; i<len; i++, j++) {
     cout << (*this)[j];
   }
   cout << "}" << endl;
-}
 #endif
+}
 

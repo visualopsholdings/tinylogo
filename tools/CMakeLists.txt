@@ -15,7 +15,7 @@ cmake_minimum_required(VERSION 3.5)
 
 project (tinylogo)
   find_package(Boost COMPONENTS program_options filesystem unit_test_framework REQUIRED)
-  add_definitions(-DBOOST_ALL_DYN_LINK -DMAX_WORDS=100 -DMAX_CODE=255 -DSTART_JCODE=80 -DSTRING_POOL_SIZE=512 -DMAX_STACK=128 -DMAX_VARS=20) 
+  add_definitions(-DBOOST_ALL_DYN_LINK -DUSE_FLASH_CODE) 
   enable_testing()
 
 add_library (Logo STATIC ../logo.cpp ../logocompiler.cpp ../logostring.cpp ../arduinoflashcode.cpp)

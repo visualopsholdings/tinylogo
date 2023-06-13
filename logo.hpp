@@ -74,30 +74,65 @@
 
 //#define LOGO_DEBUG
 
+#ifdef ARDUINO
+// un comment this if you want to use the logo runtime directly with flash code. This allows
+// for MUCH greater stack and vars.
+#define USE_FLASH_CODE
+#endif
+
 // on some Arduinos this could be MUCH larger.
 // if you run out of space, take a look at using flash memory to store your strings 
 // and even code.
-#ifndef STRING_POOL_SIZE
+
+// it's really important with these numbers that after you compile your code it 
+// leaves about 200 bytes for local variables. Otherwise your sketch won't work.
+
+#ifdef USE_FLASH_CODE
+#define STRING_POOL_SIZE    256       // these number of bytes
+#else
 #define STRING_POOL_SIZE    128       // these number of bytes
 #endif
-#ifndef MAX_WORDS
-#define MAX_WORDS           20        // 6 bytes each
+#ifdef USE_FLASH_CODE
+#define MAX_CODE            255       // 6 bytes each
+#else
+#define MAX_CODE            80        // 6 bytes each
 #endif
-#ifndef MAX_CODE
-#define MAX_CODE            100       // 6 bytes each
-#endif
-#ifndef START_JCODE
+#ifdef USE_FLASH_CODE
+#define START_JCODE         80        // the start of where the JCODE lies (the words)
+#else
 #define START_JCODE         30        // the start of where the JCODE lies (the words)
 #endif
-#ifndef MAX_STACK
+#ifdef USE_FLASH_CODE
+#define MAX_STACK           64        // 6 bytes each
+#else
 #define MAX_STACK           16        // 6 bytes each
 #endif
-#ifndef MAX_VARS
+#ifdef USE_FLASH_CODE
+#define MAX_VARS             20       // 10 bytes each
+#else
 #define MAX_VARS             8        // 10 bytes each
+#endif
+
+#ifdef USE_FLASH_CODE
+#ifdef ARDUINO
+#define CODE_SIZE           2
+#else
+#define CODE_SIZE           MAX_CODE
+#endif
+#else
+#define CODE_SIZE           MAX_CODE  
 #endif
 
 #define NUM_LEN             12        // these number of bytes
 #define SENTENCE_LEN        4         // & and 3 more digits
+
+// some settings that can be used to debug directly on an arduino.
+// #define STRING_POOL_SIZE    64        // these number of bytes
+// #define MAX_WORDS           8         // 6 bytes each
+// #define MAX_CODE            60        // 6 bytes each
+// #define START_JCODE         20        // the start of where the JCODE lies (the words)
+// #define MAX_STACK           8         // 6 bytes each
+// #define MAX_VARS            2         // 10 bytes each
 
 #include <string.h>
 #include <stdio.h>
@@ -342,7 +377,8 @@ public:
   void fail(short err);
   void schedulenext(short delay);
   int callword(const char *word); // call a word by name if you know it.
-   
+  short pc() { return _pc; }
+  
   // interface to compiler
   bool hascore() { return _core; }
   void error(short error);
@@ -436,7 +472,7 @@ private:
   char _numbuf[NUM_LEN];
    
   // the code
-  tLogoInstruction _code[MAX_CODE];
+  tLogoInstruction _code[CODE_SIZE];
   tJump _pc;
   ArduinoFlashCode *_staticcode;
   

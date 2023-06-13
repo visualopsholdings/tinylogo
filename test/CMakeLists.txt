@@ -14,11 +14,12 @@
 cmake_minimum_required(VERSION 3.5)
 
 project (logotest)
-  find_package(Boost COMPONENTS unit_test_framework REQUIRED)
+  find_package(Boost COMPONENTS unit_test_framework filesystem REQUIRED)
   add_definitions(-DBOOST_ALL_DYN_LINK) 
   enable_testing()
 
 add_library (Logo STATIC ../logo.cpp ../logocompiler.cpp ../logostring.cpp ../arduinoflashcode.cpp)
+  target_link_libraries(Logo ${Boost_FILESYSTEM_LIBRARY})
 
 add_executable(LGTestCompiler lgtestcompiler.cpp)
   target_link_libraries(LGTestCompiler Logo ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})

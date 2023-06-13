@@ -28,7 +28,7 @@ using namespace std;
 
 vector<string> gCmds;
 
-#define PRINT_RESULT
+//#define PRINT_RESULT
 
 void ledOn(Logo &logo) {
   gCmds.push_back("LED ON");

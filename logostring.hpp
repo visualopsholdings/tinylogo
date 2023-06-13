@@ -37,9 +37,7 @@ public:
   short toi(size_t offset, size_t len);
   short find(char c, size_t offset, size_t len);
   short ncmp2(LogoString *to, short offsetto, short offset, short len) const;
-#ifndef ARDUINO
   void dump(const char *msg, short start, short len) const;
-#endif
 
 };
 

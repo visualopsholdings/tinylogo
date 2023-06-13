@@ -40,11 +40,13 @@ END
 
 # arguments are reversed!
 TO SETALL :B :G :R
-  REDC :R GREENC :G BLUEC :B
+  REDC :R
+  GREENC :G
+  BLUEC :B
 END
 
 TO AMBER
-  SETALL 100 75 0
+ SETALL 100 75 0
 END
 
 TO RED
@@ -64,4 +66,3 @@ TO OFF
 END
 
 AMBER
-

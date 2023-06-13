@@ -29,10 +29,12 @@ void Logo::outstate() const {
 #define DELAY_TIME  100
 #else
 #include "nodebug.hpp"
-#define DELAY_TIME  1 // must be non zero!
+#define DELAY_TIME  2 // must be non zero!
 #endif
 
-#ifndef ARDUINO
+#ifdef ARDUINO
+#include <HardwareSerial.h>
+#else
 #include <iostream>
 #include <sstream>
 using namespace std;
@@ -90,16 +92,18 @@ Logo::Logo(LogoPrimitives *primitives, LogoTimeProvider *time, LogoBuiltinWord *
   if (_fixedstrings) {
     short len = _fixedstrings->length();
     
-    // make sure it ends with a newline. simplifies a lot of code :-)
-    if ((*_fixedstrings)[len-1] != '\n') {
-      error(LG_FIXED_NO_NEWLINE);
-      return;
-    }
+    if (len > 0) {
+      // make sure it ends with a newline. simplifies a lot of code :-)
+      if ((*_fixedstrings)[len-1] != '\n') {
+        error(LG_FIXED_NO_NEWLINE);
+        return;
+      }
     
-    // count the newlines
-    for (int i=0; i<len; i++) {
-      if ((*_fixedstrings)[i] == '\n') {
-        _fixedcount++;
+      // count the newlines
+      for (int i=0; i<len; i++) {
+        if ((*_fixedstrings)[i] == '\n') {
+          _fixedcount++;
+        }
       }
     }
   }
@@ -155,7 +159,8 @@ void Logo::reset() {
   DEBUG_IN(Logo, "reset");
   
   // ALL the code
-  for (short i=0; i<MAX_CODE; i++) {
+  short s = (sizeof(_code) / sizeof(tLogoInstruction));
+  for (short i=0; i<s; i++) {
     for (short j=0; j<INST_LENGTH; j++) {
       _code[i][j] = 0;
     }
@@ -183,7 +188,8 @@ void Logo::resetcode() {
   DEBUG_IN(Logo, "resetcode");
   
   // Just the code up to the words.
-  for (short i=0; i<START_JCODE-1; i++) {
+  short s = min(START_JCODE-1, (sizeof(_code) / sizeof(tLogoInstruction)));
+  for (short i=0; i<s; i++) {
     for (short j=0; j<INST_LENGTH; j++) {
       _code[i][j] = 0;
     }
@@ -358,9 +364,16 @@ void Logo::fail(short err) {
   
   DEBUG_IN_ARGS(Logo, "fail", "%i", err);
   
-  _code[_pc+1][FIELD_OPTYPE] = OPTYPE_ERR;
-  _code[_pc+1][FIELD_OP] = err;
-  _code[_pc+1][FIELD_OPAND] = 0;
+  if (_staticcode) {
+#ifndef ARDUINO
+    cout << "Can't fail in static code for now " << endl;
+#endif
+  }
+  else {
+    _code[_pc+1][FIELD_OPTYPE] = OPTYPE_ERR;
+    _code[_pc+1][FIELD_OP] = err;
+    _code[_pc+1][FIELD_OPAND] = 0;
+  }
   
 }
 
@@ -623,6 +636,7 @@ int Logo::callword(const char *word) {
       w++;
     }
   }
+  
   // problem with the code, couldn't find the word.
   return LG_OUT_OF_CODE;
 }
@@ -1043,10 +1057,17 @@ void Logo::addop(tJump *next, short type, short op, short opand) {
 
   DEBUG_IN_ARGS(Logo, "addop", "%i%i%i", type, op, opand);
 
-  _code[*next][FIELD_OPTYPE] = type;
-  _code[*next][FIELD_OP] = op;
-  _code[*next][FIELD_OPAND] = opand;
-  (*next)++;
+  if (_staticcode) {
+#ifndef ARDUINO
+    cout << "can't add op with static code for now" << endl;
+#endif
+  }
+  else {
+    _code[*next][FIELD_OPTYPE] = type;
+    _code[*next][FIELD_OP] = op;
+    _code[*next][FIELD_OPAND] = opand;
+    (*next)++;
+  }
   
 }
 
@@ -1059,7 +1080,7 @@ void Logo::findbuiltin(LogoString *str, short start, short slen, short *index, s
   if (_primitives) {
     *index = _primitives->find(str, start, slen);
   }
-
+  
   if (*index < 0) {
     for (short i=0; i<_corecount; i++) {
       if (strlen(_core[i]._name) == slen && str->ncmp(_core[i]._name, start, slen) == 0) {
@@ -1069,7 +1090,7 @@ void Logo::findbuiltin(LogoString *str, short start, short slen, short *index, s
       }
     }
   }
-  
+
   DEBUG_RETURN(" %i%i", *index, *category);
 
 }
@@ -1259,7 +1280,7 @@ short Logo::geterr() {
   DEBUG_IN(Logo, "geterr");
   
   // walk through the code looking for errors.
-  for (short i=0; i<MAX_CODE; i++) {
+  for (short i=0; i<CODE_SIZE; i++) {
     if (_code[i][FIELD_OPTYPE] == OPTYPE_ERR) {
       DEBUG_RETURN(" code %i", i);
       return _code[i][FIELD_OP];
@@ -1277,7 +1298,7 @@ bool Logo::haserr(short err) {
   DEBUG_IN_ARGS(Logo, "haserr", "%i", err);
   
   // walk through the code looking for a particular error.
-  for (short i=0; i<MAX_CODE; i++) {
+  for (short i=0; i<CODE_SIZE; i++) {
     if (_code[i][FIELD_OPTYPE] == OPTYPE_ERR && _code[i][FIELD_OP] == err) {
       return true;
     }
@@ -1335,15 +1356,17 @@ void LogoScheduler::schedule(short ms) {
   if (_provider->testing(ms)) {
     return;
   }
-  if (_lasttime == 0) {
-    _lasttime = _provider->currentms();
-  }
   if (_time == 0) {
     _time = ms;
   }
   else {
     _time += ms;
   }
+  _lasttime = _provider->currentms();
+// #ifdef ARDUINO
+//   Serial.print("time ");
+//   Serial.println(_time);
+// #endif
 }
 
 bool LogoScheduler::next() {
@@ -1356,9 +1379,17 @@ bool LogoScheduler::next() {
   }
   unsigned long now = _provider->currentms();
   unsigned long diff = now - _lasttime;
+// #ifdef ARDUINO
+//   Serial.print("diff ");
+//   Serial.println(diff);
+// #endif
   if (diff > _time) {
     _lasttime = now;
     _time = 0;
+// #ifdef ARDUINO
+//     Serial.print("lasttime ");
+//     Serial.println(_lasttime);
+// #endif
     return true;
   }
   _provider->delayms(DELAY_TIME);
@@ -1372,7 +1403,7 @@ void Logo::dumpinst(LogoCompiler *compiler, const char *varname, ostream &str) c
   // find the start of the jump code.
   short jstart = 0;
   short codeend = 0;
-  while (jstart<MAX_CODE) {
+  while (jstart<CODE_SIZE) {
     if (!codeend && _code[jstart][0] == OPTYPE_NOOP) {
       codeend = jstart;
     }
@@ -1380,8 +1411,8 @@ void Logo::dumpinst(LogoCompiler *compiler, const char *varname, ostream &str) c
       break;
     }
   }
-  
-  short offset = 2 - jstart;
+    
+  short offset = (codeend + 1) - jstart;
   bool haswords = compiler->haswords();
   str << "static const short " << varname << "[][INST_LENGTH] PROGMEM = {" << endl;
   for (int i=0; i<codeend; i++) {
@@ -1397,7 +1428,7 @@ void Logo::dumpinst(LogoCompiler *compiler, const char *varname, ostream &str) c
     str  << ", " << _code[i][2] << " },\t\t// " << i << endl;
   }
   str << "\t{ OPTYPE_HALT, 0, 0 },\t\t// " << codeend << endl;
-  for (int i=jstart; _code[i][0] != OPTYPE_NOOP && i<MAX_CODE; i++) {
+  for (int i=jstart; _code[i][0] != OPTYPE_NOOP && i<CODE_SIZE; i++) {
     str << "\t{ ";
     optypename(_code[i][0], str);
     str << ", ";
@@ -2066,11 +2097,13 @@ short LogoWords::printArity = 1;
 
 void LogoWords::print(Logo &logo) {
 
-#ifndef ARDUINO
   LogoStringResult result;
   logo.popstring(&result);
   char s[256];
   result.ncpy(s, sizeof(s));
+#ifdef ARDUINO
+  Serial.println(s);
+#else
   cout << "=== " << s << endl;
 #endif
   
