@@ -1095,11 +1095,14 @@ void Logo::findbuiltin(LogoString *str, short start, short slen, short *index, s
 
 }
 
-short Logo::findfixed(LogoString *stri, short strstart, short slen) {
+short Logo::findfixed(LogoString *stri, short strstart, short slen) const {
 
   DEBUG_IN_ARGS(Logo, "findfixed", "%i%i", strstart, slen);
   
+//  stri->dump("findfixed", strstart, slen);
+  
   if (_fixedstrings) {
+//    _fixedstrings->dump("findfixed", 0, _fixedstrings->length());
     short len = _fixedstrings->length();
     short start = 0;
     short index = 0;
@@ -1175,10 +1178,10 @@ short Logo::addstring(LogoString *str, short start, short slen) {
 
   DEBUG_IN_ARGS(Logo, "addstring", "%i%i", start, slen);
   
-  short fixed = findfixed(str, start, slen);
-  if (fixed >= 0) {
-    DEBUG_RETURN(" %i", fixed);
-    return fixed;
+  short existing = findfixed(str, start, slen);
+  if (existing >= 0) {
+    DEBUG_RETURN(" fixed %i", existing);
+    return existing;
   }
 
   if ((_nextstring + slen) >= STRING_POOL_SIZE) {
@@ -1241,9 +1244,11 @@ void Logo::getstring(LogoStringResult *stri, tStrPool str, tStrPool len) const {
 //  DEBUG_IN_ARGS(Logo, "getstring", "%i%i", str, len);
   
   if (getfixed(stri, str)) {
+// #ifdef ARDUINO
+//     Serial.println("got fixed");
+// #endif
     return;
   }
-
   stri->_simple.set(_strings + (str - _fixedcount), len);
   
 }
@@ -1414,31 +1419,48 @@ void Logo::dumpinst(LogoCompiler *compiler, const char *varname, ostream &str) c
     
   short offset = (codeend + 1) - jstart;
   bool haswords = compiler->haswords();
+  char name[32];
   str << "static const short " << varname << "[][INST_LENGTH] PROGMEM = {" << endl;
   for (int i=0; i<codeend; i++) {
     str << "\t{ ";
-    optypename(_code[i][0], str);
+    optypename(_code[i][FIELD_OPTYPE], str);
     str << ", ";
-    if (_code[i][0] == OPTYPE_JUMP) {
-      str << _code[i][1] + offset;
+    if (_code[i][FIELD_OPTYPE] == OPTYPE_JUMP) {
+      str << _code[i][FIELD_OP] + offset << ", " << _code[i][FIELD_OPAND];
+    }
+    else if (_code[i][FIELD_OPTYPE] == OPTYPE_STRING) {
+      LogoStringResult result;
+      getstring(&result, _code[i][FIELD_OP], _code[i][FIELD_OPAND]);
+      result.ncpy(name, sizeof(name));
+      LogoSimpleString s(name);
+      short fixed = findfixed(&s, 0, s.length());
+      str << fixed << ", " << _code[i][FIELD_OPAND];
     }
     else {
-      str << _code[i][1];
+      str << _code[i][FIELD_OP] << ", " << _code[i][FIELD_OPAND];
     }
-    str  << ", " << _code[i][2] << " },\t\t// " << i << endl;
+    str << " },\t\t// " << i << endl;
   }
   str << "\t{ OPTYPE_HALT, 0, 0 },\t\t// " << codeend << endl;
   for (int i=jstart; _code[i][0] != OPTYPE_NOOP && i<CODE_SIZE; i++) {
     str << "\t{ ";
-    optypename(_code[i][0], str);
+    optypename(_code[i][FIELD_OPTYPE], str);
     str << ", ";
-    if (_code[i][0] == OPTYPE_JUMP) {
-      str << _code[i][1] + offset;
+    if (_code[i][FIELD_OPTYPE] == OPTYPE_JUMP) {
+      str << _code[i][FIELD_OP] + offset << ", " << _code[i][FIELD_OPAND];
+    }
+    else if (_code[i][FIELD_OPTYPE] == OPTYPE_STRING) {
+      LogoStringResult result;
+      getstring(&result, _code[i][FIELD_OP], _code[i][FIELD_OPAND]);
+      result.ncpy(name, sizeof(name));
+      LogoSimpleString s(name);
+      short fixed = findfixed(&s, 0, s.length());
+      str << fixed << ", " << _code[i][FIELD_OPAND];
     }
     else {
-      str << _code[i][1];
+      str << _code[i][FIELD_OP] << ", " << _code[i][FIELD_OPAND];
     }
-    str << ", " << _code[i][2] << " },\t\t// " << i + offset << endl;
+    str << " },\t\t// " << i + offset << endl;
   }
   if (haswords) {
     compiler->dumpwordscode(offset, str);
@@ -1453,6 +1475,20 @@ int Logo::stringslist(LogoCompiler *compiler, char *buf, int len) const {
   int count = 0;
   count += compiler->wordstringslist(buf, len);
   count += varstringslist(compiler, buf, len);
+  // and add in the ACTUAL strings.
+  char name[32];
+  for (short i=0; i<CODE_SIZE; i++) {
+    if (_code[i][FIELD_OPTYPE] == OPTYPE_STRING) {
+      LogoStringResult result;
+      getstring(&result, _code[i][FIELD_OP], _code[i][FIELD_OPAND]);
+      result.ncpy(name, sizeof(name));
+      stringstream s;
+      s << name << endl;
+      strncat(buf, s.str().c_str(), min(len, s.str().length()));
+      count++;
+    }
+  }
+  
   return count;
   
 }
@@ -1464,15 +1500,12 @@ void Logo::dumpstringscode(LogoCompiler *compiler, const char *varname, ostream 
   compiler->dumpwordstrings(str);
   dumpvarsstrings(compiler, str);
   char name[32];
-  for (short i=0; i<_nextcode; i++) {
-    switch (_code[i][FIELD_OPTYPE]) {
-    
-    case OPTYPE_STRING:
+  for (short i=0; i<CODE_SIZE; i++) {
+    if (_code[i][FIELD_OPTYPE] == OPTYPE_STRING) {
       LogoStringResult result;
       getstring(&result, _code[i][FIELD_OP], _code[i][FIELD_OPAND]);
       result.ncpy(name, sizeof(name));
       str << "\t\"" << name << "\\n\"" << endl;
-      break;
     }
   }
   str << "};" << endl;
@@ -1864,6 +1897,14 @@ void LogoWords::make(Logo &logo) {
   short n = logo.popint();
   LogoStringResult result;
   logo.popstring(&result);
+  
+// #ifdef ARDUINO
+//   char s[256];
+//   result.ncpy(s, sizeof(s));
+//   Serial.println(s);
+//   Serial.println(n);
+// #endif
+  
   short var = logo.findvariable(&result);
   if (var < 0) {
     var = logo.newintvar(logo.addstring(&result), result.length(), n);

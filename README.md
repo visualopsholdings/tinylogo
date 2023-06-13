@@ -372,12 +372,6 @@ https://forum.arduino.cc/t/how-to-properly-use-wire-onreceive/891195/12
 
 ## Current development focus
 
-### FOREVER seems to be broken now.
-
-### OUTPUT from the Arduino to the PI
-
-Actually pretty simple, just need examples.
-
 ## Change Log
 
 ### 24 May 2023
@@ -406,4 +400,7 @@ to allow strings and code to be in FLASH memory.
 ### 10 Jun 2023
 - Add code to flashcode to allow it to inline process an LOGO file.
 
+### 13 Jun 2023
+- Finally created a sketch with decent amount of logic that allows a button to be
+pressed called "traffic light"
 

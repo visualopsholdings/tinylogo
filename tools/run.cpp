@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
       compiler.compile(file);
       int err = logo.geterr();
       if (err) {
-        cout << "got compile err" << err << endl;
+        cout << "got compile err " << err << endl;
         return err;
       }
       if (vm.count("dump")) {

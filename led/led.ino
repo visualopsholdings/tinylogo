@@ -96,24 +96,10 @@ LogoCompiler compiler(&logo);
 #endif
 
 
-void flashErr(int mode, int n) {
+void showErr(int mode, int n) {
   Serial.print(mode);
   Serial.print(", ");
   Serial.println(n);
-  // it's ok to tie up the device with delays here.
-  for (int i=0; i<mode; i++) {
-    digitalWrite(LED_PIN, HIGH);
-    delay(100);
-    digitalWrite(LED_PIN, LOW);
-    delay(100);
-  }
-  delay(500);
-  for (int i=0; i<n; i++) {
-    digitalWrite(LED_PIN, HIGH);
-    delay(100);
-    digitalWrite(LED_PIN, LOW);
-    delay(100);
-  }
 }
 
 // At the start
@@ -138,7 +124,7 @@ void setup() {
   compiler.compile(&str);
   int err = logo.geterr();
   if (err) {
-    flashErr(1, err + 2);
+    showErr(1, err + 2);
   }
  
   // this would make it just run straight away
@@ -185,7 +171,7 @@ void loop() {
     int err = logo.geterr();
  #endif
     if (err) {
-      flashErr(1, err);
+      showErr(1, err);
     }
 }
 
@@ -195,7 +181,7 @@ void loop() {
   // And if there was an error doing that, apart from STOP (at the end)
   // flash the LED
   if (err && err != LG_STOP) {
-    flashErr(2, err);
+    showErr(2, err);
   }
 
 }

@@ -373,13 +373,6 @@ bool LogoCompiler::dodefine(LogoString *str, short wordstart, short wordlen, boo
   
   if (str->ncmp("BUILTIN", wordstart, wordstart+7) == 0) {
     _logo->setprimitives(str, wordstart+8, wordlen-9);
-//     if (!_primitives) {
-//       DEBUG_RETURN(" no primitives %b", true);
-//     }
-//     else {
-//       _primitives->set(str, wordstart+8, wordlen-9);
-//     }
-//    str->ncpy(_builtindef, wordstart+8, wordlen-9);
     DEBUG_RETURN(" builtin def %b", true);
     return true;
   }
@@ -696,7 +689,6 @@ int LogoCompiler::compile(fstream &file) {
     compile(line.c_str());
     int err = _logo->geterr();
     if (err) {
-      cout << "got err " << err << " while compiling" << endl;
       return err;
     }
   }

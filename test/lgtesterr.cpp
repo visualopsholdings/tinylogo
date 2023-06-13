@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE( outOfStrings )
   strstream str;
   for (short i=0; i<(segn + 2); i++) {
     for (short j=0; j<seg; j++) {
-      str << "A";
+      str << "A" << i << j;
     }
     str << ";";
   }

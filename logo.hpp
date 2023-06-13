@@ -493,7 +493,7 @@ private:
   bool parsestring(short type, short op, short oplen, LogoStringResult *str);
 
   // fixed strings
-  short findfixed(LogoString *str, short start, short slen);
+  short findfixed(LogoString *str, short start, short slen) const;
   bool fixedcmp(LogoString *stri, short strstart, short slen, tStrPool str, tStrPool len) const;
   bool getfixed(LogoStringResult *reuslt, tStrPool str) const;
 
