@@ -15,7 +15,9 @@
 #include "logo.hpp"
 #include "logostring.hpp"
 
-#ifndef ARDUINO
+#ifdef ARDUINO
+#include <HardwareSerial.h>
+#else
 #include <iostream>
 using namespace std;
 #endif
