@@ -3,7 +3,7 @@
 #   Author: Paul Hamilton (paul@visualops.com)
 #   Date: 2-Jun-2023
 #
-#   allow colors to be set on an RGB LED
+#   Allow colors to be set on an RGB LED
 #
 #   This work is licensed under the Creative Commons Attribution 4.0 International License. 
 #   To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0/ or 
@@ -27,30 +27,30 @@ TO SCLR :C
 END
 
 # arguments are reversed!
-TO SETALL :B :G :R
+TO SET :B :G :R
   REDR SCLR :R
   GREENR SCLR :G
   BLUER SCLR :B
 END
 
 TO AMBER
- SETALL 100 75 0
+ SET 100 75 0
 END
 
 TO RED
-  SETALL 100 0 0
+  SET 100 0 0
 END
 
 TO GREEN
-  SETALL 0 100 0
+  SET 0 100 0
 END
 
 TO BLUE
-  SETALL 0 0 100
+  SET 0 0 100
 END
 
 TO OFF
-  SETALL 0 0 0
+  SET 0 0 0
 END
 
 AMBER
