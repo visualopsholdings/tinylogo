@@ -88,7 +88,7 @@
 // leaves about 200 bytes for local variables. Otherwise your sketch won't work.
 
 #ifdef USE_FLASH_CODE
-#define STRING_POOL_SIZE    256       // these number of bytes
+#define STRING_POOL_SIZE    320       // these number of bytes
 #else
 #define STRING_POOL_SIZE    128       // these number of bytes
 #endif
@@ -437,6 +437,7 @@ public:
   void dumpvars(const LogoCompiler *compiler) const;
   void dumpvars() const;
   void dumpstaticwords(const LogoCompiler *compiler) const;
+  bool safestringcat(short op, short opand, char *buf, int len) const;
   int stringslist(LogoCompiler *compiler, char *buf, int len) const;
   int varstringslist(LogoCompiler *compiler, char *buf, int len) const;
   void dumpstringscode(LogoCompiler *compiler, const char *varname, std::ostream &str) const;

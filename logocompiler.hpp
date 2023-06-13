@@ -97,7 +97,7 @@ public:
   bool haswords() { return _wordcount > 0; }
   void entab(short indent) const;
   void printwordstring(const LogoWord &word, std::ostream &str) const;
-  static void generatecode(std::fstream &file, const std::string &name, std::ostream &str);
+  static int generatecode(std::fstream &file, const std::string &name, std::ostream &str);
   static int updateino(const std::string &infn, std::fstream &infile, std::fstream &outfile);
   static int includelgo(const std::string &infn, const std::string &name, std::fstream &outfile);
   int compile(std::fstream &file);

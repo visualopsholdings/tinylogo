@@ -1462,21 +1462,40 @@ void Logo::dumpinst(LogoCompiler *compiler, const char *varname, ostream &str) c
 
 }
 
+bool Logo::safestringcat(short op, short opand, char *buf, int len) const {
+
+  LogoStringResult result;
+  getstring(&result, op, opand);
+  int nlen = result.length();
+  int buflen = strlen(buf);
+  if ((buflen + (nlen + 1)) >= len) {
+    return false;
+  }
+  result.ncpy(buf + buflen, nlen);
+  strncat(buf + buflen + 1, "\n", 1);
+  return true;
+  
+}
+
 int Logo::stringslist(LogoCompiler *compiler, char *buf, int len) const {
 
   int count = 0;
-  count += compiler->wordstringslist(buf, len);
-  count += varstringslist(compiler, buf, len);
+  int wcount = compiler->wordstringslist(buf, len);
+  if (wcount < 0) {
+    return -1;
+  }
+  count += wcount;
+  int vcount = varstringslist(compiler, buf, len);
+  if (vcount < 0) {
+    return -1;
+  }
+  count += vcount;
   // and add in the ACTUAL strings.
-  char name[STRING_LEN];
   for (short i=0; i<CODE_SIZE; i++) {
     if (_code[i][FIELD_OPTYPE] == OPTYPE_STRING) {
-      LogoStringResult result;
-      getstring(&result, _code[i][FIELD_OP], _code[i][FIELD_OPAND]);
-      result.ncpy(name, sizeof(name));
-      stringstream s;
-      s << name << endl;
-      strncat(buf, s.str().c_str(), min(len, s.str().length()));
+      if (!safestringcat(_code[i][FIELD_OP], _code[i][FIELD_OPAND], buf, len)) {
+        return -1;
+      }
       count++;
     }
   }
@@ -1607,14 +1626,10 @@ int Logo::varstringslist(LogoCompiler *compiler, char *buf, int len) const {
     return 0;
   }
   
-  char name[LINE_LEN];
-  LogoStringResult result;
   for (short i=0; i<_varcount; i++) {
-    getstring(&result, _variables[i]._name, _variables[i]._namelen);
-    result.ncpy(name, sizeof(name));
-    stringstream s;
-    s << name << endl;
-    strncat(buf, s.str().c_str(), min(len, s.str().length()));
+    if (!safestringcat(_variables[i]._name, _variables[i]._namelen, buf, len)) {
+      return -1;
+    }
   }
 
   return _varcount;

@@ -666,14 +666,10 @@ int LogoCompiler::wordstringslist(char *buf, int len) const {
     return 0;
   }
   
-  char name[LINE_LEN];
-  LogoStringResult result;
   for (short i=0; i<_wordcount; i++) {
-    _logo->getstring(&result, _words[i]._name, _words[i]._namelen);
-    result.ncpy(name, sizeof(name));
-    stringstream s;
-    s << name << endl;
-    strncat(buf, s.str().c_str(), min(len, s.str().length()));
+    if (!_logo->safestringcat(_words[i]._name, _words[i]._namelen, buf, len)) {
+      return -1;
+    }
   }
   
   return _wordcount;
@@ -695,7 +691,7 @@ int LogoCompiler::compile(fstream &file) {
   return 0;
 }
 
-void LogoCompiler::generatecode(fstream &file, const string &name, ostream &str) {
+int LogoCompiler::generatecode(fstream &file, const string &name, ostream &str) {
 
   // first compile the code so we can dump the strings from it in 
   // the correct order
@@ -703,14 +699,22 @@ void LogoCompiler::generatecode(fstream &file, const string &name, ostream &str)
   Logo logo(&primitives, 0, Logo::core);
   LogoCompiler compiler(&logo);
   compiler.compile(file);
+  int err = logo.geterr();
+  if (err) {
+    return err;
+  }
   
   // can dump the strings code.
   logo.dumpstringscode(&compiler, ("strings_" + name).c_str(), str);
 
   // now gather the strings and specify them for the new compile
-  char list[128];
+  char list[STRING_POOL_SIZE];
   list[0] = 0;
   int count = logo.stringslist(&compiler, list, sizeof(list));
+  if (count < 0) {
+    cout << "buffer overflow generating strings list" << endl;
+    return 1;
+  }
   LogoSimpleString strings(list);
   {
     // build a new engine with these strings and compile again.
@@ -718,10 +722,16 @@ void LogoCompiler::generatecode(fstream &file, const string &name, ostream &str)
     Logo logo2(&primitives2, 0, Logo::core, &strings);
     LogoCompiler compiler2(&logo2);
     compiler2.compile(file);
+    int err = logo2.geterr();
+    if (err) {
+      return err;
+    }
     
     // ready to dump the code now.
     logo2.dumpinst(&compiler2, ("code_" + name).c_str(), str);
   }
+  
+  return 0;
   
 }
 
@@ -735,9 +745,13 @@ int LogoCompiler::includelgo(const string &infn, const string &name, fstream &ou
   }
   
   stringstream str;
-  LogoCompiler::generatecode(file, name, str);
-  outfile << str.str();
+  int err = LogoCompiler::generatecode(file, name, str);
   file.close();
+  if (err) {
+    return err;
+  }
+  
+  outfile << str.str();
   
   return 0;
   

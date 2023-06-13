@@ -44,12 +44,15 @@ int process_ino(const string &infn) {
   infile.close();
   outfile.close();
   
-  if (!err) {
-    fs::rename(infn, infn + ".old");
-    fs::rename(outfn, infn);
+  if (err) {
+    cout << "got error " << err << endl;
+    return err;
   }
   
-  return err;
+  fs::rename(infn, infn + ".old");
+  fs::rename(outfn, infn);
+  
+  return 0;
   
 }
 
