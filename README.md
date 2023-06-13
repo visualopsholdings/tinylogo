@@ -131,28 +131,46 @@ Words need to be defined on 3 lines like this:
 TO wordname; BLOCK; END
 ```
 
+OR
+```
+TO wordname
+  BLOCK
+END
+```
+
+A semicolon is just a replacement for new line. White space is ignored, but you MUST
+have spaces between words
+
 #### Arguments
 
-Argumemts to functions work BUT it is just a lexical trick, not scoped so recursion won't
-work.
+Argumemts to functions work BUT it is just a lexical trick, not scoped at all, 
+so recursion won't work.
 
 ```
-TO MULT :A :B; :A * :B; END;
+TO MULT :A :B
+  A * :B
+END
 MULT 10 20
 ```
 
 Is functionally equivalent to:
 
 ```
-TO MULT; :A * :B; END;
-MAKE \"A 10 MAKE \"B 20 MULT
+TO MULT
+  :A * :B
+END
+MAKE \"A 10 
+MAKE \"B 20 
+MULT
 ```
 
 Note: There is a bg where the arguments are pushed in reverse order of the call :-( so the 
 code above is really:
 
 ```
-TO MULT :B :A; :A * :B; END;
+TO MULT :B :A
+  :A * :B
+END
 MULT 10 20
 ```
 
@@ -172,9 +190,7 @@ VALUE := [number | string]
 Repeat the next word forever. The syntax is:
 
 ```
-REPEAT WORD
-WORD := [wordname]
-LITWORD := the name of a word
+FOREVER wordname
 ```
 
 ## REPEAT
@@ -182,13 +198,11 @@ LITWORD := the name of a word
 Repeat the next word a number of times. The syntax is:
 
 ```
-REPEAT NUM WORD
-NUM := [number | VAR]
-VAR := :varname
-WORD := [wordname | LITERAL]
-LITERAL := [number | string } VAR] 
-VAR := :varname
-LITWORD := the name of a word
+REPEAT num word
+num := [number | varname]
+word := [wordname | literal]
+literal := [number | string | var] 
+var := :varname
 ```
 
 ## IFELSE
@@ -196,12 +210,12 @@ LITWORD := the name of a word
 Test an expression, it true put the first word on the stack else the second. The syntax is:
 
 ```
-IFELSE EXPR THEN ELSE
-EXPR := [wordname | LITERAL]
-LITERAL := [number | string } VAR] 
-VAR := :varname
-THEN := [wordname | LITERAL]
-ELSE := [wordname | LITERAL]
+IFELSE expr then else
+expr := [wordname | literal]
+literal := [number | string | var] 
+var := :varname
+then := [wordname | literal]
+else := [wordname | literal]
 ```
 
 ## IF
@@ -209,11 +223,11 @@ ELSE := [wordname | LITERAL]
 Test an expression, it true execute the next word. The syntax is:
 
 ```
-IF EXPR THEN
-EXPR := [wordname | LITERAL]
-LITERAL := [number | string } VAR] 
-VAR := :varname
-THEN := [wordname | LITERAL]
+IF expr then
+expr := [wordname | literal]
+literal := [number | string | var] 
+var := :varname
+then := [wordname | literal]
 ```
 
 ## =
@@ -221,8 +235,9 @@ THEN := [wordname | LITERAL]
 Push a 1 on the stack if the operands are the same. The syntax is:
 
 ```
-WORD = WORD
-WORD := [wordname | LITERAL]
+word '=' word
+word := [wordname | literal]
+literal := [number | string | var] 
 ```
 
 ## !=
@@ -234,9 +249,9 @@ Opposite of =
 Wait for milliseconds before executing the next word. The syntax is:
 
 ```
-WAIT NUM WORD
-NUM := [number | VAR]
-WORD := [wordname]
+WAIT num wordname
+num := [number | var]
+var := :varname
 ```
 
 ## Arithmetic
@@ -264,8 +279,9 @@ MUL / 3
 Print the literal out to the serial port
 
 ```
-PRINT WORD
-WORD := [wordname | LITERAL]
+PRINT word
+word := [wordname | literal]
+literal := [number | string | var] 
 ```
 
 ## Static code
