@@ -12,7 +12,7 @@
 #   https://github.com/visualopsholdings/tinylogo  
 #
 
-# turn an LED on or off
+# turn an LED on or off, including a button
 BUILTIN(ON,OFF,BUTTON)
 
 TO FLASH
@@ -24,9 +24,9 @@ TO TESTSTATE
   IF :VALUE = 1 FLASH
 END
 
-TO TESTVALUE
+TO TESTBTN
   MAKE "VALUE BUTTON
   IF :VALUE != :OLDVALUE TESTSTATE 
 END
 
-FOREVER TESTVALUE
+FOREVER TESTBTN

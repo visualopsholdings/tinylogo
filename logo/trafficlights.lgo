@@ -27,14 +27,14 @@ TO SCLR :C
 END
 
 # arguments are reversed!
-TO SETALL1 :B :G :R
+TO SET1 :B :G :R
   RED1R SCLR :R
   GREEN1R SCLR :G
   BLUE1R SCLR :B
 END
 
 # arguments are reversed!
-TO SETALL2 :B :G :R
+TO SET2 :B :G :R
   RED2R SCLR :R
   GREEN2R SCLR :G
   BLUE2R SCLR :B
@@ -43,30 +43,33 @@ END
 # the named colors we use for each LED
 
 TO AMBER1
- SETALL1 100 75 0
+ SET1 100 75 0
 END
 
 TO RED1
-  SETALL1 100 0 0
+  SET1 100 0 0
 END
 
 TO GREEN1
-  SETALL1 0 100 0
+  SET1 0 100 0
 END
 
 TO RED2
-  SETALL2 8 2 2
+  SET2 8 2 2
 END
 
 TO GREEN2
-  SETALL2 2 8 2
+  SET2 2 8 2
 END
 
 TO OFF1
-  SETALL1 0 0 0
+  SET1 0 0 0
 END
 
 # the button logic
+
+# STATE1 holds 0 for RED, 1 for GREEN and 2 for AMBER for the first LED
+# STATE2 holds 0 for OFF and 1 for ON
 
 TO NEXTSTATE1
   :STATE1 + 1
