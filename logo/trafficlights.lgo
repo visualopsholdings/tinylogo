@@ -14,11 +14,6 @@
 
 # send a raw analog value to an RGB LED's redm green and blue channel (0 is full on)
 BUILTIN(REDR:1,GREENR:1,BLUER:1,BUTTON)
-#BUILTIN(REDR:1,GREENR:1,BLUER:1)
-
-# TO BUTTON
-#   1
-# END
 
 # scale a color to be between 1 and 100
 TO SUBC :C

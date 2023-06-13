@@ -18,7 +18,6 @@
 #include "arduinoflashstring.hpp"
 #include "arduinoflashcode.hpp"
 
-#define I2C_ADDRESS 8
 #define LED_PIN     13
 #define BLUE_PIN    2
 #define RED_PIN     3
@@ -49,7 +48,6 @@ void button(Logo &logo) {
   logo.pushint(digitalRead(BUTTON_PIN));
 }
 
-// the strings for the program in flash
 //#LOGO FILE=../logo/trafficlights.lgo NAME=rgb
 static const char strings_rgb[] PROGMEM = {
 	"SUBC\n"
@@ -273,11 +271,7 @@ void setup() {
 // Go around and around
 void loop() {
 
-  // just execute each LOGO word
   int err = logo.step();
-  
-  // And if there was an error doing that, apart from STOP (at the end)
-  // flash the LED
   if (err && err != LG_STOP) {
     showErr(2, err);
   }
