@@ -18,7 +18,7 @@ project (logotest)
   add_definitions(-DBOOST_ALL_DYN_LINK) 
   enable_testing()
 
-add_library (Logo STATIC ../logo.cpp ../logocompiler.cpp ../logostring.cpp ../arduinoflashcode.cpp)
+add_library (Logo STATIC ../logo.cpp ../logocompiler.cpp ../logostring.cpp ../arduinoflashcode.cpp ../logowords.cpp)
   target_link_libraries(Logo ${Boost_FILESYSTEM_LIBRARY})
 
 add_executable(LGTestCompiler lgtestcompiler.cpp)

@@ -26,23 +26,11 @@ TO SCLR :C
   DIVC :C * 255
 END
 
-TO REDC :N
-  REDR SCLR :N
-END
-
-TO GREENC :N
-  GREENR SCLR :N
-END
-
-TO BLUEC :N
-  BLUER SCLR :N
-END
-
 # arguments are reversed!
 TO SETALL :B :G :R
-  REDC :R
-  GREENC :G
-  BLUEC :B
+  REDR SCLR :R
+  GREENR SCLR :G
+  BLUER SCLR :B
 END
 
 TO AMBER

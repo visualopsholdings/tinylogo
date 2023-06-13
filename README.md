@@ -202,7 +202,18 @@ LITERAL := [number | string } VAR]
 VAR := :varname
 THEN := [wordname | LITERAL]
 ELSE := [wordname | LITERAL]
-LITWORD := the name of a word
+```
+
+## IF
+
+Test an expression, it true execute the next word. The syntax is:
+
+```
+IF EXPR THEN
+EXPR := [wordname | LITERAL]
+LITERAL := [number | string } VAR] 
+VAR := :varname
+THEN := [wordname | LITERAL]
 ```
 
 ## =
@@ -212,8 +223,11 @@ Push a 1 on the stack if the operands are the same. The syntax is:
 ```
 WORD = WORD
 WORD := [wordname | LITERAL]
-LITWORD := the name of a word
 ```
+
+## !=
+
+Opposite of =
 
 ## WAIT (not working yet so not in current build)
 
@@ -223,7 +237,6 @@ Wait for milliseconds before executing the next word. The syntax is:
 WAIT NUM WORD
 NUM := [number | VAR]
 WORD := [wordname]
-LITWORD := the name of a word
 ```
 
 ## Arithmetic
@@ -241,6 +254,19 @@ TO MUL
   SUB * 4
 END
 MUL / 3
+
+## Logic
+
+>, >=, <, <=  and NOT all work like you wold think.
+
+## PRINT
+
+Print the literal out to the serial port
+
+```
+PRINT WORD
+WORD := [wordname | LITERAL]
+```
 
 ## Static code
 
@@ -275,6 +301,22 @@ words your have defined or primitives directly with
 
 This will allow your to fit quite large programs into yoru arduino, and also allow the programs
 to come from an actual text file with comments etc.
+
+The tool can also modify your .ino file directly with this:
+
+$ tools/build/flashcode rgb/rgb.ino
+
+This searches for 2 lines in the file:
+
+```
+//#LOGO FILE=../logo/rgb.lgo NAME=rgb
+//#LOGO ENDFILE
+```
+
+And modifies whatever is between 2 lines to output the actual compiled runtime for that logo file.
+This allows development to be very quick. You can modify and run your .lgo file in a dev
+envrionment and then run flashcode and then in the IDE upload directly to your Arduino
+to try the code out.
 
 ## Running a .lgo file and seeing what it does.
 
@@ -372,6 +414,8 @@ https://forum.arduino.cc/t/how-to-properly-use-wire-onreceive/891195/12
 
 ## Current development focus
 
+### Do the I2C stuff for PI and include test scripts etc to make that easy to do.
+
 ## Change Log
 
 ### 24 May 2023
@@ -401,6 +445,6 @@ to allow strings and code to be in FLASH memory.
 - Add code to flashcode to allow it to inline process an LOGO file.
 
 ### 13 Jun 2023
-- Finally created a sketch with decent amount of logic that allows a button to be
-pressed called "traffic light"
+- Finally created a sketch with decent amount of logic that allows 2 buttons to be
+pressed to drive 2 colored LEDs called trafficlights.lgo
 

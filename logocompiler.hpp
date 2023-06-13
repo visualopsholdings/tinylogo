@@ -32,7 +32,7 @@
 #define MAX_WORDS           16        // 6 bytes each
 #endif
 
-#define LINE_LEN            64        // these number of bytes
+#define LINE_LEN            128       // these number of bytes
 
 typedef struct {
   tStrPool  _name;

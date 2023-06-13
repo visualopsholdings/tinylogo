@@ -309,6 +309,32 @@ BOOST_AUTO_TEST_CASE( lteWord )
   BOOST_CHECK(logo.stackempty());
 }
 
+BOOST_AUTO_TEST_CASE( notWord )
+{
+  cout << "=== notWord ===" << endl;
+  
+  Logo logo(0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("NOT 1");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popint(), 0);
+  
+  logo.reset();
+  compiler.reset();
+  compiler.compile("NOT 0");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+  
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popint(), 1);
+  
+  BOOST_CHECK(logo.stackempty());
+}
+
 BOOST_AUTO_TEST_CASE( ifelseFalse )
 {
   cout << "=== ifelseFalse ===" << endl;

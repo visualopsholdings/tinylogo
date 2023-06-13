@@ -12,7 +12,7 @@
 */
 
 // if you uncomment this, also uncomment the USE_FLASH_CODE in logo.hpp
-//#define FLASH_CODE
+#define FLASH_CODE
 
 #include "ringbuffer.hpp"
 #include "cmd.hpp"
@@ -51,7 +51,7 @@ static const char strings_led[] PROGMEM = {
 	"STOP\n"
 };
 static const short code_led[][INST_LENGTH] PROGMEM = {
-	{ OPTYPE_NOOP, 0, 0 },		// 0
+	{ OPTYPE_JUMP, 9, 0 },		// 0
 	{ OPTYPE_HALT, 0, 0 },		// 1
 	{ OPTYPE_BUILTIN, 0, 0 },		// 2
 	{ OPTYPE_BUILTIN, 6, 1 },		// 3

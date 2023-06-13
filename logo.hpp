@@ -88,12 +88,12 @@
 // leaves about 200 bytes for local variables. Otherwise your sketch won't work.
 
 #ifdef USE_FLASH_CODE
-#define STRING_POOL_SIZE    320       // these number of bytes
+#define STRING_POOL_SIZE    512       // these number of bytes
 #else
 #define STRING_POOL_SIZE    128       // these number of bytes
 #endif
 #ifdef USE_FLASH_CODE
-#define MAX_CODE            255       // 6 bytes each
+#define MAX_CODE            512       // 6 bytes each
 #else
 #define MAX_CODE            80        // 6 bytes each
 #endif
@@ -103,7 +103,7 @@
 #define START_JCODE         30        // the start of where the JCODE lies (the words)
 #endif
 #ifdef USE_FLASH_CODE
-#define MAX_STACK           64        // 6 bytes each
+#define MAX_STACK           48        // 6 bytes each
 #else
 #define MAX_STACK           16        // 6 bytes each
 #endif
@@ -231,73 +231,6 @@ typedef struct {
   tStrPool           _valuelen;
   short              _value; // needs to hold a (possible) literal number
 } LogoVar;
-
-class LogoWords {
-
-public:
-
-  static void err(Logo &logo);
-  static short errArity;
-  
-  static void ifelse(Logo &logo);
-  static short ifelseArity;
-  
-  static void ifWord(Logo &logo);
-  static short ifArity;
-  
-  static void repeat(Logo &logo);
-  static short repeatArity;
-  
-  static void forever(Logo &logo);
-  static short foreverArity;
-
-  static void make(Logo &logo);
-  static short makeArity;
-
-  static void wait(Logo &logo);
-  static short waitArity;
-
-  static void subtract(Logo &logo);
-  static short subtractArity;
-
-  static void add(Logo &logo);
-  static short addArity;
-
-  static void divide(Logo &logo);
-  static short divideArity;
-
-  static void multiply(Logo &logo);
-  static short multiplyArity;
-
-  static void eq(Logo &logo);
-  static short eqArity;
-
-  static void neq(Logo &logo);
-  static short neqArity;
-
-  static void gt(Logo &logo);
-  static short gtArity;
-
-  static void gte(Logo &logo);
-  static short gteArity;
-
-  static void lt(Logo &logo);
-  static short ltArity;
-
-  static void lte(Logo &logo);
-  static short lteArity;
-
-  static void dumpvars(Logo &logo);
-  static short dumpvarsArity;
-
-  static void print(Logo &logo);
-  static short printArity;
-
-private:
-
-  static bool pushliterals(Logo &logo, short rel);
-
-};
 
 class LogoTimeProvider {
 
