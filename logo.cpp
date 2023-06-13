@@ -1510,8 +1510,11 @@ void Logo::dumpstringscode(LogoCompiler *compiler, const char *varname, ostream 
 
   str << "static const char "<< varname << "[] PROGMEM = {" << endl;
   // these are in a particuar order
+  str << "// words" << endl;
   compiler->dumpwordstrings(str);
+  str << "// variables" << endl;
   dumpvarsstrings(compiler, str);
+  str << "// strings" << endl;
   char name[STRING_LEN];
   for (short i=0; i<CODE_SIZE; i++) {
     if (_code[i][FIELD_OPTYPE] == OPTYPE_STRING) {

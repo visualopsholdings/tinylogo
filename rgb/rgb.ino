@@ -18,23 +18,16 @@
 #include "arduinoflashstring.hpp"
 #include "arduinoflashcode.hpp"
 
-#define LED_PIN       13
+// these are in a horrible order. Need to clean this up but
+// it shows the usefulness of the abstraction
 #define BLUE1_PIN     2
 #define RED1_PIN      3
 #define GREEN1_PIN    4
+#define BUTTON2_PIN   6
+#define BUTTON1_PIN   7
 #define BLUE2_PIN     9
 #define RED2_PIN      10
 #define GREEN2_PIN    11
-#define BUTTON1_PIN   7
-#define BUTTON2_PIN   6
-
-void ledOn(Logo &logo) {
-  digitalWrite(LED_PIN, HIGH);
-}
-
-void ledOff(Logo &logo) {
-  digitalWrite(LED_PIN, LOW);
-}
 
 void red1Raw(Logo &logo) {
   analogWrite(RED1_PIN, logo.popint());
@@ -70,6 +63,7 @@ void button2(Logo &logo) {
 
 //#LOGO FILE=../logo/trafficlights.lgo NAME=rgb
 static const char strings_rgb[] PROGMEM = {
+// words
 	"SUBC\n"
 	"DIVC\n"
 	"SCLR\n"
@@ -95,10 +89,12 @@ static const char strings_rgb[] PROGMEM = {
 	"TESTB2\n"
 	"TESTB\n"
 	"START\n"
+// variables
 	"C\n"
 	"B\n"
 	"G\n"
 	"R\n"
+// strings
 	"STATE1\n"
 	"STATE1\n"
 	"OLDVALUE1\n"
@@ -344,10 +340,6 @@ void showErr(int mode, int n) {
 
 // At the start
 void setup() {
-
-  // Setup the LED
-  pinMode(LED_PIN, OUTPUT);
-  digitalWrite(LED_PIN, LOW);
 
   // the RGB pins
   pinMode(RED1_PIN, OUTPUT);
