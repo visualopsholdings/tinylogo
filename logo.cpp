@@ -1403,6 +1403,33 @@ bool LogoScheduler::next() {
 }
 
 #ifndef ARDUINO
+
+void Logo::dumpinstline(short type, short op, short opand, int offset, int line, ostream &str) const {
+
+  char name[STRING_LEN];
+  str << "\t{ ";
+  optypename(type, str);
+  str << ", ";
+  if (type == OPTYPE_JUMP) {
+    str << op + offset << ", " << opand;
+  }
+  else if (type == OPTYPE_STRING) {
+    LogoStringResult result;
+    if (getfixed(&result, op)) {
+      short fixed = findfixed(result._fixed, result._fixedstart, result._fixedlen);
+      str << fixed << ", " << opand;
+    }
+    else {
+      str << "(missing_fixed, " << op << "), ";
+    }
+  }
+  else {
+    str << op << ", " << opand;
+  }
+  str << " },\t\t// " << line << endl;
+  
+}
+
 void Logo::dumpinst(LogoCompiler *compiler, const char *varname, ostream &str) const {
 
   // find the start of the jump code.
@@ -1419,48 +1446,13 @@ void Logo::dumpinst(LogoCompiler *compiler, const char *varname, ostream &str) c
     
   short offset = (codeend + 1) - jstart;
   bool haswords = compiler->haswords();
-  char name[32];
   str << "static const short " << varname << "[][INST_LENGTH] PROGMEM = {" << endl;
   for (int i=0; i<codeend; i++) {
-    str << "\t{ ";
-    optypename(_code[i][FIELD_OPTYPE], str);
-    str << ", ";
-    if (_code[i][FIELD_OPTYPE] == OPTYPE_JUMP) {
-      str << _code[i][FIELD_OP] + offset << ", " << _code[i][FIELD_OPAND];
-    }
-    else if (_code[i][FIELD_OPTYPE] == OPTYPE_STRING) {
-      LogoStringResult result;
-      getstring(&result, _code[i][FIELD_OP], _code[i][FIELD_OPAND]);
-      result.ncpy(name, sizeof(name));
-      LogoSimpleString s(name);
-      short fixed = findfixed(&s, 0, s.length());
-      str << fixed << ", " << _code[i][FIELD_OPAND];
-    }
-    else {
-      str << _code[i][FIELD_OP] << ", " << _code[i][FIELD_OPAND];
-    }
-    str << " },\t\t// " << i << endl;
+    dumpinstline(_code[i][FIELD_OPTYPE], _code[i][FIELD_OP], _code[i][FIELD_OPAND], offset, i, str);
   }
   str << "\t{ OPTYPE_HALT, 0, 0 },\t\t// " << codeend << endl;
   for (int i=jstart; _code[i][0] != OPTYPE_NOOP && i<CODE_SIZE; i++) {
-    str << "\t{ ";
-    optypename(_code[i][FIELD_OPTYPE], str);
-    str << ", ";
-    if (_code[i][FIELD_OPTYPE] == OPTYPE_JUMP) {
-      str << _code[i][FIELD_OP] + offset << ", " << _code[i][FIELD_OPAND];
-    }
-    else if (_code[i][FIELD_OPTYPE] == OPTYPE_STRING) {
-      LogoStringResult result;
-      getstring(&result, _code[i][FIELD_OP], _code[i][FIELD_OPAND]);
-      result.ncpy(name, sizeof(name));
-      LogoSimpleString s(name);
-      short fixed = findfixed(&s, 0, s.length());
-      str << fixed << ", " << _code[i][FIELD_OPAND];
-    }
-    else {
-      str << _code[i][FIELD_OP] << ", " << _code[i][FIELD_OPAND];
-    }
-    str << " },\t\t// " << i + offset << endl;
+    dumpinstline(_code[i][FIELD_OPTYPE], _code[i][FIELD_OP], _code[i][FIELD_OPAND], offset, i + offset, str);
   }
   if (haswords) {
     compiler->dumpwordscode(offset, str);
@@ -1476,7 +1468,7 @@ int Logo::stringslist(LogoCompiler *compiler, char *buf, int len) const {
   count += compiler->wordstringslist(buf, len);
   count += varstringslist(compiler, buf, len);
   // and add in the ACTUAL strings.
-  char name[32];
+  char name[STRING_LEN];
   for (short i=0; i<CODE_SIZE; i++) {
     if (_code[i][FIELD_OPTYPE] == OPTYPE_STRING) {
       LogoStringResult result;
@@ -1499,7 +1491,7 @@ void Logo::dumpstringscode(LogoCompiler *compiler, const char *varname, ostream 
   // these are in a particuar order
   compiler->dumpwordstrings(str);
   dumpvarsstrings(compiler, str);
-  char name[32];
+  char name[STRING_LEN];
   for (short i=0; i<CODE_SIZE; i++) {
     if (_code[i][FIELD_OPTYPE] == OPTYPE_STRING) {
       LogoStringResult result;
@@ -1749,7 +1741,7 @@ void Logo::dumpstaticwords(const LogoCompiler *compiler) const {
   if (_staticcode) {
     cout << "static words:" << endl;
 
-    char name[32];
+    char name[STRING_LEN];
     int word = 0;
     for (short i=0; i<MAX_CODE; i++) {
       short type = instField(i, FIELD_OPTYPE);

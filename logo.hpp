@@ -125,6 +125,7 @@
 
 #define NUM_LEN             12        // these number of bytes
 #define SENTENCE_LEN        4         // & and 3 more digits
+#define STRING_LEN          32        // the length of a single string.
 
 // some settings that can be used to debug directly on an arduino.
 // #define STRING_POOL_SIZE    64        // these number of bytes
@@ -440,6 +441,7 @@ public:
   int varstringslist(LogoCompiler *compiler, char *buf, int len) const;
   void dumpstringscode(LogoCompiler *compiler, const char *varname, std::ostream &str) const;
   void dumpinst(LogoCompiler *compiler, const char *varname, std::ostream &str) const;
+  void dumpinstline(short type, short op, short opand, int offset, int line, std::ostream &str) const;
   void optypename(short optype, std::ostream &str) const;
   void printvarstring(const LogoVar &var, std::ostream &str) const;
   void dumpvarsstrings(const LogoCompiler *compiler, std::ostream &str) const;
