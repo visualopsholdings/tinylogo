@@ -44,15 +44,20 @@ LogoCompiler::LogoCompiler(Logo * logo) :
   _logo(logo),
   _inword(false), _inwordargs(false), _defining(-1), _defininglen(-1), _wordarity(-1),
   _jump(NO_JUMP),
-  _sentencecount(0), _wordcount(0) {
+  _wordcount(0) {
 
+#ifdef LOGO_SENTENCES
+  _sentencecount = 0;
+#endif
 }
 
 void LogoCompiler::reset() {
 
   DEBUG_IN(LogoCompiler, "reset");
   
+#ifdef LOGO_SENTENCES
   _sentencecount = 0;
+#endif
   _wordcount = 0;
   
 }

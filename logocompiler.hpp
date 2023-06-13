@@ -121,16 +121,20 @@ private:
   short _jump;
   short _wordarity;
   
+#ifdef LOGO_SENTENCES
   // various buffers to hold data
   char _linebuf[LINE_LEN];
   char _sentencebuf[SENTENCE_LEN];
+#endif
 
   // words
   short _wordcount;
   LogoWord _words[MAX_WORDS];
   
+#ifdef LOGO_SENTENCES
   // sentences
   short _sentencecount;
+#endif
 
   // parser
   bool dodefine(LogoString *str, short wordstart, short wordlen, bool eol);
