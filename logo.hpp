@@ -314,7 +314,6 @@ public:
   short pc() { return _pc; }
   
   // interface to compiler
-  bool hascore() { return _core; }
   void error(short error);
   void outofcode();
   void addop(tJump *next, short type, short op=0, short opand=0);
@@ -339,8 +338,6 @@ public:
   short popint();
   void pushint(short n);
   double popdouble();
-  void splitdouble(double n, short *op, short *opand);
-  double joindouble(short op, short opand) const;
   void pushdouble(double n);
   void popstring(LogoStringResult *result);  
   void pushstring(tStrPool n, tStrPool len);  
@@ -351,7 +348,11 @@ public:
   void setintvar(short var, short n);
   
   // logo words can be self modifying code but be careful!
-  void modifyreturn(short rel, short n);
+  
+  // used in FOREVER and REPEAT
+  void modifyreturn(short rel, short n); 
+  
+  // used in IF and IFELSE
   bool codeisint(short rel);
   bool codeisstring(short rel);
   short codetoint(short rel);
@@ -389,7 +390,6 @@ public:
   static LogoBuiltinWord core[];
 
 private:
-//  friend class LogoCompiler;
   
   // the pool of all strings
   LogoString *_fixedstrings;
@@ -443,6 +443,8 @@ private:
   bool doinfix();
   bool call(short jump, tByte opand2);
   short instField(short pc, short field) const;
+  void splitdouble(double n, short *op, short *opand);
+  double joindouble(short op, short opand) const;
   
 };
 

@@ -89,7 +89,6 @@ public:
   void searchword(short op) const;
   void markword(tJump jump) const;
   void printword(const LogoWord &word) const;
-  void dumpwordnames() const;
   void printvar(const LogoVar &var) const;
   void dumpwordscode(short offset, std::ostream &str) const;
   void dumpwordstrings(std::ostream &str) const;

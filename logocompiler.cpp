@@ -818,26 +818,6 @@ int LogoCompiler::updateino(const std::string &infn, std::fstream &infile, std::
 
 }
 
-void LogoCompiler::dumpwordnames() const {
-
-  _logo->dumpstaticwords(this);
-  
-  cout << "words: " << endl;
-  
-  if (!_wordcount) {
-    entab(1);
-    cout << "empty" << endl;
-    return;
-  }
-  
-  for (short i=0; i<_wordcount; i++) {
-    entab(1);
-    printword(_words[i]);
-    cout << endl;
-  }
-  
-}
-
 void LogoCompiler::printword(const LogoWord &word) const {
 
   char name[LINE_LEN];
@@ -909,7 +889,6 @@ void LogoCompiler::dump(const char *msg, bool all) const {
 void LogoCompiler::dump(bool all) const {
 
   cout << "------" << endl;
-//  dumpwordnames();
   _logo->dumpcode(this, all);
   _logo->dumpstack(this, all);
   _logo->dumpvars(this);

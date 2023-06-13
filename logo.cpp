@@ -1447,7 +1447,6 @@ void Logo::dumpinst(LogoCompiler *compiler, const char *varname, ostream &str) c
   }
     
   short offset = (codeend + 1) - jstart;
-  bool haswords = compiler->haswords();
   str << "static const short " << varname << "[][INST_LENGTH] PROGMEM = {" << endl;
   for (int i=0; i<codeend; i++) {
     dumpinstline(_code[i][FIELD_OPTYPE], _code[i][FIELD_OP], _code[i][FIELD_OPAND], offset, i, str);
@@ -1456,7 +1455,7 @@ void Logo::dumpinst(LogoCompiler *compiler, const char *varname, ostream &str) c
   for (int i=jstart; _code[i][0] != OPTYPE_NOOP && i<CODE_SIZE; i++) {
     dumpinstline(_code[i][FIELD_OPTYPE], _code[i][FIELD_OP], _code[i][FIELD_OPAND], offset, i + offset, str);
   }
-  if (haswords) {
+  if (compiler->haswords()) {
     compiler->dumpwordscode(offset, str);
   }
   str << "\t{ SCOPTYPE_END, 0, 0 } " << endl;
