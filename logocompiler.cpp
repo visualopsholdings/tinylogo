@@ -877,7 +877,7 @@ void LogoCompiler::printvar(const LogoVar &var) const {
   _logo->getstring(&result, var._name, var._namelen);
   result.ncpy(name, sizeof(name));
   cout << name;
-  dump(2, var._type, var._value, var._valuelen);
+  dump(2, var._type, var._value, var._valueopand);
   
 }
 

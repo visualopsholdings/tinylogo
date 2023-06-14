@@ -1,5 +1,5 @@
 /*
-  arduinotimeprovider.hpp
+  arduinotimeprovider.cpp
   
   Author: Paul Hamilton (paul@visualops.com)
   Date: 22-May-2023
@@ -13,20 +13,14 @@
   https://github.com/visualopsholdings/tinylogo  
 */
 
-#ifndef H_arduinotimeprovider
-#define H_arduinotimeprovider
+#include "arduinotimeprovider.hpp"
 
-#include "logo.hpp"
+#include <Arduino.h>
 
-class ArduinoTimeProvider: public LogoTimeProvider {
+unsigned long ArduinoTimeProvider::currentms() {
+  return millis();
+}
 
-public:
-
-  // LogoTimeProvider
-  virtual unsigned long currentms();
-  virtual void delayms(unsigned long ms);
-  virtual bool testing(short ms) { return false; };
-
-};
-
-#endif // H_arduinotimeprovider
+void ArduinoTimeProvider::delayms(unsigned long ms) {
+  delay(ms);
+}

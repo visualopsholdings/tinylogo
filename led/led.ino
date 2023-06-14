@@ -29,6 +29,7 @@
 
 #define I2C_ADDRESS 8
 #define LED_PIN     13
+//#define LED_PIN     3
 
 void ledOn() {
   digitalWrite(LED_PIN, HIGH);
@@ -46,9 +47,12 @@ char cmdbuf[64];
 
 //#LOGO FILE=../logo/ledflash.lgo NAME=led
 static const char strings_led[] PROGMEM = {
+// words
 	"FLASH\n"
 	"GO\n"
 	"STOP\n"
+// variables
+// strings
 };
 static const short code_led[][INST_LENGTH] PROGMEM = {
 	{ OPTYPE_JUMP, 9, 0 },		// 0
@@ -173,7 +177,7 @@ void loop() {
     if (err) {
       showErr(1, err);
     }
-}
+  }
 
   // just execute each LOGO word
   int err = logo.step();

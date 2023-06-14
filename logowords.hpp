@@ -82,6 +82,24 @@ public:
   static void print(Logo &logo);
   static short printArity;
 
+  static void dread(Logo &logo);
+  static short dreadArity;
+
+  static void dhigh(Logo &logo);
+  static short dhighArity;
+
+  static void dlow(Logo &logo);
+  static short dlowArity;
+
+  static void pinout(Logo &logo);
+  static short pinoutArity;
+
+  static void pinin(Logo &logo);
+  static short pininArity;
+
+  static void aout(Logo &logo);
+  static short aoutArity;
+
 private:
 
   static bool pushliterals(Logo &logo, short rel);

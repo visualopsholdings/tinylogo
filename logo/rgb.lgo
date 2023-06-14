@@ -12,8 +12,39 @@
 #   https://github.com/visualopsholdings/tinylogo  
 #
 
-# send a raw analog value to an RGB LED's redm green and blue channel (0 is full on)
-BUILTIN(REDR:1,GREENR:1,BLUER:1)
+# change your pins here
+TO BPIN
+  2
+END
+
+TO RPIN
+  3
+END
+
+TO GPIN
+  4
+END
+
+TO SETUP
+  PINOUT RPIN
+  AOUT RPIN 255
+  PINOUT GPIN
+  AOUT GPIN 255
+  PINOUT BPIN
+  AOUT BPIN 255
+END
+
+TO REDR :V
+  AOUT RPIN :V
+END
+
+TO GREENR :V
+  AOUT GPIN :V
+END
+
+TO BLUER :V
+  AOUT BPIN :V
+END
 
 # scale a color to be between 1 and 100
 TO SUBC :C

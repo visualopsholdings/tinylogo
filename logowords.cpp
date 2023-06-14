@@ -17,6 +17,7 @@
 
 #ifdef ARDUINO
 #include <HardwareSerial.h>
+#include <Arduino.h>
 #else
 #include <iostream>
 using namespace std;
@@ -297,5 +298,87 @@ void LogoWords::print(Logo &logo) {
 #endif
   
 }
+
+short LogoWords::dreadArity = 1;
+
+void LogoWords::dread(Logo &logo) {
+
+  int pin = logo.popint();
+#ifdef ARDUINO
+  logo.pushint(digitalRead(pin));
+#else
+  cout << "d read pin " << pin << endl;
+  logo.pushint(1);
+#endif
+  
+}
+
+short LogoWords::dhighArity = 1;
+
+void LogoWords::dhigh(Logo &logo) {
+
+  int pin = logo.popint();
+#ifdef ARDUINO
+  digitalWrite(pin, HIGH);
+#else
+  cout << "d write high " << pin << endl;
+#endif
+  
+}
+
+short LogoWords::dlowArity = 1;
+
+void LogoWords::dlow(Logo &logo) {
+
+  int pin = logo.popint();
+#ifdef ARDUINO
+  digitalWrite(pin, LOW);
+#else
+  cout << "d write low " << pin << endl;
+#endif
+  
+}
+
+short LogoWords::pinoutArity = 1;
+
+void LogoWords::pinout(Logo &logo) {
+
+  int pin = logo.popint();
+#ifdef ARDUINO
+  pinMode(pin, OUTPUT);
+#else
+  cout << "pin out " << pin << endl;
+#endif
+  
+}
+
+short LogoWords::pininArity = 1;
+
+void LogoWords::pinin(Logo &logo) {
+
+  int pin = logo.popint();
+#ifdef ARDUINO
+  pinMode(pin, INPUT);
+#else
+  cout << "pin in " << pin << endl;
+#endif
+  
+}
+
+short LogoWords::aoutArity = 2;
+
+void LogoWords::aout(Logo &logo) {
+
+  int value = logo.popint();
+  int pin = logo.popint();
+#ifdef ARDUINO
+  analogWrite(pin, value);
+#else
+  cout << "aout " << pin << "=" << value << endl;
+#endif
+  
+}
+
+
 
 

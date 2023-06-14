@@ -228,8 +228,8 @@ typedef struct {
   tVarType           _type; // just OPTYPE_STRING, OPTYPE_INT or OPTYPE_DOUBLE
   tStrPool           _name;
   tStrPool           _namelen;
-  tStrPool           _valuelen;
   short              _value; // needs to hold a (possible) literal number
+  short              _valueopand;
 } LogoVar;
 
 class LogoTimeProvider {
@@ -311,6 +311,7 @@ public:
   void fail(short err);
   void schedulenext(short delay);
   int callword(const char *word); // call a word by name if you know it.
+  void halt();
   short pc() { return _pc; }
   
   // interface to compiler

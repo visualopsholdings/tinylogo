@@ -14,8 +14,91 @@
 #   https://github.com/visualopsholdings/tinylogo  
 #
 
-# send a raw analog value to an RGB LED's redm green and blue channel (0 is full on)
-BUILTIN(RED1R:1,GREEN1R:1,BLUE1R:1,RED2R:1,GREEN2R:1,BLUE2R:1,BUTTON1,BUTTON2)
+# change your pins here
+TO B1PIN
+  2
+END
+
+TO R1PIN
+  3
+END
+
+TO G1PIN
+  4
+END
+
+TO BTN2PIN
+  6
+END
+
+TO BTN1PIN
+  7
+END
+
+TO B2PIN
+  9
+END
+
+TO R2PIN
+  10
+END
+
+TO G2PIN
+  11
+END
+
+# setup all the pins for in out and values
+TO SETUP
+  PINOUT R1PIN
+  AOUT R1PIN 255
+  PINOUT G1PIN
+  AOUT G1PIN 255
+  PINOUT B1PIN
+  AOUT B1PIN 255
+  
+  PINOUT R2PIN
+  AOUT R2PIN 255
+  PINOUT G2PIN
+  AOUT G2PIN 255
+  PINOUT B2PIN
+  AOUT B2PIN 255
+
+  PININ BTN1PIN
+  PININ BTN2PIN
+END
+
+# send raw values out to each pin
+TO RED1R :V
+  AOUT R1PIN :V
+END
+
+TO GREEN1R :V
+  AOUT G1PIN :V
+END
+
+TO BLUE1R :V
+  AOUT B1PIN :V
+END
+
+TO RED2R :V
+  AOUT R2PIN :V
+END
+
+TO GREEN2R :V
+  AOUT G2PIN :V
+END
+
+TO BLUE2R :V
+  AOUT B2PIN :V
+END
+
+TO BUTTON1
+  DREAD BTN1PIN
+END
+
+TO BUTTON2
+  DREAD BTN2PIN
+END
 
 # scale a color to be between 1 and 100
 TO SUBC :C

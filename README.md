@@ -280,15 +280,119 @@ Print the literal out to the serial port
 
 ```
 PRINT word
-word := [wordname | literal]
-literal := [number | string | var] 
+word := [wordname | number | string | var]
+var := :varname
+```
+
+## DREAD
+
+Read from a digital pin. Takes the pin number off the stack and pushes the value at that
+pin onto the stack.
+
+```
+DREAD pin
+pin := [wordname | number | var]
+var := :varname
+```
+
+## DHIGH
+
+Output high to a digital pin. Takes the pin number off the stack.
+
+```
+DHIGH pin
+pin := [wordname | number | var]
+var := :varname
+```
+
+## DLOW
+
+Output low to a digital pin. Takes the pin number off the stack.
+
+```
+DLOW pin
+pin := [wordname | number | var]
+var := :varname
+```
+
+## PINOUT
+
+Set's a PIN up to be an output. Takes the pin number off the stack.
+
+```
+PINOUT pin
+pin := [wordname | number | var]
+var := :varname
+```
+
+## PININ
+
+Set's a PIN up to be an input. Takes the pin number off the stack.
+
+```
+PININ pin
+pin := [wordname | number | var]
+var := :varname
+```
+
+## AOUT
+
+Output's a value to an analog output. Takes the pin number and value off the stack.
+
+```
+AOUT pin value
+pin := [wordname | number | var]
+value := [wordname | number | var]
+var := :varname
 ```
 
 ## Static code
 
 Using the compiler on the arduino takes a lot of program space up. There is a tool called "flashcode" that will
-take a logo program and outpu a compiled version of that program taht can exist entirely in the 
+take a logo program and outpu a compiled version of that program that can exist entirely in the 
 flash memory of the Arduino.
+
+The simplest possible way to use it is to create a .ino file that looks like this:
+
+```
+#include "logosketch.hpp"
+
+//#LOGO FILE=../logo/btnledflash.lgo NAME=sketch
+//#LOGO ENDFILE
+
+LogoSketch sketch(strings_sketch, (const PROGMEM short *)code_sketch);
+void setup() {
+  sketch.setup();
+}
+void loop() {
+  sketch.loop();
+}
+```
+
+$ tools/build/flashcode sketch/sketch.ino
+
+Which will find the .lgo file, compile it and outut the compiled code into that section. Then
+just open up your .ino sketch and upload it to your arduino and run it.
+
+There are examples in the "logo" folder.
+
+You can do a setup by simply declaring a "SETUP" word like this:
+
+```
+TO LEDPIN
+  13
+END
+TO BTNPIN
+  7
+END
+TO SETUP
+  PINOUT LEDPIN
+  DLOW LEDPIN
+  PININ BTNPIN
+END
+```
+
+This will be run automatically at the start in the sketch.setup() line.
 
 To build the tool see below in development.
 
@@ -331,7 +435,7 @@ This searches for 2 lines in the file:
 
 And modifies whatever is between 2 lines to output the actual compiled runtime for that logo file.
 This allows development to be very quick. You can modify and run your .lgo file in a dev
-envrionment and then run flashcode and then in the IDE upload directly to your Arduino
+environment and then run flashcode and then in the IDE upload directly to your Arduino
 to try the code out.
 
 ## Running a .lgo file and seeing what it does.
@@ -463,4 +567,10 @@ to allow strings and code to be in FLASH memory.
 ### 13 Jun 2023
 - Finally created a sketch with decent amount of logic that allows 2 buttons to be
 pressed to drive 2 colored LEDs called trafficlights.lgo
+
+### 14 Jun 2023
+- Logo sketches are a thing now! The .lgo file can contain the pin definitions and all the 
+writes and reads. Use the flashcode tool to write new LOGO compiled code right into 
+your sketch.
+
 

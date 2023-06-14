@@ -30,7 +30,7 @@ void Logo::outstate() const {
 #define DELAY_TIME  100
 #else
 #include "nodebug.hpp"
-#define DELAY_TIME  2 // must be non zero!
+#define DELAY_TIME  1 // must be non zero!
 #endif
 
 #ifdef ARDUINO
@@ -68,6 +68,12 @@ LogoBuiltinWord Logo::core[] = {
   { "DUMPVARS", LogoWords::dumpvars, LogoWords::dumpvarsArity },
   { "PRINT", LogoWords::print, LogoWords::printArity },
   { "NOT", LogoWords::notWord, LogoWords::notArity },
+  { "DREAD", LogoWords::dread, LogoWords::dreadArity },
+  { "DHIGH", LogoWords::dhigh, LogoWords::dhighArity },
+  { "DLOW", LogoWords::dlow, LogoWords::dlowArity },
+  { "PINOUT", LogoWords::pinout, LogoWords::pinoutArity },
+  { "PININ", LogoWords::pinin, LogoWords::pininArity },
+  { "AOUT", LogoWords::aout, LogoWords::aoutArity },
 };
 
 LogoFunctionPrimitives::LogoFunctionPrimitives(LogoBuiltinWord *builtins, short size) : _builtins(builtins) {
@@ -285,7 +291,7 @@ short Logo::popint() {
   if (_stack[_tos][FIELD_OPTYPE] == OPTYPE_REF) {
     short var = getvarfromref(_stack[_tos][FIELD_OP], _stack[_tos][FIELD_OPAND]);
     if (var >= 0) {
-      i = parseint(_variables[var]._type, _variables[var]._value, _variables[var]._valuelen);
+      i = parseint(_variables[var]._type, _variables[var]._value, _variables[var]._valueopand);
       if (i >= 0) {
         return i;
       }
@@ -309,7 +315,7 @@ double Logo::popdouble() {
   if (_stack[_tos][FIELD_OPTYPE] == OPTYPE_REF) {
     short var = getvarfromref(_stack[_tos][FIELD_OP], _stack[_tos][FIELD_OPAND]);
     if (var >= 0) {
-      i = parsedouble(_variables[var]._type, _variables[var]._value, _variables[var]._valuelen);
+      i = parsedouble(_variables[var]._type, _variables[var]._value, _variables[var]._valueopand);
       if (i >= 0) {
         return i;
       }
@@ -441,7 +447,7 @@ void Logo::popstring(LogoStringResult *result) {
   if (!parsestring(_stack[_tos][FIELD_OPTYPE], _stack[_tos][FIELD_OP], _stack[_tos][FIELD_OPAND], result)) {
     short var = getvarfromref(_stack[_tos][FIELD_OP], _stack[_tos][FIELD_OPAND]);
     if (var >= 0) {
-      if (!parsestring(_variables[var]._type, _variables[var]._value, _variables[var]._valuelen, result))
+      if (!parsestring(_variables[var]._type, _variables[var]._value, _variables[var]._valueopand, result))
         result->init();
     }
   }
@@ -592,6 +598,15 @@ bool Logo::call(short jump, tByte arity) {
   
 }
 
+void Logo::halt() {
+  while (_pc < (CODE_SIZE - 1)) {
+    if (_code[_pc+1][FIELD_OPTYPE] == OPTYPE_HALT) {
+      return;
+    }
+   _pc++;
+  }
+}
+
 int Logo::callword(const char *word) {
 
   LogoSimpleString s(word);
@@ -603,6 +618,9 @@ int Logo::callword(const char *word) {
   
     if (category == 0 && _primitives) {
       _primitives->exec(index, this);
+      // need to leave the PC at HALT after this so we don't
+      // accidentally start executing more code.
+      halt();
       return 0;
     }
     
@@ -726,7 +744,7 @@ short Logo::step() {
     {
       short var = getvarfromref(instField(_pc, FIELD_OP), instField(_pc, FIELD_OPAND));
       if (var >= 0) {
-        if (!push(_variables[var]._type, _variables[var]._value, _variables[var]._valuelen)) {
+        if (!push(_variables[var]._type, _variables[var]._value, _variables[var]._valueopand)) {
           err = LG_STACK_OVERFLOW;
         }
       }
@@ -740,20 +758,18 @@ short Logo::step() {
     break;
     
   case OPTYPE_POPREF:
-  
-    // pop the value from the stack
-    if (!pop()) {
-      err = LG_STACK_OVERFLOW;
-      break;
+    {
+      // pop the value from the stack
+      if (!pop()) {
+        err = LG_STACK_OVERFLOW;
+        break;
+      }
+      // and set the variable to that value.
+      short var = instField(_pc, FIELD_OP);
+      _variables[var]._type = _stack[_tos][FIELD_OPTYPE];
+      _variables[var]._value = _stack[_tos][FIELD_OP];
+      _variables[var]._valueopand = _stack[_tos][FIELD_OPAND];
     }
-    if (_stack[_tos][FIELD_OPTYPE] != OPTYPE_INT) {
-      err = LG_NOT_INT;
-      break;
-    }
-  
-    // and set the variable to that value.
-    _variables[instField(_pc, FIELD_OP)]._value = _stack[_tos][FIELD_OP];
-
     break;
     
   case OPTYPE_JUMP:
@@ -1344,7 +1360,7 @@ short Logo::newintvar(short str, short slen, short n) {
   _variables[var]._namelen = slen;
   _variables[var]._type = OPTYPE_INT;
   _variables[var]._value = n;
-  _variables[var]._valuelen = 0;
+  _variables[var]._valueopand = 0;
   return var;
   
 }
@@ -1352,7 +1368,7 @@ void Logo::setintvar(short var, short n) {
 
   _variables[var]._type = OPTYPE_INT;
   _variables[var]._value = n;
-  _variables[var]._valuelen = 0;
+  _variables[var]._valueopand = 0;
   
 }
 
@@ -1438,7 +1454,7 @@ void Logo::dumpinst(LogoCompiler *compiler, const char *varname, ostream &str) c
   short jstart = 0;
   short codeend = 0;
   while (jstart<CODE_SIZE) {
-    if (!codeend && _code[jstart][0] == OPTYPE_NOOP) {
+    if (!codeend && _code[jstart][FIELD_OPTYPE] == OPTYPE_NOOP) {
       codeend = jstart;
     }
     if (_code[jstart++][0] == OPTYPE_HALT) {
@@ -1586,7 +1602,7 @@ void Logo::printvarcode(const LogoVar &var, ostream &str) const {
   LogoStringResult result;
   getstring(&result, var._name, var._namelen);
   result.ncpy(name, sizeof(name));
-  str << "\t{ SCOPTYPE_VAR, " << var._value << ", " << (short)var._valuelen << " }, " << endl;
+  str << "\t{ SCOPTYPE_VAR, " << var._value << ", " << (short)var._valueopand << " }, " << endl;
   
 }
 
@@ -1733,7 +1749,7 @@ void Logo::printvar(const LogoVar &var) const {
   getstring(&result, var._name, var._namelen);
   result.ncpy(name, sizeof(name));
   cout << name;
-  dump(2, var._type, var._value, var._valuelen);
+  dump(2, var._type, var._value, var._valueopand);
   
 }
 

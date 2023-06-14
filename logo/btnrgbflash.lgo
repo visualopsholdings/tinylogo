@@ -1,9 +1,9 @@
-#   btnledflash.lgo
+#   btnrgbflash.lgo
 #
 #   Author: Paul Hamilton (paul@visualops.com)
-#   Date: 2-Jun-2023
+#   Date: 14-Jun-2023
 #
-#   Flash a LED with a button
+#   Flash a color LED BLUE with a button
 #
 #   This work is licensed under the Creative Commons Attribution 4.0 International License. 
 #   To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0/ or 
@@ -14,7 +14,7 @@
 
 # change your pins here
 TO LEDPIN
-  13
+  2
 END
 
 TO BTNPIN
@@ -23,16 +23,16 @@ END
 
 TO SETUP
   PINOUT LEDPIN
-  DLOW LEDPIN
+  AOUT LEDPIN 255
   PININ BTNPIN
 END
 
 TO ON
-  DHIGH LEDPIN
+  AOUT LEDPIN 0
 END
 
 TO OFF
-  DLOW LEDPIN
+  AOUT LEDPIN 255
 END
 
 TO BUTTON
