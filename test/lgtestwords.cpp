@@ -89,6 +89,48 @@ BOOST_AUTO_TEST_CASE( makeChange )
   
 }
 
+BOOST_AUTO_TEST_CASE( makeCompound1 )
+{
+  cout << "=== makeCompound1 ===" << endl;
+  
+  Logo logo(0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("MAKE \"VAR 1");
+  compiler.compile("MAKE \"VAR !:VAR");
+  compiler.compile(":VAR");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  gCmds.clear();
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popint(), 0);
+  BOOST_CHECK(logo.stackempty());
+  DEBUG_DUMP(false);
+  
+}
+
+BOOST_AUTO_TEST_CASE( makeCompound2 )
+{
+  cout << "=== makeCompound2 ===" << endl;
+  
+  Logo logo(0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("MAKE \"VAR 1");
+  compiler.compile("MAKE \"VAR :VAR+1");
+  compiler.compile(":VAR");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  gCmds.clear();
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popint(), 2);
+  BOOST_CHECK(logo.stackempty());
+  DEBUG_DUMP(false);
+  
+}
+
 BOOST_AUTO_TEST_CASE( forever )
 {
   cout << "=== forever ===" << endl;
@@ -186,7 +228,7 @@ BOOST_AUTO_TEST_CASE( neqWord )
   Logo logo(0, 0, Logo::core);
   LogoCompiler compiler(&logo);
 
-  compiler.compile("1 != 3");
+  compiler.compile("1!= 3");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -212,7 +254,7 @@ BOOST_AUTO_TEST_CASE( gtWord )
   Logo logo(0, 0, Logo::core);
   LogoCompiler compiler(&logo);
 
-  compiler.compile("3 > 1");
+  compiler.compile("3  >1");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -238,7 +280,7 @@ BOOST_AUTO_TEST_CASE( gteWord )
   Logo logo(0, 0, Logo::core);
   LogoCompiler compiler(&logo);
 
-  compiler.compile("3 >= 1");
+  compiler.compile("3>=1 ");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -247,7 +289,7 @@ BOOST_AUTO_TEST_CASE( gteWord )
   
   logo.reset();
   compiler.reset();
-  compiler.compile("10 >= 10");
+  compiler.compile("10   >=10");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
   
@@ -264,7 +306,7 @@ BOOST_AUTO_TEST_CASE( ltWord )
   Logo logo(0, 0, Logo::core);
   LogoCompiler compiler(&logo);
 
-  compiler.compile("3 < 1");
+  compiler.compile("3 <1");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -273,7 +315,7 @@ BOOST_AUTO_TEST_CASE( ltWord )
   
   logo.reset();
   compiler.reset();
-  compiler.compile("10 < 11");
+  compiler.compile("10<   11");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
   
@@ -290,7 +332,7 @@ BOOST_AUTO_TEST_CASE( lteWord )
   Logo logo(0, 0, Logo::core);
   LogoCompiler compiler(&logo);
 
-  compiler.compile("3 <= 1");
+  compiler.compile("3<=  1");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -316,7 +358,7 @@ BOOST_AUTO_TEST_CASE( notWord )
   Logo logo(0, 0, Logo::core);
   LogoCompiler compiler(&logo);
 
-  compiler.compile("NOT 1");
+  compiler.compile("! 1");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -325,7 +367,7 @@ BOOST_AUTO_TEST_CASE( notWord )
   
   logo.reset();
   compiler.reset();
-  compiler.compile("NOT 0");
+  compiler.compile("!0");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
   
@@ -849,3 +891,4 @@ BOOST_AUTO_TEST_CASE( arithmeticColors )
   BOOST_CHECK_EQUAL(logo.popdouble(), 51);
   BOOST_CHECK(logo.stackempty());
 }
+

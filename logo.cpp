@@ -67,7 +67,7 @@ LogoBuiltinWord Logo::core[] = {
   { "<=", LogoWords::lte, LogoWords::lteArity },
   { "DUMPVARS", LogoWords::dumpvars, LogoWords::dumpvarsArity },
   { "PRINT", LogoWords::print, LogoWords::printArity },
-  { "NOT", LogoWords::notWord, LogoWords::notArity },
+  { "!", LogoWords::notWord, LogoWords::notArity },
   { "DREAD", LogoWords::dread, LogoWords::dreadArity },
   { "DHIGH", LogoWords::dhigh, LogoWords::dhighArity },
   { "DLOW", LogoWords::dlow, LogoWords::dlowArity },
@@ -920,7 +920,7 @@ bool Logo::doarity() {
 short LogoFunctionPrimitives::find(LogoString *str, short start, short slen) {
 
   for (short i=0; i<_count; i++) {
-    if (strlen(_builtins[i]._name) == slen && str->ncmp(_builtins[i]._name, start, slen) == 0) {
+    if (strlen(_builtins[i]._name) == slen && str->ncasecmp(_builtins[i]._name, start, slen) == 0) {
       return i;
     }
   }
@@ -1101,7 +1101,7 @@ void Logo::findbuiltin(LogoString *str, short start, short slen, short *index, s
   
   if (*index < 0) {
     for (short i=0; i<_corecount; i++) {
-      if (strlen(_core[i]._name) == slen && str->ncmp(_core[i]._name, start, slen) == 0) {
+      if (strlen(_core[i]._name) == slen && str->ncasecmp(_core[i]._name, start, slen) == 0) {
         *index = i;
         *category = 1;
         return;

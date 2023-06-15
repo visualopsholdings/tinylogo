@@ -33,6 +33,7 @@ public:
   virtual char operator[](int index) const = 0;
   virtual void ncpy(char *to, size_t offset, size_t len) const = 0;
   virtual int ncmp(const char *to, size_t offset, size_t len) const = 0;
+  virtual int ncasecmp(const char *to, size_t offset, size_t len) const = 0;
  
   short toi(size_t offset, size_t len);
   short find(char c, size_t offset, size_t len);
@@ -67,6 +68,7 @@ public:
   
   void ncpy(char *to, size_t offset, size_t len) const ;
   int ncmp(const char *to, size_t offset, size_t len) const;
+  int ncasecmp(const char *to, size_t offset, size_t len) const;
   double tof();
     
 private:

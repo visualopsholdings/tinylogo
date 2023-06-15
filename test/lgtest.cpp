@@ -168,6 +168,40 @@ BOOST_AUTO_TEST_CASE( defineCompoundWord )
   
 }
 
+
+BOOST_AUTO_TEST_CASE( defineMixedCase )
+{
+  cout << "=== defineCompoundWord ===" << endl;
+  
+  LogoBuiltinWord builtins[] = {
+    { "ON", &ledOn },
+    { "OFF", &ledOff },
+    { "WAIT", &wait, 1 }
+  };
+  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
+  Logo logo(&primitives);
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("to test1; ON WAIT 100 OFF WAIT 20; END;");
+  compiler.compile("TO Test2; OFF wait 30 ON WAIT 40; end;");
+  compiler.compile("test1; Test2;");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  gCmds.clear();
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(gCmds.size(), 8);
+  BOOST_CHECK_EQUAL(gCmds[0], "LED ON");
+  BOOST_CHECK_EQUAL(gCmds[1], "WAIT 100");
+  BOOST_CHECK_EQUAL(gCmds[2], "LED OFF");
+  BOOST_CHECK_EQUAL(gCmds[3], "WAIT 20");
+  BOOST_CHECK_EQUAL(gCmds[4], "LED OFF");
+  BOOST_CHECK_EQUAL(gCmds[5], "WAIT 30");
+  BOOST_CHECK_EQUAL(gCmds[6], "LED ON");
+  BOOST_CHECK_EQUAL(gCmds[7], "WAIT 40");
+  
+}
+
 BOOST_AUTO_TEST_CASE( nestedWord )
 {
   cout << "=== nestedWord ===" << endl;
@@ -883,6 +917,7 @@ BOOST_AUTO_TEST_CASE( staticProgUse )
   BOOST_CHECK_EQUAL(gCmds[3], "WAIT 20");
   
 }
+
 BOOST_AUTO_TEST_CASE( staticCodeUse )
 {
   cout << "=== staticCodeUse ===" << endl;

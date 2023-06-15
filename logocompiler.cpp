@@ -376,13 +376,13 @@ bool LogoCompiler::dodefine(LogoString *str, short wordstart, short wordlen, boo
     return false;
   }
   
-  if (str->ncmp("BUILTIN", wordstart, wordstart+7) == 0) {
+  if (str->ncasecmp("BUILTIN", wordstart, wordstart+7) == 0) {
     _logo->setprimitives(str, wordstart+8, wordlen-9);
     DEBUG_RETURN(" builtin def %b", true);
     return true;
   }
 
-  if (str->ncmp("TO", wordstart, wordlen) == 0) {
+  if (str->ncasecmp("TO", wordstart, wordlen) == 0) {
     _inword = true;
     _inwordargs = false;
     _wordarity = 0;
@@ -419,7 +419,7 @@ bool LogoCompiler::dodefine(LogoString *str, short wordstart, short wordlen, boo
       return true;
     
     }
-    else if (str->ncmp("END", wordstart, wordlen) == 0) {
+    else if (str->ncasecmp("END", wordstart, wordlen) == 0) {
       // the END token
       _inword = false;
       _inwordargs = false;

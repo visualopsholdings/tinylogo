@@ -15,210 +15,202 @@
 #
 
 # change your pins here
-TO B1PIN
+to B1PIN
   2
-END
+end
 
-TO R1PIN
+to R1PIN
   3
-END
+end
 
-TO G1PIN
+to G1PIN
   4
-END
+end
 
-TO BTN2PIN
+to BTN2PIN
   6
-END
+end
 
-TO BTN1PIN
+to BTN1PIN
   7
-END
+end
 
-TO B2PIN
+to B2PIN
   9
-END
+end
 
-TO R2PIN
+to R2PIN
   10
-END
+end
 
-TO G2PIN
+to G2PIN
   11
-END
+end
 
 # setup all the pins for in out and values
-TO SETUP
-  PINOUT R1PIN
-  AOUT R1PIN 255
-  PINOUT G1PIN
-  AOUT G1PIN 255
-  PINOUT B1PIN
-  AOUT B1PIN 255
+to SETUP
+  pinout R1PIN
+  aout R1PIN 255
+  pinout G1PIN
+  aout G1PIN 255
+  pinout B1PIN
+  aout B1PIN 255
   
-  PINOUT R2PIN
-  AOUT R2PIN 255
-  PINOUT G2PIN
-  AOUT G2PIN 255
-  PINOUT B2PIN
-  AOUT B2PIN 255
+  pinout R2PIN
+  aout R2PIN 255
+  pinout G2PIN
+  aout G2PIN 255
+  pinout B2PIN
+  aout B2PIN 255
 
-  PININ BTN1PIN
-  PININ BTN2PIN
-END
+  pinin BTN1PIN
+  pinin BTN2PIN
+end
 
 # send raw values out to each pin
-TO RED1R :V
-  AOUT R1PIN :V
-END
+to RED1R :V
+  aout R1PIN :V
+end
 
-TO GREEN1R :V
-  AOUT G1PIN :V
-END
+to GREEN1R :V
+  aout G1PIN :V
+end
 
-TO BLUE1R :V
-  AOUT B1PIN :V
-END
+to BLUE1R :V
+  aout B1PIN :V
+end
 
-TO RED2R :V
-  AOUT R2PIN :V
-END
+to RED2R :V
+  aout R2PIN :V
+end
 
-TO GREEN2R :V
-  AOUT G2PIN :V
-END
+to GREEN2R :V
+  aout G2PIN :V
+end
 
-TO BLUE2R :V
-  AOUT B2PIN :V
-END
+to BLUE2R :V
+  aout B2PIN :V
+end
 
-TO BUTTON1
+to BUTTON1
   DREAD BTN1PIN
-END
+end
 
-TO BUTTON2
+to BUTTON2
   DREAD BTN2PIN
-END
+end
 
 # scale a color to be between 1 and 100
-TO SCLR :C
+to SCLR :C
   # ((100 - :C) / 100) * 255
   255 * 1 / 100 / 100 - :C
-END
+end
 
 # arguments are reversed!
-TO SET1 :B :G :R
+to SET1 :B :G :R
   RED1R SCLR :R
   GREEN1R SCLR :G
   BLUE1R SCLR :B
-END
+end
 
 # arguments are reversed!
-TO SET2 :B :G :R
+to SET2 :B :G :R
   RED2R SCLR :R
   GREEN2R SCLR :G
   BLUE2R SCLR :B
-END
+end
 
 # the named colors we use for each LED
 
-TO AMBER1
+to AMBER1
  SET1 100 75 0
-END
+end
 
-TO RED1
+to RED1
   SET1 100 0 0
-END
+end
 
-TO GREEN1
+to GREEN1
   SET1 0 100 0
-END
+end
 
-TO RED2
+to RED2
   SET2 8 2 2
-END
+end
 
-TO GREEN2
+to GREEN2
   SET2 2 8 2
-END
+end
 
-TO OFF1
+to OFF1
   SET1 0 0 0
-END
+end
 
 # the button logic
 
 # STATE1 holds 0 for RED, 1 for GREEN and 2 for AMBER for the first LED
 # STATE2 holds 0 for OFF and 1 for ON
 
-TO NEXTSTATE1
-  :STATE1 + 1
-END
+to FIRSTSTATE1
+  make "STATE1 0
+end
 
-TO FIRSTSTATE1
-  MAKE "STATE1 0
-END
+to NOTRED1
+  ifelse :STATE1 = 1 GREEN1 AMBER1
+end
 
-TO NOTRED1
-  IFELSE :STATE1 = 1 GREEN1 AMBER1
-END
+to PRESS1
+  make "STATE1 :STATE1+1
+  if :STATE1 > 2 FIRSTSTATE1
+  ifelse :STATE1 = 0 RED1 NOTRED1
+end
 
-TO PRESS1
-  MAKE "STATE1 NEXTSTATE1
-  IF :STATE1 > 2 FIRSTSTATE1
-  IFELSE :STATE1 = 0 RED1 NOTRED1
-END
+to TESTST1
+  make "OLDVALUE1 :VALUE1
+  if :VALUE1 = 1 PRESS1
+end
 
-TO TESTST1
-  MAKE "OLDVALUE1 :VALUE1
-  IF :VALUE1 = 1 PRESS1
-END
+to TESTB1
+  make "VALUE1 BUTTON1
+  if :VALUE1 != :OLDVALUE1 TESTST1
+end
 
-TO TESTB1
-  MAKE "VALUE1 BUTTON1
-  IF :VALUE1 != :OLDVALUE1 TESTST1
-END
-
-TO OFF
+to OFF
   OFF1
   RED2
-END
+end
 
-TO ON
+to ON
   RED1
   GREEN2
-END
+end
 
-TO NOTSTATE2
-  NOT :STATE2
-END
+to PRESS2
+  make "STATE2 !:STATE2
+  ifelse :STATE2 = 0 OFF ON
+end
 
-TO PRESS2
-  MAKE "STATE2 NOTSTATE2
-  IFELSE :STATE2 = 0 OFF ON
-END
+to TESTST2
+  make "OLDVALUE2 :VALUE2
+  if :VALUE2 = 1 PRESS2
+end
 
-TO TESTST2
-  MAKE "OLDVALUE2 :VALUE2
-  IF :VALUE2 = 1 PRESS2
-END
+to TESTB2
+  make "VALUE2 BUTTON2
+  if :VALUE2 != :OLDVALUE2 TESTST2
+end
 
-TO TESTB2
-  MAKE "VALUE2 BUTTON2
-  IF :VALUE2 != :OLDVALUE2 TESTST2
-END
-
-TO TESTB
-  IF :STATE2 = 1 TESTB1
+to TESTB
+  if :STATE2 = 1 TESTB1
   TESTB2
-END
+end
 
-TO START
-  MAKE "STATE2 1
+to START
+  make "STATE2 1
   GREEN2
   RED1
   FOREVER TESTB
-END
+end
 
 START
 

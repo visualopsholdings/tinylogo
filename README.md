@@ -17,15 +17,15 @@ a look at the source for led/led.ino and you
 can see some cool code that takes this LOGO program:
 
 ```
-TO FLASH
+to FLASH
   ON WAIT 100 OFF WAIT 1000
-END
-TO GO
+end
+to GO
   FOREVER FLASH
-END
-TO STOP
+end
+to STOP
   OFF
-END
+end
 ```
 
 And then when you get an I2C string or serial command that says "GO;" (or "GOT\n" it will flash the LEDs on and off.
@@ -35,7 +35,7 @@ You can send it any of that code ON THE FLY, so even word definitions.
 So You could send it:
 
 ```
-TO FLASH; ON WAIT 20 OFF WAIT 200; END;
+to FLASH; ON WAIT 20 OFF WAIT 200; end;
 ```
 
 To make it flash faster, or even completely write a new thing like a morse code
@@ -89,9 +89,9 @@ LogoCompiler compiler(&logo);
 Now in your "setup()", compile your LOGO program:
 
 ```
-compiler.compiler("TO FLASH; ON WAIT 100 OFF WAIT 100; END;");
-compiler.compiler("TO GO; FOREVER FLASH; END;");
-compiler.compiler("TO STOP; OFF; END;");
+compiler.compiler("to FLASH; ON WAIT 100 OFF WAIT 100; end;");
+compiler.compiler("to GO; FOREVER FLASH; end;");
+compiler.compiler("to STOP; OFF; end;");
 int err = logo.geterr();
 if (err) {
   ... do something with the error.
@@ -128,14 +128,14 @@ And near the bottom of your loop just "step" logo and it will "do" the code :-)
 Words need to be defined on 3 lines like this:
 
 ```
-TO wordname; BLOCK; END
+to wordname; BLOCK; end
 ```
 
 OR
 ```
-TO wordname
+to wordname
   BLOCK
-END
+end
 ```
 
 A semicolon is just a replacement for new line. White space is ignored, but you MUST
@@ -147,18 +147,18 @@ Argumemts to functions work BUT it is just a lexical trick, not scoped at all,
 so recursion won't work.
 
 ```
-TO MULT :A :B
+to MULT :A :B
   A * :B
-END
+end
 MULT 10 20
 ```
 
 Is functionally equivalent to:
 
 ```
-TO MULT
+to MULT
   :A * :B
-END
+end
 MAKE \"A 10 
 MAKE \"B 20 
 MULT
@@ -168,49 +168,53 @@ Note: There is a bg where the arguments are pushed in reverse order of the call 
 code above is really:
 
 ```
-TO MULT :B :A
+to MULT :B :A
   :A * :B
-END
+end
 MULT 10 20
 ```
 
 ### LOGO words
 
-## MAKE 
+Builtin words are not case sensitive. So you could write make, Or MAKE or even Make.
+
+Your own words Are case sensitive.
+
+## make 
 
 Make a variable. The syntax is:
 
 ```
-MAKE "VARNAME VALUE
+make "VARNAME VALUE
 VALUE := [number | string] 
 ```
 
-## FOREVER
+## forever
 
 Repeat the next word forever. The syntax is:
 
 ```
-FOREVER wordname
+forever wordname
 ```
 
-## REPEAT
+## repeat
 
 Repeat the next word a number of times. The syntax is:
 
 ```
-REPEAT num word
+repeat num word
 num := [number | varname]
 word := [wordname | literal]
 literal := [number | string | var] 
 var := :varname
 ```
 
-## IFELSE
+## ifelse
 
 Test an expression, it true put the first word on the stack else the second. The syntax is:
 
 ```
-IFELSE expr then else
+ifelse expr then else
 expr := [wordname | literal]
 literal := [number | string | var] 
 var := :varname
@@ -218,12 +222,12 @@ then := [wordname | literal]
 else := [wordname | literal]
 ```
 
-## IF
+## if
 
 Test an expression, it true execute the next word. The syntax is:
 
 ```
-IF expr then
+if expr then
 expr := [wordname | literal]
 literal := [number | string | var] 
 var := :varname
@@ -259,8 +263,6 @@ var := :varname
 +, -, * and / all work but the order of evaluation is not what you would expect. It's
 right to left, not left to right.
 
-So the expression
-
 So the expression:
 
 ```
@@ -283,85 +285,87 @@ The order in this case is:
   
 It's also possible that you could rewrite it as:
 
-TO SUB
+```
+to SUB
   3 -1
-END
-TO MUL
+end
+to MUL
   SUB * 4
-END
+end
 MUL / 3
+```
 
 ## Logic
 
->, >=, <, <=  and NOT all work like you wold think.
+>, >=, <, <=  and ! all work like you wold think.
 
-## PRINT
+## print
 
 Print the literal out to the serial port
 
 ```
-PRINT word
+print word
 word := [wordname | number | string | var]
 var := :varname
 ```
 
-## DREAD
+## dread
 
 Read from a digital pin. Takes the pin number off the stack and pushes the value at that
 pin onto the stack.
 
 ```
-DREAD pin
+dread pin
 pin := [wordname | number | var]
 var := :varname
 ```
 
-## DHIGH
+## dhigh
 
 Output high to a digital pin. Takes the pin number off the stack.
 
 ```
-DHIGH pin
+dhigh pin
 pin := [wordname | number | var]
 var := :varname
 ```
 
-## DLOW
+## dlow
 
 Output low to a digital pin. Takes the pin number off the stack.
 
 ```
-DLOW pin
+dlow pin
 pin := [wordname | number | var]
 var := :varname
 ```
 
-## PINOUT
+## pinout
 
 Set's a PIN up to be an output. Takes the pin number off the stack.
 
 ```
-PINOUT pin
+pinout pin
 pin := [wordname | number | var]
 var := :varname
 ```
 
-## PININ
+## pinin
 
 Set's a PIN up to be an input. Takes the pin number off the stack.
 
 ```
-PININ pin
+pinin pin
 pin := [wordname | number | var]
 var := :varname
 ```
 
-## AOUT
+## aout
 
 Output's a value to an analog output. Takes the pin number and value off the stack.
 
 ```
-AOUT pin value
+aout pin value
 pin := [wordname | number | var]
 value := [wordname | number | var]
 var := :varname
@@ -400,17 +404,17 @@ There are examples in the "logo" folder.
 You can do a setup by simply declaring a "SETUP" word like this:
 
 ```
-TO LEDPIN
+to LEDPIN
   13
-END
-TO BTNPIN
+end
+to BTNPIN
   7
-END
-TO SETUP
-  PINOUT LEDPIN
-  DLOW LEDPIN
-  PININ BTNPIN
-END
+end
+to SETUP
+  pinout LEDPIN
+  dlow LEDPIN
+  pinin BTNPIN
+end
 ```
 
 This will be run automatically at the start in the sketch.setup() line.
@@ -595,5 +599,9 @@ pressed to drive 2 colored LEDs called trafficlights.lgo
 - Logo sketches are a thing now! The .lgo file can contain the pin definitions and all the 
 writes and reads. Use the flashcode tool to write new LOGO compiled code right into 
 your sketch.
+
+### 15 Jun 2023
+- Remove case sensitivity and whitespace sensitivity. You can write 3+3/4 now.
+
 
 

@@ -32,6 +32,7 @@ public:
   char operator[](int index) const;
   void ncpy(char *to, size_t offset, size_t len) const;
   int ncmp(const char *to, size_t offset, size_t len) const;
+  int ncasecmp(const char *to, size_t offset, size_t len) const;
 
 private:
   const char *_str PROGMEM;

@@ -69,6 +69,10 @@ int LogoSimpleString::ncmp(const char *to, size_t offset, size_t len) const {
   return strncmp(to, _code + offset, len);
 }
 
+int LogoSimpleString::ncasecmp(const char *to, size_t offset, size_t len) const { 
+  return strncasecmp(to, _code + offset, len);
+}
+
 double LogoSimpleString::tof() {
   return atof(_code);
 }

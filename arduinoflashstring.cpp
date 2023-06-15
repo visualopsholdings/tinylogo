@@ -37,3 +37,9 @@ int ArduinoFlashString::ncmp(const char *to, size_t offset, size_t len) const {
   return strncmp_P(to, _str + offset, len);
   
 }
+
+int ArduinoFlashString::ncasecmp(const char *to, size_t offset, size_t len) const {
+
+  return strncasecmp_P(to, _str + offset, len);
+  
+}

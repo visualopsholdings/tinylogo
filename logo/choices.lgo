@@ -1,0 +1,10 @@
+# goals. Can't do this :-)
+
+to choices :menu [:sofar []]
+  if emptyp :menu [print :sofar stop]
+  foreach first :menu [(choices butfirst :menu sentence :sofar ?)]
+end
+
+choices [[small medium large]
+         [vanilla [ultra chocolate] lychee [rum raisin] ginger]
+         [cone cup]]
