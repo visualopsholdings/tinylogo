@@ -47,14 +47,9 @@ TO BLUER :V
 END
 
 # scale a color to be between 1 and 100
-TO SUBC :C
-  100 - :C
-END
-TO DIVC :C
-  SUBC :C / 100
-END
 TO SCLR :C
-  DIVC :C * 255
+  # ((100 - :C) / 100) * 255
+  255 * 1 / 100 / 100 - :C
 END
 
 # arguments are reversed!

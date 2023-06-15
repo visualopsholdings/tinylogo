@@ -764,41 +764,6 @@ BOOST_AUTO_TEST_CASE( waitWordNotReady )
 
 }
 
-BOOST_AUTO_TEST_CASE( arithmetic1 )
-{
-  cout << "=== arithmetic1 ===" << endl;
-  
-  Logo logo(0, 0, Logo::core);
-  LogoCompiler compiler(&logo);
-
-  compiler.compile("3 - 1");
-  BOOST_CHECK_EQUAL(logo.geterr(), 0);
-  DEBUG_DUMP(false);
-
-  DEBUG_STEP_DUMP(8, false);
-  BOOST_CHECK_EQUAL(logo.run(), 0);
-  BOOST_CHECK_EQUAL(logo.popdouble(), 2);
-  
-}
-
-BOOST_AUTO_TEST_CASE( arithmetic2 )
-{
-  cout << "=== arithmetic2 ===" << endl;
-  
-  Logo logo(0, 0, Logo::core);
-  LogoCompiler compiler(&logo);
-
-  compiler.compile("TO SUB;3 - 1;END");
-  compiler.compile("SUB * 4");
-  BOOST_CHECK_EQUAL(logo.geterr(), 0);
-  DEBUG_DUMP(false);
-
-  DEBUG_STEP_DUMP(8, false);
-  BOOST_CHECK_EQUAL(logo.run(), 0);
-  BOOST_CHECK_EQUAL(logo.popdouble(), 8);
-  
-}
-
 BOOST_AUTO_TEST_CASE( arithmetic )
 {
   cout << "=== arithmetic ===" << endl;
@@ -806,16 +771,81 @@ BOOST_AUTO_TEST_CASE( arithmetic )
   Logo logo(0, 0, Logo::core);
   LogoCompiler compiler(&logo);
 
-  compiler.compile("TO SUB;3 - 1;END");
-  compiler.compile("TO MUL;SUB * 4;END");
-  compiler.compile("MUL / 3");
+  compiler.compile("3-1");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
   DEBUG_STEP_DUMP(8, false);
   BOOST_CHECK_EQUAL(logo.run(), 0);
-  double d = logo.popdouble();
+  BOOST_CHECK_EQUAL(logo.popdouble(), 2);
+  BOOST_CHECK(logo.stackempty());
+  
+}
+
+BOOST_AUTO_TEST_CASE( arithmeticCompound )
+{
+  cout << "=== arithmeticCompound ===" << endl;
+  
+  Logo logo(0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
+
+  // sanity check :-)
+  double d = ((3 - 1) * 4.0) / 3.0;
   BOOST_CHECK(d > 2.6);
   BOOST_CHECK(d < 2.7);
+
+  // ((3 - 1) * 4) / 3
+  compiler.compile("1 / 3 / 4 * 3 - 1");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  DEBUG_STEP_DUMP(8, false);
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  d = logo.popdouble();
+  BOOST_CHECK(d > 2.6);
+  BOOST_CHECK(d < 2.7);
+  BOOST_CHECK(logo.stackempty());
   
+}
+
+BOOST_AUTO_TEST_CASE( arithmeticColors )
+{
+  cout << "=== arithmeticColors ===" << endl;
+  
+  Logo logo(0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
+
+  // sanity check :-)
+  BOOST_CHECK_EQUAL(((100 - 0) / 100.0) * 255.0, 255);
+  BOOST_CHECK_EQUAL(((100 - 100) / 100.0) * 255.0, 0);
+  BOOST_CHECK_EQUAL(((100 - 80) / 100.0) * 255.0, 51);
+
+  // ((100 - C) / 100) * 255
+  // 255 * 1 / 100 / 100 - C
+  compiler.compile("TO SCLR :C; 255*1/   100 / 100 - :C; END");
+  compiler.compile("SCLR 0");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popdouble(), 255);
+  BOOST_CHECK(logo.stackempty());
+
+  logo.resetcode();
+  compiler.compile("SCLR 100");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+  
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popdouble(), 0);
+  BOOST_CHECK(logo.stackempty());
+
+  logo.resetcode();
+  compiler.compile("SCLR 80");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+  
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popdouble(), 51);
+  BOOST_CHECK(logo.stackempty());
 }

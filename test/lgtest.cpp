@@ -690,8 +690,8 @@ BOOST_AUTO_TEST_CASE( arguments )
 
 //   compiler.compile("TO MULT; :A * :B; END;");
 //   compiler.compile("MAKE \"A 10 MAKE \"B 20 MULT");
- compiler.compile("TO MULT :A :B; :A * :B; END;");
- compiler.compile("MULT 10 20");
+  compiler.compile("TO MULT :A :B; :A * :B; END;");
+  compiler.compile("MULT 10 20");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 

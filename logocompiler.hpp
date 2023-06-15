@@ -103,7 +103,7 @@ public:
 #endif
 
   // public for testing.
-  short scanfor(short *strstart, short *strsize, LogoString *str, short start, short len, bool newline);
+  short scan(short *strstart, short *strsize, LogoString *str, short len, short start, bool newline);
 #ifdef LOGO_SENTENCES
   void dosentences(char *buf, short len, const char *start);
 #endif
@@ -138,7 +138,8 @@ private:
   // parser
   bool dodefine(LogoString *str, short wordstart, short wordlen, bool eol);
   void compilewords(LogoString *str, short start, short len, bool define);
-  bool istoken(char c, bool newline);
+  bool isident(char c);
+  bool istoken(char c, bool newline, bool wasalnum);
   bool isnum(LogoString *str, short wordstart, short wordlen);
   void compileword(tJump *next, LogoString *str, short wordstart, short wordlen, short op);
   void finishword(short word, short wordlen, short jump, short arity);

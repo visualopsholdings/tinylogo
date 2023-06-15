@@ -282,7 +282,7 @@ void LogoCompiler::compile(LogoString *str) {
   short nextline = 0;
   short linestart, linelen;
   while (nextline >= 0) {
-    nextline = scanfor(&linestart, &linelen, str, nextline, (len-nextline), true);
+    nextline = scan(&linestart, &linelen, str, len, nextline, true);
     
     if (linelen == 0) {
       break;
@@ -342,7 +342,7 @@ void LogoCompiler::compilewords(LogoString *str, short start, short len, bool de
       return;
     }
 #endif    
-    nextword = scanfor(&wordstart, &wordlen, str, nextword, (start+len)-nextword, false);
+    nextword = scan(&wordstart, &wordlen, str, start+len, nextword, false);
     if (define) {
       if (!dodefine(str, wordstart, wordlen, nextword == -1)) {
         if (_logo->_nextcode >= START_JCODE) {
@@ -472,21 +472,35 @@ bool LogoCompiler::dodefine(LogoString *str, short wordstart, short wordlen, boo
 
 }
 
-bool LogoCompiler::istoken(char c, bool newline) {
+bool LogoCompiler::isident(char c) {
+  return isalnum(c) || c == ':' || c == '"';
+}
 
-//  DEBUG_IN_ARGS(Logo, "istoken", "%c%b", c, newline);
+bool LogoCompiler::istoken(char c, bool newline, bool wasident) {
+
+//  DEBUG_IN_ARGS(Logo, "istoken", "%c%b%b", c, newline, wasident);
   
-  return newline ? c == ';' || c == '\n' : c == ' ';
+  if (newline) {
+    return c == ';' || c == '\n';
+  }
+  return c == ' ' || isident(c) != wasident;
   
 }
 
-short LogoCompiler::scanfor(short *strstart, short *strsize, LogoString *str, short start, short len, bool newline) {
+short LogoCompiler::scan(short *strstart, short *strsize, LogoString *str, short len, short start, bool newline) {
 
-  DEBUG_IN_ARGS(LogoCompiler, "scanfor", "%i%i%b", start, len, newline);
+  DEBUG_IN_ARGS(LogoCompiler, "scan", "%i%i%b", start, len, newline);
   
 #ifdef LOGO_DEBUG  
-  str->dump("scanning", start, len);
+  str->dump("scanning", start, len-start);
 #endif  
+
+  if ((len - start) == 0) {
+    *strsize = 0;
+    DEBUG_RETURN(" nothing to scan %i", -1);
+    return -1;
+  }
+
   // skip ws
   while (start < (start+len) && ((*str)[start] == ' ' || (*str)[start] == '\t')) {
     start++;
@@ -494,32 +508,36 @@ short LogoCompiler::scanfor(short *strstart, short *strsize, LogoString *str, sh
   
   short end = start;
   
-  // find end of line
-  while (end < (start+len) && (*str)[end] && !istoken((*str)[end], newline)) {
+  // are we at an identifier?
+  bool wasident = isident((*str)[end]);
+  
+  // find end
+  while (end < (start+len) && (*str)[end] && !istoken((*str)[end], newline, wasident)) {
     end++;
   }
   
-  if (end < (start+len-1)) {
-    if (istoken((*str)[end], newline)) {
+  *strstart = start;
+  
+  if (istoken((*str)[end], newline, wasident)) {
+    if (newline || isspace((*str)[end])) {
       end++;
-      *strstart = start;
       *strsize = end-start-1;
     }
     else {
-      DEBUG_RETURN(" token not found %i", -1);
+       *strsize = end-start;
+    }
+    if (end >= len) {
+      DEBUG_RETURN(" found end %i", -1);
       return -1;
     }
-  }
-  else {
-    *strstart = start;
-    *strsize = end-start;
-    DEBUG_RETURN(" end of string %i%i%i", start, end, -1);
-    return -1;
+    DEBUG_RETURN(" %i", end);
+    return end;
   }
 
+  *strsize = end-start;
   DEBUG_RETURN(" %i", end);
   return end;
-
+    
 }
 
 #ifndef ARDUINO

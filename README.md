@@ -256,11 +256,32 @@ var := :varname
 
 ## Arithmetic
 
-+, -, * and / all work but changing them doesn't work.
++, -, * and / all work but the order of evaluation is not what you would expect. It's
+right to left, not left to right.
 
-So the expression ((3 - 1) * 4) / 3
+So the expression
 
-Needs to be written like:
+So the expression:
+
+```
+((3 - 1) * 4) / 3 = 2.666...
+```
+
+Would need to be rewritten as:
+
+```
+1 / 3 / 4 * 3 - 1
+```
+
+To yield the same result.
+The order in this case is:
+
+  - 3 - 1 = 2
+  - 4 * 2 = 8
+  - 3 / 8 = 0.375
+  - 1 / 0.375 = 2.666...
+  
+It's also possible that you could rewrite it as:
 
 TO SUB
   3 -1
@@ -533,6 +554,8 @@ This stuff is just for the development environment.
 https://forum.arduino.cc/t/how-to-properly-use-wire-onreceive/891195/12
 
 ## Current development focus
+
+### Get a serial connection working from a PI to the Arduino
 
 ### Do the I2C stuff for PI and include test scripts etc to make that easy to do.
 
