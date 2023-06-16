@@ -56,6 +56,24 @@ void LogoWords::make(Logo &logo) {
 
 }
 
+short LogoWords::thingArity = 1;
+
+void LogoWords::thing(Logo &logo) {
+
+  LogoStringResult result;
+  logo.popstring(&result);
+  short var = logo.findvariable(&result);
+  if (var >= 0 && logo.varisint(var)) {
+    logo.pushint(logo.varintvalue(var));
+  }
+  else {
+    logo.pushint(0);
+  }
+
+}
+
+
+
 short LogoWords::foreverArity = 0;
 
 void LogoWords::forever(Logo &logo) {
@@ -259,6 +277,10 @@ void LogoWords::divide(Logo &logo) {
 
   double a1 = logo.popdouble();
   double a2 = logo.popdouble();
+  if (a1 == 0) {
+    logo.pushdouble(0);
+    return;
+  }
   logo.pushdouble(a2 / a1);
   
 }

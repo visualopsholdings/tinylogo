@@ -29,7 +29,6 @@
 
 #define I2C_ADDRESS 8
 #define LED_PIN     13
-//#define LED_PIN     3
 
 void ledOn() {
   digitalWrite(LED_PIN, HIGH);

@@ -12,7 +12,7 @@
 */
 
 #include "logo.hpp"
-#include "logocompiler.hpp"
+#include "logostring.hpp"
 #include "arduinoflashcode.hpp"
 #include "logowords.hpp"
 
@@ -36,6 +36,7 @@ void Logo::outstate() const {
 #ifdef ARDUINO
 #include <HardwareSerial.h>
 #else
+#include "logocompiler.hpp"
 #include <iostream>
 #include <sstream>
 using namespace std;
@@ -74,6 +75,7 @@ LogoBuiltinWord Logo::core[] = {
   { "PINOUT", LogoWords::pinout, LogoWords::pinoutArity },
   { "PININ", LogoWords::pinin, LogoWords::pininArity },
   { "AOUT", LogoWords::aout, LogoWords::aoutArity },
+  { "THING", LogoWords::thing, LogoWords::thingArity },
 };
 
 LogoFunctionPrimitives::LogoFunctionPrimitives(LogoBuiltinWord *builtins, short size) : _builtins(builtins) {
@@ -229,7 +231,7 @@ short Logo::parseint(short type, short op, short opand) {
     
   }
   
-  return -1;
+  return 0;
   
 }
 
@@ -258,7 +260,7 @@ double Logo::parsedouble(short type, short op, short opand) {
     
   }
   
-  return -1;
+  return 0;
   
 }
 
@@ -284,20 +286,16 @@ short Logo::popint() {
     error(LG_STACK_OVERFLOW);
     return 0;
   }
-  short i = parseint(_stack[_tos][FIELD_OPTYPE], _stack[_tos][FIELD_OP], _stack[_tos][FIELD_OPAND]);
-  if (i >= 0) {
-    return i;
-  }
+  
   if (_stack[_tos][FIELD_OPTYPE] == OPTYPE_REF) {
     short var = getvarfromref(_stack[_tos][FIELD_OP], _stack[_tos][FIELD_OPAND]);
     if (var >= 0) {
-      i = parseint(_variables[var]._type, _variables[var]._value, _variables[var]._valueopand);
-      if (i >= 0) {
-        return i;
-      }
+      return parseint(_variables[var]._type, _variables[var]._value, _variables[var]._valueopand);
     }
+    return 0;
   }
-  return 0;
+  
+  return parseint(_stack[_tos][FIELD_OPTYPE], _stack[_tos][FIELD_OP], _stack[_tos][FIELD_OPAND]);
 }
 
 double Logo::popdouble() {
@@ -308,20 +306,17 @@ double Logo::popdouble() {
     error(LG_STACK_OVERFLOW);
     return 0;
   }
-  double i = parsedouble(_stack[_tos][FIELD_OPTYPE], _stack[_tos][FIELD_OP], _stack[_tos][FIELD_OPAND]);
-  if (i >= 0) {
-    return i;
-  }
+  
   if (_stack[_tos][FIELD_OPTYPE] == OPTYPE_REF) {
     short var = getvarfromref(_stack[_tos][FIELD_OP], _stack[_tos][FIELD_OPAND]);
     if (var >= 0) {
-      i = parsedouble(_variables[var]._type, _variables[var]._value, _variables[var]._valueopand);
-      if (i >= 0) {
-        return i;
-      }
+      return parsedouble(_variables[var]._type, _variables[var]._value, _variables[var]._valueopand);
     }
+    return 0;
   }
-  return 0;
+  
+  return parsedouble(_stack[_tos][FIELD_OPTYPE], _stack[_tos][FIELD_OP], _stack[_tos][FIELD_OPAND]);
+
 }
 
 void Logo::pushint(short n) {
@@ -781,6 +776,11 @@ short Logo::step() {
     
   case OPTYPE_ERR:
     err = instField(_pc, FIELD_OP);
+    break;
+    
+  case OPTYPE_GSTART:
+  case OPTYPE_GEND:
+    // not handled yet
     break;
     
   default:
@@ -1372,6 +1372,17 @@ void Logo::setintvar(short var, short n) {
   
 }
 
+bool Logo::varisint(short var) {
+  return _variables[var]._type == OPTYPE_INT;
+}
+
+short Logo::varintvalue(short var) {
+  if (varisint(var)) {
+    return _variables[var]._value;
+  }
+  return 0;
+}
+
 void LogoScheduler::schedule(short ms) {
   if (!_provider) {
     return;
@@ -1724,6 +1735,12 @@ void Logo::dump(short indent, short type, short op, short opand) const {
     case OPTYPE_ERR:
       cout << "err " << op;
       break;
+    case OPTYPE_GSTART:
+      cout << "gstart";
+      break;
+    case OPTYPE_GEND:
+      cout << "gend";
+      break;
     case SOPTYPE_ARITY:
       cout << "(stack) arity pc " << op << " to go " << opand;
       break;
@@ -1736,7 +1753,7 @@ void Logo::dump(short indent, short type, short op, short opand) const {
     case SOPTYPE_SKIP:
       cout << "(stack) skip ";
       break;
-    default:
+     default:
       cout << "unknown optype " << type;
   }
 

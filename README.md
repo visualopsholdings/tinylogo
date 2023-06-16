@@ -159,8 +159,8 @@ Is functionally equivalent to:
 to MULT
   :A * :B
 end
-MAKE \"A 10 
-MAKE \"B 20 
+make \"A 10 
+make \"B 20 
 MULT
 ```
 
@@ -188,6 +188,16 @@ Make a variable. The syntax is:
 make "VARNAME VALUE
 VALUE := [number | string] 
 ```
+
+## thing 
+
+Push the value of a variable onto the stack.
+
+```
+thing "VARNAME
+```
+
+This is the same as :VARNAME.
 
 ## forever
 

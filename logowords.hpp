@@ -100,6 +100,9 @@ public:
   static void aout(Logo &logo);
   static short aoutArity;
 
+  static void thing(Logo &logo);
+  static short thingArity;
+
 private:
 
   static bool pushliterals(Logo &logo, short rel);

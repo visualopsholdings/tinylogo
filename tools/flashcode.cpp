@@ -30,6 +30,8 @@ using namespace std;
 
 int process_ino(const string &infn) {
 
+  cout << "processing .INO " << infn << endl;
+  
   fs::path inpath(infn);
   fstream infile;
   infile.open(infn, ios::in);
@@ -57,6 +59,9 @@ int process_ino(const string &infn) {
 }
 
 int process_lgo(const string &infn, const string &name) {
+
+  cout << "processing .LGO " << infn << endl;
+  
   fstream file;
   file.open(infn, ios::in);
   if (!file) {

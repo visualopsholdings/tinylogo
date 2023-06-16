@@ -13,6 +13,8 @@
 
 cmake_minimum_required(VERSION 3.5)
 
+#set(CMAKE_BUILD_TYPE Debug)
+
 project (tinylogo)
   find_package(Boost COMPONENTS program_options filesystem unit_test_framework REQUIRED)
   add_definitions(-DBOOST_ALL_DYN_LINK -DUSE_FLASH_CODE) 

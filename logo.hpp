@@ -88,7 +88,13 @@
 // leaves about 200 bytes for local variables. Otherwise your sketch won't work.
 
 #ifdef USE_FLASH_CODE
+#ifdef ARDUINO
+// when we are allocating strings on the ARDUINO, this will be too small but
+// for now they area all static.
+#define STRING_POOL_SIZE    2
+#else
 #define STRING_POOL_SIZE    512       // these number of bytes
+#endif
 #else
 #define STRING_POOL_SIZE    128       // these number of bytes
 #endif
@@ -103,7 +109,7 @@
 #define START_JCODE         30        // the start of where the JCODE lies (the words)
 #endif
 #ifdef USE_FLASH_CODE
-#define MAX_STACK           48        // 6 bytes each
+#define MAX_STACK           64        // 6 bytes each
 #else
 #define MAX_STACK           16        // 6 bytes each
 #endif
@@ -175,6 +181,8 @@
 #define OPTYPE_DOUBLE         8 // FIELD_OP = literal integer part of double, FIELD_OPAND is fractional
 #define OPTYPE_REF            9 // FIELD_OP = index of string (-fixedcount) with a var in it, FIELD_OPAND = length of string
 #define OPTYPE_POPREF         10 // FIELD_OP = index of var to pop into
+#define OPTYPE_GSTART         11 //
+#define OPTYPE_GEND           12 //
 
 // only on the stack
 #define SOP_START             100
@@ -347,6 +355,8 @@ public:
   short findvariable(LogoStringResult *str) const;
   short newintvar(short str, short slen, short n);
   void setintvar(short var, short n);
+  bool varisint(short var);
+  short varintvalue(short var);
   
   // logo words can be self modifying code but be careful!
   

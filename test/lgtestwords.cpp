@@ -57,7 +57,6 @@ BOOST_AUTO_TEST_CASE( make )
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
-  gCmds.clear();
   BOOST_CHECK_EQUAL(logo.run(), 0);
   BOOST_CHECK_EQUAL(logo.popint(), 10);
   BOOST_CHECK(logo.stackempty());
@@ -102,7 +101,6 @@ BOOST_AUTO_TEST_CASE( makeCompound1 )
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
-  gCmds.clear();
   BOOST_CHECK_EQUAL(logo.run(), 0);
   BOOST_CHECK_EQUAL(logo.popint(), 0);
   BOOST_CHECK(logo.stackempty());
@@ -123,7 +121,26 @@ BOOST_AUTO_TEST_CASE( makeCompound2 )
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
-  gCmds.clear();
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popint(), 2);
+  BOOST_CHECK(logo.stackempty());
+  DEBUG_DUMP(false);
+  
+}
+
+BOOST_AUTO_TEST_CASE( thing )
+{
+  cout << "=== thing ===" << endl;
+  
+  Logo logo(0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("make \"VAR 1");
+  compiler.compile("make \"VAR :VAR+1");
+  compiler.compile("thing \"VAR");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
   BOOST_CHECK_EQUAL(logo.run(), 0);
   BOOST_CHECK_EQUAL(logo.popint(), 2);
   BOOST_CHECK(logo.stackempty());
@@ -862,10 +879,21 @@ BOOST_AUTO_TEST_CASE( arithmeticColors )
   BOOST_CHECK_EQUAL(((100 - 100) / 100.0) * 255.0, 0);
   BOOST_CHECK_EQUAL(((100 - 80) / 100.0) * 255.0, 51);
 
+//   compiler.compile("((100 - 80) / 100) * 255");
+//   BOOST_CHECK_EQUAL(logo.geterr(), 0);
+//   DEBUG_DUMP(false);
+// 
+//   DEBUG_STEP_DUMP(8, false);
+//   BOOST_CHECK_EQUAL(logo.run(), 0);
+//   BOOST_CHECK_EQUAL(logo.popdouble(), 51);
+
   // ((100 - C) / 100) * 255
   // 255 * 1 / 100 / 100 - C
   compiler.compile("TO SCLR :C; 255*1/   100 / 100 - :C; END");
+//  compiler.compile("TO SCLR :C; ((100 - :C) / 100) * 255; END");
+//   compiler.compile("TO SCLR :C; ((100 - 80) / 100) * 255 ; END");
   compiler.compile("SCLR 0");
+//  compiler.compile("((100 - 80) / 100) * 255");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
@@ -892,3 +920,21 @@ BOOST_AUTO_TEST_CASE( arithmeticColors )
   BOOST_CHECK(logo.stackempty());
 }
 
+// BOOST_AUTO_TEST_CASE( arithmeticGrouping )
+// {
+//   cout << "=== arithmeticGrouping ===" << endl;
+//   
+//   Logo logo(0, 0, Logo::core);
+//   LogoCompiler compiler(&logo);
+// 
+// //  compiler.compile("(3 - 1) * 4");
+//   compiler.compile("((100 - 100) / 100) * 255");
+//   BOOST_CHECK_EQUAL(logo.geterr(), 0);
+//   DEBUG_DUMP(false);
+// 
+//   DEBUG_STEP_DUMP(8, false);
+//   BOOST_CHECK_EQUAL(logo.run(), 0);
+//   BOOST_CHECK_EQUAL(logo.popdouble(), 8);
+//   
+// }
+// 

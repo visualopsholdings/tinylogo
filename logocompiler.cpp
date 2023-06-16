@@ -70,9 +70,25 @@ void LogoCompiler::compileword(tJump *next, LogoString *stri, short wordstart, s
   stri->dump("word", wordstart, wordlen);
 #endif
 
+  if (wordlen == 0) {
+    return;
+  }
+    
   if (*next >= MAX_CODE) {
     _logo->outofcode();
     DEBUG_RETURN(" err ", 0);
+    return;
+  }
+  
+  if ((*stri)[wordstart] == '(') {
+    _logo->addop(next, OPTYPE_GSTART);
+    DEBUG_RETURN(" gstart ", 0);
+    return;
+  }
+  
+  if ((*stri)[wordstart] == ')') {
+    _logo->addop(next, OPTYPE_GEND);
+    DEBUG_RETURN(" gend ", 0);
     return;
   }
   
@@ -92,16 +108,6 @@ void LogoCompiler::compileword(tJump *next, LogoString *stri, short wordstart, s
     return;
   }
 
-  if (wordlen == 0) {
-    return;
-  }
-  
-  if ((*stri)[wordstart] == '!') {
-    _logo->addop(next, OPTYPE_ERR, op);
-    DEBUG_RETURN(" err ", 0);
-    return;
-  }
-  
   if ((*stri)[wordstart] == ':') {
     short len = wordlen - 1;
     short str = _logo->addstring(stri, wordstart+1, len);
@@ -296,6 +302,16 @@ void LogoCompiler::compile(LogoString *str) {
       continue;
     }
     
+    if (str->ncasecmp("BUILTIN", linestart, linestart+7) == 0) {
+      if (linelen < 9) {
+        _logo->error(LG_WORD_NOT_FOUND);
+      }
+      else {
+        _logo->setprimitives(str, linestart+8, linelen-9);
+      }
+      continue;
+    }
+    
 #ifdef LOGO_SENTENCES
     // build and replace sentences in the line.
     if ((*str)[linestart] == '[') {
@@ -376,10 +392,15 @@ bool LogoCompiler::dodefine(LogoString *str, short wordstart, short wordlen, boo
     return false;
   }
   
-  if (str->ncasecmp("BUILTIN", wordstart, wordstart+7) == 0) {
-    _logo->setprimitives(str, wordstart+8, wordlen-9);
-    DEBUG_RETURN(" builtin def %b", true);
-    return true;
+  if ((*str)[wordstart] == '[') {
+    // all sentences should have been replaced!
+    _logo->error(LG_WORD_NOT_FOUND);
+    return false;
+  }
+
+  if ((*str)[wordstart] == '(' || (*str)[wordstart] == ')') {
+    DEBUG_RETURN(" grouping %b", false);
+    return false;
   }
 
   if (str->ncasecmp("TO", wordstart, wordlen) == 0) {
@@ -388,12 +409,6 @@ bool LogoCompiler::dodefine(LogoString *str, short wordstart, short wordlen, boo
     _wordarity = 0;
     DEBUG_RETURN(" in define %b", true);
     return true;
-  }
-
-  if ((*str)[wordstart] == '[') {
-    // all sentences should have been replaced!
-    _logo->error(LG_WORD_NOT_FOUND);
-   return false;
   }
 
   if (!_inword) {
@@ -811,6 +826,7 @@ int LogoCompiler::updateino(const std::string &infn, std::fstream &infile, std::
           trim(rest);
           including = true;
           outfile << line << endl;
+          cout << "including .LGO " << lgopath.string() << endl;
           int err = includelgo(lgopath.string(), rest, outfile);
           if (err) {
             return err;
