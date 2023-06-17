@@ -853,7 +853,6 @@ BOOST_AUTO_TEST_CASE( arithmeticCompound )
   BOOST_CHECK(d > 2.6);
   BOOST_CHECK(d < 2.7);
 
-  // ((3 - 1) * 4) / 3
   compiler.compile("1 / 3 / 4 * 3 - 1");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
@@ -865,6 +864,76 @@ BOOST_AUTO_TEST_CASE( arithmeticCompound )
   BOOST_CHECK(d < 2.7);
   BOOST_CHECK(logo.stackempty());
   
+}
+
+BOOST_AUTO_TEST_CASE( arithmeticGrouping )
+{
+  cout << "=== arithmeticGrouping ===" << endl;
+  
+  Logo logo(0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("3 - 1 * 4");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  DEBUG_STEP_DUMP(8, false);
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popdouble(), -1);
+  
+  logo.resetcode();
+  compiler.compile("(3 - 1) * 4");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  DEBUG_STEP_DUMP(8, false);
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popdouble(), 8);
+
+  logo.resetcode();
+  compiler.compile("3 - (1 * 4)");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  DEBUG_STEP_DUMP(10, false);
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popdouble(), -1);
+  
+}
+
+BOOST_AUTO_TEST_CASE( nestedGrouping )
+{
+  cout << "=== nestedGrouping ===" << endl;
+  
+  Logo logo(0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("((3 - ((1 * 4))))");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+ DEBUG_STEP_DUMP(10, false);
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popdouble(), -1);
+  
+}
+
+BOOST_AUTO_TEST_CASE( arithmeticNoWSGrouping )
+{
+  cout << "=== arithmeticNoWSGrouping ===" << endl;
+  
+  Logo logo(0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
+
+  logo.resetcode();
+  compiler.compile("3-(1*4)");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  DEBUG_STEP_DUMP(10, false);
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popdouble(), -1);
+
 }
 
 BOOST_AUTO_TEST_CASE( arithmeticColors )
@@ -879,24 +948,12 @@ BOOST_AUTO_TEST_CASE( arithmeticColors )
   BOOST_CHECK_EQUAL(((100 - 100) / 100.0) * 255.0, 0);
   BOOST_CHECK_EQUAL(((100 - 80) / 100.0) * 255.0, 51);
 
-//   compiler.compile("((100 - 80) / 100) * 255");
-//   BOOST_CHECK_EQUAL(logo.geterr(), 0);
-//   DEBUG_DUMP(false);
-// 
-//   DEBUG_STEP_DUMP(8, false);
-//   BOOST_CHECK_EQUAL(logo.run(), 0);
-//   BOOST_CHECK_EQUAL(logo.popdouble(), 51);
-
-  // ((100 - C) / 100) * 255
-  // 255 * 1 / 100 / 100 - C
-  compiler.compile("TO SCLR :C; 255*1/   100 / 100 - :C; END");
-//  compiler.compile("TO SCLR :C; ((100 - :C) / 100) * 255; END");
-//   compiler.compile("TO SCLR :C; ((100 - 80) / 100) * 255 ; END");
+  compiler.compile("TO SCLR :C; ((100 - :C) / 100) * 255; END");
   compiler.compile("SCLR 0");
-//  compiler.compile("((100 - 80) / 100) * 255");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
+  DEBUG_STEP_DUMP(10, false);
   BOOST_CHECK_EQUAL(logo.run(), 0);
   BOOST_CHECK_EQUAL(logo.popdouble(), 255);
   BOOST_CHECK(logo.stackempty());
@@ -920,21 +977,3 @@ BOOST_AUTO_TEST_CASE( arithmeticColors )
   BOOST_CHECK(logo.stackempty());
 }
 
-// BOOST_AUTO_TEST_CASE( arithmeticGrouping )
-// {
-//   cout << "=== arithmeticGrouping ===" << endl;
-//   
-//   Logo logo(0, 0, Logo::core);
-//   LogoCompiler compiler(&logo);
-// 
-// //  compiler.compile("(3 - 1) * 4");
-//   compiler.compile("((100 - 100) / 100) * 255");
-//   BOOST_CHECK_EQUAL(logo.geterr(), 0);
-//   DEBUG_DUMP(false);
-// 
-//   DEBUG_STEP_DUMP(8, false);
-//   BOOST_CHECK_EQUAL(logo.run(), 0);
-//   BOOST_CHECK_EQUAL(logo.popdouble(), 8);
-//   
-// }
-// 

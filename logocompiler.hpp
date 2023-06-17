@@ -19,9 +19,6 @@
 #include "logo.hpp"
 #include "logostring.hpp"
 
-// Sentences are painful to make word so we just remove them for now.
-//#define LOGO_SENTENCES
-
 #ifndef ARDUINO
 #include <fstream>
 #endif
@@ -104,9 +101,7 @@ public:
 
   // public for testing.
   short scan(short *strstart, short *strsize, LogoString *str, short len, short start, bool newline);
-#ifdef LOGO_SENTENCES
-  void dosentences(char *buf, short len, const char *start);
-#endif
+  bool switchtoken(char prevc, char c, bool newline);
 
 private:
   
@@ -120,31 +115,19 @@ private:
   short _jump;
   short _wordarity;
   
-#ifdef LOGO_SENTENCES
-  // various buffers to hold data
-  char _linebuf[LINE_LEN];
-  char _sentencebuf[SENTENCE_LEN];
-#endif
-
   // words
   short _wordcount;
   LogoWord _words[MAX_WORDS];
   
-#ifdef LOGO_SENTENCES
-  // sentences
-  short _sentencecount;
-#endif
-
   // parser
   bool dodefine(LogoString *str, short wordstart, short wordlen, bool eol);
   void compilewords(LogoString *str, short start, short len, bool define);
-  bool isident(char c);
-  bool istoken(char c, bool newline, bool wasalnum);
   bool isnum(LogoString *str, short wordstart, short wordlen);
   void compileword(tJump *next, LogoString *str, short wordstart, short wordlen, short op);
   void finishword(short word, short wordlen, short jump, short arity);
   short findword(LogoString *str, short wordstart, short wordlen) const;
   short findword(LogoStringResult *str) const;
+  void addnops(tJump *next, short op, int n);
   
 };
 

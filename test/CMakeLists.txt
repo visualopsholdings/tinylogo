@@ -15,6 +15,7 @@ cmake_minimum_required(VERSION 3.5)
 
 project (logotest)
   find_package(Boost COMPONENTS unit_test_framework filesystem REQUIRED)
+#  add_definitions(-DBOOST_ALL_DYN_LINK -DLOGO_DEBUG) 
   add_definitions(-DBOOST_ALL_DYN_LINK) 
   enable_testing()
 

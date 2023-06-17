@@ -26,9 +26,9 @@
 
 using namespace std;
 
-BOOST_AUTO_TEST_CASE( scan )
+BOOST_AUTO_TEST_CASE( scanLine )
 {
-  cout << "=== scan ===" << endl;
+  cout << "=== scanLine ===" << endl;
   
   Logo logo;
   LogoCompiler compiler(&logo);
@@ -45,6 +45,23 @@ BOOST_AUTO_TEST_CASE( scan )
   BOOST_CHECK_EQUAL(next, -1);
   BOOST_CHECK_EQUAL(size, 5);
   BOOST_CHECK_EQUAL(string.ncmp("BBBBC", start, size), 0);
+
+}
+
+BOOST_AUTO_TEST_CASE( scanNewLine )
+{
+  cout << "=== scanNewLine ===" << endl;
+  
+  Logo logo;
+  LogoCompiler compiler(&logo);
+
+  const char *str = "\n";
+  LogoSimpleString string(str, strlen(str));
+
+  short start, size;
+  short next = compiler.scan(&start, &size, &string, string.length(), 0, true);
+  BOOST_CHECK_EQUAL(next, -1);
+  BOOST_CHECK_EQUAL(size, 0);
 
 }
 
@@ -205,4 +222,71 @@ BOOST_AUTO_TEST_CASE( staticPrimitivesname )
   primitives.name(2, name, sizeof(name));
   BOOST_CHECK_EQUAL(name, "DEF");
 
+}
+
+void alnumswitchcheck(LogoCompiler &compiler, char c) {
+
+  BOOST_CHECK(compiler.switchtoken('A', c, false));
+  BOOST_CHECK(compiler.switchtoken(c, 'A', false));
+  BOOST_CHECK(compiler.switchtoken('1', c, false));
+  BOOST_CHECK(compiler.switchtoken(c, '1', false));
+  BOOST_CHECK(compiler.switchtoken('a', c, false));
+  BOOST_CHECK(compiler.switchtoken(c, 'a', false));
+  
+}
+
+void alnumsamecheck(LogoCompiler &compiler, char c1, char c2) {
+
+  BOOST_CHECK(!compiler.switchtoken(c1, c2, false));
+  BOOST_CHECK(!compiler.switchtoken(c2, c1, false));
+
+}
+
+void parenswitchheck(LogoCompiler &compiler, char c) {
+
+  BOOST_CHECK(compiler.switchtoken(c, '(', false));
+  BOOST_CHECK(compiler.switchtoken('(', c, false));
+  BOOST_CHECK(compiler.switchtoken(c, ')', false));
+  BOOST_CHECK(compiler.switchtoken(')', c, false));
+
+}
+
+BOOST_AUTO_TEST_CASE( switchtokenWord )
+{
+  cout << "=== switchtokenWord ===" << endl;
+  
+  Logo logo;
+  LogoCompiler compiler(&logo);
+
+  BOOST_CHECK(!compiler.switchtoken('A', 'A', false));
+  BOOST_CHECK(!compiler.switchtoken('1', '1', false));
+  BOOST_CHECK(!compiler.switchtoken('a', 'a', false));
+  
+  alnumsamecheck(compiler, 'A', 'a');
+  alnumsamecheck(compiler, 'A', '1');
+
+  alnumswitchcheck(compiler, '+');
+  alnumswitchcheck(compiler, '(');
+  alnumswitchcheck(compiler, ')');
+    
+  BOOST_CHECK(compiler.switchtoken('(', '(', false));
+  BOOST_CHECK(compiler.switchtoken(')', ')', false));
+  
+  parenswitchheck(compiler, '+');
+  parenswitchheck(compiler, 'A');
+  parenswitchheck(compiler, 'a');
+  parenswitchheck(compiler, '1');
+  
+  // special cases
+  BOOST_CHECK(!compiler.switchtoken(':', 'A', false));
+  BOOST_CHECK(!compiler.switchtoken(':', 'a', false));
+
+  BOOST_CHECK(!compiler.switchtoken('\"', 'A', false));
+  BOOST_CHECK(!compiler.switchtoken('\"', 'a', false));
+  
+  // internal word defs.
+  BOOST_CHECK(!compiler.switchtoken('!', '=', false));
+  BOOST_CHECK(!compiler.switchtoken('>', '=', false));
+  BOOST_CHECK(!compiler.switchtoken('<', '=', false));
+  
 }

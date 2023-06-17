@@ -45,21 +45,20 @@ LogoCompiler::LogoCompiler(Logo * logo) :
   _inword(false), _inwordargs(false), _defining(-1), _defininglen(-1), _wordarity(-1),
   _jump(NO_JUMP),
   _wordcount(0) {
-
-#ifdef LOGO_SENTENCES
-  _sentencecount = 0;
-#endif
 }
 
 void LogoCompiler::reset() {
 
   DEBUG_IN(LogoCompiler, "reset");
   
-#ifdef LOGO_SENTENCES
-  _sentencecount = 0;
-#endif
   _wordcount = 0;
   
+}
+
+void LogoCompiler::addnops(tJump *next, short op, int n) {
+  for (int i=0; i<n; i++) {
+    _logo->addop(next, op);
+  }
 }
 
 void LogoCompiler::compileword(tJump *next, LogoString *stri, short wordstart, short wordlen, short op) {
@@ -81,13 +80,15 @@ void LogoCompiler::compileword(tJump *next, LogoString *stri, short wordstart, s
   }
   
   if ((*stri)[wordstart] == '(') {
-    _logo->addop(next, OPTYPE_GSTART);
+    // let's just assume that we have all ( for now.
+    addnops(next, OPTYPE_GSTART, wordlen);
     DEBUG_RETURN(" gstart ", 0);
     return;
   }
   
   if ((*stri)[wordstart] == ')') {
-    _logo->addop(next, OPTYPE_GEND);
+    // let's just assume that we have all ) for now.
+    addnops(next, OPTYPE_GEND, wordlen);
     DEBUG_RETURN(" gend ", 0);
     return;
   }
@@ -198,87 +199,6 @@ void LogoCompiler::finishword(short word, short wordlen, short jump, short arity
 
 }
 
-#ifdef LOGO_SENTENCES
-void LogoCompiler::dosentences(char *buf, short len, const char *start) {
-
-  DEBUG_IN(LogoCompiler, "dosentences");
-  
-  // we preprocess all sentences in a line first. We basically treat
-  // sentences like lambdas (anonymous words). Each one has a unique name
-  // like &N and we define them and then replace sentence in the line
-  // with the word name of the sentence.
-  //
-  //  so
-  //
-  //    REPEAT 10 [SOMETHING TO DO]
-  //
-  //  becomes
-  //
-  //    REPEAT 10 &0
-  //
-  //  where
-  //
-  //    &0 is
-  //      string SOMETHING
-  //      string TO
-  //      string DO
-  
-  if (!start) {
-    start = buf;
-  }
-  while (1) {
-  
-    const char *end = strstr(start + 1, "]");
-    if (!end) {
-      _logo->outofcode();
-      return;
-    }
-  
-    snprintf(_sentencebuf, sizeof(_sentencebuf), "&%d", _sentencecount);
-    _sentencecount++;
-
-    LogoSimpleString str1(_sentencebuf);
-    short wlen = str1.length();
-    short word = _logo->addstring(&str1, 0, wlen);
-    if (word < 0) {
-      _logo->error(LG_OUT_OF_STRINGS);
-      return;
-    }
-    
-    // how much to go?
-    short endlen = strlen(end);
-    
-    // remember where we are before compiling.
-    short jump = _logo->_nextjcode;
-    
-    // add all the words etc. They are all placed as jumps.
-    LogoSimpleString str(start + 1, end - start - 1);
-    compilewords(&str, 0, str.length(), false);
-    
-    // and finish off the word
-    finishword(word, wlen, jump, 0);
-  
-    // replace sentence in the original string.
-    memmove((char *)start, _sentencebuf, wlen);
-    memmove((char *)(start + wlen), end + 1, endlen);
-    
-    if (endlen > 1) {
-      start = strstr(buf, "[");
-      if (!start) {
-        break;
-      }
-      end = strstr(start + 1, "]");
-      if (!end) {
-        _logo->outofcode();
-        return;
-      }
-    }
-    else {
-      break;
-   }
-  }
-}
-#endif // LOGO_SENTENCES
 
 void LogoCompiler::compile(LogoString *str) {
 
@@ -299,6 +219,7 @@ void LogoCompiler::compile(LogoString *str) {
 
     // skip comments.
     if ((*str)[linestart] == '#') {
+      DEBUG_OUT(" comment", 0);
       continue;
     }
     
@@ -312,24 +233,7 @@ void LogoCompiler::compile(LogoString *str) {
       continue;
     }
     
-#ifdef LOGO_SENTENCES
-    // build and replace sentences in the line.
-    if ((*str)[linestart] == '[') {
-      // replacing sentences COULD modify the line.
-      str->ncpy(_linebuf, linestart, linelen);
-//      cout << "compile line before " << _linebuf << endl;
-      dosentences(_linebuf, strlen(_linebuf), 0);
-//      cout << "compile line after " << _linebuf << endl;
-      short len = strlen(_linebuf);
-      LogoSimpleString str2(_linebuf, len);
-      compilewords(&str2, 0, len, true);
-    }
-    else {
-#endif
-      compilewords(str, linestart, linelen, true);
-#ifdef LOGO_SENTENCES
-    }
-#endif
+    compilewords(str, linestart, linelen, true);
   }
 
 }
@@ -346,18 +250,6 @@ void LogoCompiler::compilewords(LogoString *str, short start, short len, bool de
   short wordstart, wordlen;
   while (nextword >= 0) {
   
-#ifdef LOGO_SENTENCES
-    if ((*str)[nextword] == '[') {
-      str->ncpy(_linebuf, nextword, (start+len)-nextword);
-//      cout << "compilewords line before " << _linebuf << endl;
-      dosentences(_linebuf, strlen(_linebuf), 0);
-//      cout << "compilewords line after " << _linebuf << endl;
-      short len = strlen(_linebuf);
-      LogoSimpleString str2(_linebuf, len);
-      compilewords(&str2, 0, len, true);
-      return;
-    }
-#endif    
     nextword = scan(&wordstart, &wordlen, str, start+len, nextword, false);
     if (define) {
       if (!dodefine(str, wordstart, wordlen, nextword == -1)) {
@@ -395,11 +287,6 @@ bool LogoCompiler::dodefine(LogoString *str, short wordstart, short wordlen, boo
   if ((*str)[wordstart] == '[') {
     // all sentences should have been replaced!
     _logo->error(LG_WORD_NOT_FOUND);
-    return false;
-  }
-
-  if ((*str)[wordstart] == '(' || (*str)[wordstart] == ')') {
-    DEBUG_RETURN(" grouping %b", false);
     return false;
   }
 
@@ -487,18 +374,19 @@ bool LogoCompiler::dodefine(LogoString *str, short wordstart, short wordlen, boo
 
 }
 
-bool LogoCompiler::isident(char c) {
-  return isalnum(c) || c == ':' || c == '"';
-}
+bool LogoCompiler::switchtoken(char prevc, char c, bool newline) {
 
-bool LogoCompiler::istoken(char c, bool newline, bool wasident) {
-
-//  DEBUG_IN_ARGS(Logo, "istoken", "%c%b%b", c, newline, wasident);
+//  DEBUG_IN_ARGS(Logo, "switchtoken", "%c%b%b", c, newline, wasident);
   
   if (newline) {
-    return c == ';' || c == '\n';
+    return strchr(";\n", c);
   }
-  return c == ' ' || isident(c) != wasident;
+
+  if (isalnum(c)) {
+    return !strchr(":\"", prevc) && !isalnum(prevc);
+  }
+  
+  return !strchr("!><", prevc) || c != '=';
   
 }
 
@@ -517,40 +405,51 @@ short LogoCompiler::scan(short *strstart, short *strsize, LogoString *str, short
   }
 
   // skip ws
-  while (start < (start+len) && ((*str)[start] == ' ' || (*str)[start] == '\t')) {
+  while (start < (start+len) && isspace((*str)[start])) {
     start++;
   }
   
   short end = start;
   
-  // are we at an identifier?
-  bool wasident = isident((*str)[end]);
+  // save away the token we are at
+  char prevc = (*str)[end];
   
-  // find end
-  while (end < (start+len) && (*str)[end] && !istoken((*str)[end], newline, wasident)) {
+  // go 1 more.
+  end++;
+  
+  if (end >= (start+len)) {
+    *strstart = start;
+    *strsize = 0;
+    DEBUG_RETURN(" found end at start %i", -1);
+    return -1;
+  }
+  
+  // find a place where we switch to a new type of token.
+  while (end < (start+len) && (*str)[end] && !switchtoken(prevc, (*str)[end], newline)) {
     end++;
   }
   
   *strstart = start;
   
-  if (istoken((*str)[end], newline, wasident)) {
-    if (newline || isspace((*str)[end])) {
-      end++;
-      *strsize = end-start-1;
-    }
-    else {
-       *strsize = end-start;
-    }
+  if (newline || isspace((*str)[end])) {
+    DEBUG_OUT("newline or space", 0);
+    end++;
+    *strsize = end-start-1;
     if (end >= len) {
-      DEBUG_RETURN(" found end %i", -1);
-      return -1;
+      end = -1;
     }
-    DEBUG_RETURN(" %i", end);
+    DEBUG_RETURN(" newline or space %i%i", end, *strsize);
     return end;
   }
 
   *strsize = end-start;
-  DEBUG_RETURN(" %i", end);
+  
+  if (end >= len) {
+    DEBUG_RETURN(" found end %i", -1);
+    return -1;
+  }
+  
+  DEBUG_RETURN(" %i%i", end, *strsize);
   return end;
     
 }
@@ -737,6 +636,7 @@ int LogoCompiler::generatecode(fstream &file, const string &name, ostream &str) 
   Logo logo(&primitives, 0, Logo::core);
   LogoCompiler compiler(&logo);
   compiler.compile(file);
+//  compiler.dump(false);
   int err = logo.geterr();
   if (err) {
     return err;

@@ -190,6 +190,7 @@
 #define SOPTYPE_RETADDR       SOP_START + 2 // FIELD_OP = the return address. These are just on the stack
 #define SOPTYPE_MRETADDR      SOP_START + 3 // FIELD_OP = the offset to modify by
 #define SOPTYPE_SKIP          SOP_START + 4 // skip the next instruction if on the stack under a return
+#define SOPTYPE_GSTART        SOP_START + 5 // we are grouping on the stack.
 
 // only in static code
 #define SCOP_START            200
@@ -452,6 +453,8 @@ private:
   short dobuiltin();
   bool doarity();
   bool doinfix();
+  short startgroup();
+  short endgroup();
   bool call(short jump, tByte opand2);
   short instField(short pc, short field) const;
   void splitdouble(double n, short *op, short *opand);

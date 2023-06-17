@@ -15,16 +15,16 @@
 # turn an LED on or off
 BUILTIN(ON,OFF)
 
-TO FLASH
-  ON WAIT 500 OFF WAIT 1000
-END
+to FLASH
+  ON wait 500 OFF wait 1000
+end
 
-TO GO
-  FOREVER FLASH
-END
+to GO
+  forever FLASH
+end
 
-TO STOP
+to STOP
   OFF
-END
+end
 
 GO

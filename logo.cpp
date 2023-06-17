@@ -714,11 +714,19 @@ short Logo::step() {
   case OPTYPE_HALT:
     return LG_STOP;
     
-  case OPTYPE_RETURN:
-    return doreturn();
-    
   case OPTYPE_NOOP:
     break;
+    
+  case OPTYPE_GSTART:
+    err = startgroup();
+    break;
+    
+  case OPTYPE_GEND:
+    err = endgroup();
+    break;
+    
+  case OPTYPE_RETURN:
+    return doreturn();
     
   case OPTYPE_BUILTIN:
     err = dobuiltin();
@@ -768,19 +776,15 @@ short Logo::step() {
     break;
     
   case OPTYPE_JUMP:
-  
-    if (!call(instField(_pc, FIELD_OP), instField(_pc, FIELD_OPAND))) {
-      err = LG_STACK_OVERFLOW;
+    {
+      if (!call(instField(_pc, FIELD_OP), instField(_pc, FIELD_OPAND))) {
+        err = LG_STACK_OVERFLOW;
+      }
     }
     break;
     
   case OPTYPE_ERR:
     err = instField(_pc, FIELD_OP);
-    break;
-    
-  case OPTYPE_GSTART:
-  case OPTYPE_GEND:
-    // not handled yet
     break;
     
   default:
@@ -841,9 +845,13 @@ bool Logo::doarity() {
   DEBUG_IN(Logo, "doarity");
 
   short ar = _tos-1;
-  while (ar >= 0 && _stack[ar][FIELD_OPTYPE] != SOPTYPE_RETADDR && _stack[ar][FIELD_OPTYPE] != SOPTYPE_ARITY) {
+  while (ar >= 0 && 
+    _stack[ar][FIELD_OPTYPE] != SOPTYPE_RETADDR && 
+    _stack[ar][FIELD_OPTYPE] != SOPTYPE_ARITY && 
+    _stack[ar][FIELD_OPTYPE] != SOPTYPE_GSTART) {
     ar--;
   }
+  
   if (ar < 0) {
     DEBUG_RETURN(" no arity", 0);
     return false;
@@ -851,6 +859,11 @@ bool Logo::doarity() {
   
   if (_stack[ar][FIELD_OPTYPE] == SOPTYPE_RETADDR) {
     DEBUG_RETURN(" found return address before arity", 0);
+    return false;
+  }
+  
+  if (_stack[ar][FIELD_OPTYPE] == SOPTYPE_GSTART) {
+    DEBUG_RETURN(" found gstart", 0);
     return false;
   }
   
@@ -943,6 +956,38 @@ void LogoFunctionPrimitives::name(short index, char *s, int len) {
     strncpy(s, _builtins[index]._name, len);
     s[len] = 0;
   }
+}
+
+short Logo::startgroup() {
+
+  DEBUG_IN(Logo, "startgroup");
+
+  if (!push(SOPTYPE_GSTART)) {
+    return LG_STACK_OVERFLOW;
+  }
+  
+  return 0;
+}
+
+short Logo::endgroup() {
+
+  DEBUG_IN(Logo, "endgroup");
+
+  // go back and find the last gstart
+  short start = _tos-1;
+  while (start >= 0 && _stack[start][FIELD_OPTYPE] != SOPTYPE_GSTART) {
+    start--;
+  }
+  
+  if (_stack[start][FIELD_OPTYPE] != SOPTYPE_GSTART) {
+    return LG_STACK_OVERFLOW;
+  }
+  
+  // shuffle the gstart out. The dtack is correct :-)
+  memmove(_stack + start, _stack + start + 1, sizeof(tLogoInstruction));
+  _tos--;
+
+  return 0;
 }
 
 short Logo::dobuiltin() {
@@ -1752,6 +1797,9 @@ void Logo::dump(short indent, short type, short op, short opand) const {
       break;
     case SOPTYPE_SKIP:
       cout << "(stack) skip ";
+      break;
+    case SOPTYPE_GSTART:
+      cout << "(stack) gstart ";
       break;
      default:
       cout << "unknown optype " << type;

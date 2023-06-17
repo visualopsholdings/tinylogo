@@ -102,8 +102,7 @@ end
 
 # scale a color to be between 1 and 100
 to SCLR :C
-  # ((100 - :C) / 100) * 255
-  255 * 1 / 100 / 100 - :C
+  ((100 - :C) / 100) * 255
 end
 
 # arguments are reversed!

@@ -276,33 +276,13 @@ right to left, not left to right.
 So the expression:
 
 ```
-((3 - 1) * 4) / 3 = 2.666...
+3 / 4 + 4
 ```
 
-Would need to be rewritten as:
+To yield 4.75 (it will give you 0.375), Just write:
 
 ```
-1 / 3 / 4 * 3 - 1
-```
-
-To yield the same result.
-The order in this case is:
-
-  - 3 - 1 = 2
-  - 4 * 2 = 8
-  - 3 / 8 = 0.375
-  - 1 / 0.375 = 2.666...
-  
-It's also possible that you could rewrite it as:
-
-```
-to SUB
-  3 -1
-end
-to MUL
-  SUB * 4
-end
-MUL / 3
+(3 / 4) + 4
 ```
 
 ## Logic
@@ -612,6 +592,11 @@ your sketch.
 
 ### 15 Jun 2023
 - Remove case sensitivity and whitespace sensitivity. You can write 3+3/4 now.
+
+### 17 Jun 2023
+- Get arithmetic grouping working. So you can write (3+3)/4 now.
+
+
 
 
 
