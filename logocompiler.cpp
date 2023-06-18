@@ -347,23 +347,22 @@ bool LogoCompiler::dodefine(LogoString *str, short wordstart, short wordlen, boo
   
   if (_inwordargs) {
     if ((*str)[wordstart] == ':') {
-      short var = _logo->findvariable(str, wordstart+1, wordlen-1);
-      if (var < 0) {
-        var = _logo->newintvar(_logo->addstring(str, wordstart+1, wordlen-1), wordlen-1, 0);
-      }
-      else {
-        _logo->setintvar(var, 0);
-      }
-      _logo->addop(&_logo->_nextjcode, OPTYPE_POPREF, var);
-      _wordarity++;
-      if (eol) {
-        _inwordargs = false;
-      }
-      DEBUG_RETURN(" %b", true);
-      return true;
+      wordstart++;
+      wordlen--;
     }
-    _logo->error(LG_EXTRA_IN_DEFINE);
-    DEBUG_RETURN(" too many in define %b", true);
+    short var = _logo->findvariable(str, wordstart, wordlen);
+    if (var < 0) {
+      var = _logo->newintvar(_logo->addstring(str, wordstart, wordlen), wordlen, 0);
+    }
+    else {
+      _logo->setintvar(var, 0);
+    }
+    _logo->addop(&_logo->_nextjcode, OPTYPE_POPREF, var);
+    _wordarity++;
+    if (eol) {
+      _inwordargs = false;
+    }
+    DEBUG_RETURN(" %b", true);
     return true;
   }
   
@@ -382,10 +381,13 @@ bool LogoCompiler::switchtoken(char prevc, char c, bool newline) {
     return strchr(";\n", c);
   }
 
-  if (isalnum(c)) {
-    return !strchr(":\"", prevc) && !isalnum(prevc);
+  // identifiers can have . in them like MY.VAR
+  if (isalnum(c) || c == '.') {
+    // above is transitive and also :A and "A 
+    return !(isalnum(prevc) || prevc == '.') && !strchr(":\"", prevc);
   }
   
+  // != >= <=
   return !strchr("!><", prevc) || c != '=';
   
 }

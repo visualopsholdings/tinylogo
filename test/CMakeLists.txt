@@ -37,8 +37,12 @@ add_executable(LGTestErr lgtesterr.cpp)
 add_executable(LGTestWords lgtestwords.cpp)
   target_link_libraries(LGTestWords Logo ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
+add_executable(LGTestExamples lgtestexamples.cpp)
+  target_link_libraries(LGTestExamples Logo ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+
 add_test(LGTestCompiler LGTestCompiler)
 add_test(LGTestString LGTestString)
 add_test(LGTest LGTest)
 add_test(LGTestErr LGTestErr)
 add_test(LGTestWords LGTestWords)
+add_test(LGTestExamples LGTestExamples)

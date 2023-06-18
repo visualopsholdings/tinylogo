@@ -148,6 +148,46 @@ BOOST_AUTO_TEST_CASE( thing )
   
 }
 
+BOOST_AUTO_TEST_CASE( word )
+{
+  cout << "=== word ===" << endl;
+  
+  Logo logo(0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("word \"START \"END");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  DEBUG_STEP_DUMP(10, false);
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  LogoStringResult str;
+  logo.popstring(&str);  
+  BOOST_CHECK_EQUAL(str.ncmp("STARTEND"), 0);
+  BOOST_CHECK(logo.stackempty());
+  
+}
+
+BOOST_AUTO_TEST_CASE( first )
+{
+  cout << "=== first ===" << endl;
+  
+  Logo logo(0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("first \"START");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  DEBUG_STEP_DUMP(10, false);
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  LogoStringResult str;
+  logo.popstring(&str);  
+  BOOST_CHECK_EQUAL(str.ncmp("S"), 0);
+  BOOST_CHECK(logo.stackempty());
+  
+}
+
 BOOST_AUTO_TEST_CASE( forever )
 {
   cout << "=== forever ===" << endl;

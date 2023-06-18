@@ -91,7 +91,7 @@
 #ifdef ARDUINO
 // when we are allocating strings on the ARDUINO, this will be too small but
 // for now they area all static.
-#define STRING_POOL_SIZE    2
+#define STRING_POOL_SIZE    64
 #else
 #define STRING_POOL_SIZE    512       // these number of bytes
 #endif
@@ -166,9 +166,8 @@
 #define LG_NOT_INT            10
 #define LG_NOT_STRING         11
 #define LG_NOT_CALLABLE       12
-#define LG_EXTRA_IN_DEFINE    13
-#define LG_FIXED_NO_NEWLINE   14
-#define LG_ARITY_NOT_IMPL     15
+#define LG_FIXED_NO_NEWLINE   13
+#define LG_ARITY_NOT_IMPL     14
 
 #define OPTYPE_NOOP           0 //
 #define OPTYPE_RETURN         1 //
@@ -351,6 +350,7 @@ public:
   void pushdouble(double n);
   void popstring(LogoStringResult *result);  
   void pushstring(tStrPool n, tStrPool len);  
+  void pushstring(LogoString *str);  
   bool pop();
   short findvariable(LogoString *str, short start, short slen) const;
   short findvariable(LogoStringResult *str) const;

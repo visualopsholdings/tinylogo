@@ -158,18 +158,3 @@ BOOST_AUTO_TEST_CASE( notString )
   BOOST_CHECK_EQUAL(logo.run(), LG_NOT_STRING);
 
 }
-
-BOOST_AUTO_TEST_CASE( extraAfterWord )
-{
-  cout << "=== extraAfterWord ===" << endl;
-  
-  Logo logo;
-  LogoCompiler compiler(&logo);
-
-  compiler.compile("TO TEST1 AND SOME MORE; END;");
-  BOOST_CHECK_EQUAL(logo.geterr(), LG_EXTRA_IN_DEFINE);
-  DEBUG_DUMP(false);
-  
-}
-
-

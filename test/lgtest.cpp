@@ -722,9 +722,27 @@ BOOST_AUTO_TEST_CASE( arguments )
   Logo logo(0, 0, Logo::core);
   LogoCompiler compiler(&logo);
 
-//   compiler.compile("TO MULT; :A * :B; END;");
-//   compiler.compile("MAKE \"A 10 MAKE \"B 20 MULT");
   compiler.compile("TO MULT :A :B; :A * :B; END;");
+  compiler.compile("MULT 10 20");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  gCmds.clear();
+  DEBUG_STEP_DUMP(20, false);
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popint(), 200);
+  DEBUG_DUMP(false);
+  
+}
+
+BOOST_AUTO_TEST_CASE( argumentsNoColons )
+{
+  cout << "=== argumentsNoColons ===" << endl;
+  
+  Logo logo(0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("TO MULT A B; :A * :B; END;");
   compiler.compile("MULT 10 20");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);

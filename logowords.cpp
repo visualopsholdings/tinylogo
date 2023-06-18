@@ -401,6 +401,46 @@ void LogoWords::aout(Logo &logo) {
   
 }
 
+short LogoWords::outputArity = 0;
+
+void LogoWords::output(Logo &logo) {
+
+  // just leaves whatever is on the stack on the stack.
+  
+}
+
+short LogoWords::wordArity = 2;
+
+void LogoWords::word(Logo &logo) {
+
+  LogoStringResult s1;
+  logo.popstring(&s1);
+  LogoStringResult s2;
+  logo.popstring(&s2);
+  
+  char s[32];
+  s2.ncpy(s, sizeof(s));
+  s1.ncpy(s + s2.length(), sizeof(s) - s2.length());
+  LogoSimpleString str(s);
+  logo.pushstring(&str);
+  
+}
+
+short LogoWords::firstArity = 1;
+
+void LogoWords::first(Logo &logo) {
+
+  LogoStringResult str;
+  logo.popstring(&str);
+  
+  char s[2];
+  str.ncpy(s, 1);
+    
+  LogoSimpleString str2(s);
+  logo.pushstring(&str2);
+  
+}
+
 
 
 

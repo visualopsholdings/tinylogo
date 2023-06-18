@@ -261,6 +261,9 @@ BOOST_AUTO_TEST_CASE( switchtokenWord )
   BOOST_CHECK(!compiler.switchtoken('A', 'A', false));
   BOOST_CHECK(!compiler.switchtoken('1', '1', false));
   BOOST_CHECK(!compiler.switchtoken('a', 'a', false));
+
+  BOOST_CHECK(!compiler.switchtoken('A', '.', false));
+  BOOST_CHECK(!compiler.switchtoken('.', 'A', false));
   
   alnumsamecheck(compiler, 'A', 'a');
   alnumsamecheck(compiler, 'A', '1');

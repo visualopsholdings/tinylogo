@@ -180,7 +180,7 @@ Builtin words are not case sensitive. So you could write make, Or MAKE or even M
 
 Your own words Are case sensitive.
 
-## make 
+#### make 
 
 Make a variable. The syntax is:
 
@@ -189,7 +189,7 @@ make "VARNAME VALUE
 VALUE := [number | string] 
 ```
 
-## thing 
+#### thing 
 
 Push the value of a variable onto the stack.
 
@@ -199,7 +199,7 @@ thing "VARNAME
 
 This is the same as :VARNAME.
 
-## forever
+#### forever
 
 Repeat the next word forever. The syntax is:
 
@@ -207,7 +207,7 @@ Repeat the next word forever. The syntax is:
 forever wordname
 ```
 
-## repeat
+#### repeat
 
 Repeat the next word a number of times. The syntax is:
 
@@ -219,7 +219,7 @@ literal := [number | string | var]
 var := :varname
 ```
 
-## ifelse
+#### ifelse
 
 Test an expression, it true put the first word on the stack else the second. The syntax is:
 
@@ -232,7 +232,7 @@ then := [wordname | literal]
 else := [wordname | literal]
 ```
 
-## if
+#### if
 
 Test an expression, it true execute the next word. The syntax is:
 
@@ -244,7 +244,7 @@ var := :varname
 then := [wordname | literal]
 ```
 
-## =
+#### =
 
 Push a 1 on the stack if the operands are the same. The syntax is:
 
@@ -254,11 +254,11 @@ word := [wordname | literal]
 literal := [number | string | var] 
 ```
 
-## !=
+#### !=
 
 Opposite of =
 
-## WAIT (not working yet so not in current build)
+#### WAIT (not working yet so not in current build)
 
 Wait for milliseconds before executing the next word. The syntax is:
 
@@ -268,7 +268,7 @@ num := [number | var]
 var := :varname
 ```
 
-## Arithmetic
+#### Arithmetic
 
 +, -, * and / all work but the order of evaluation is not what you would expect. It's
 right to left, not left to right.
@@ -285,11 +285,11 @@ To yield 4.75 (it will give you 0.375), Just write:
 (3 / 4) + 4
 ```
 
-## Logic
+#### Logic
 
 >, >=, <, <=  and ! all work like you wold think.
 
-## print
+#### print
 
 Print the literal out to the serial port
 
@@ -299,7 +299,7 @@ word := [wordname | number | string | var]
 var := :varname
 ```
 
-## dread
+#### dread
 
 Read from a digital pin. Takes the pin number off the stack and pushes the value at that
 pin onto the stack.
@@ -310,7 +310,7 @@ pin := [wordname | number | var]
 var := :varname
 ```
 
-## dhigh
+#### dhigh
 
 Output high to a digital pin. Takes the pin number off the stack.
 
@@ -320,7 +320,7 @@ pin := [wordname | number | var]
 var := :varname
 ```
 
-## dlow
+#### dlow
 
 Output low to a digital pin. Takes the pin number off the stack.
 
@@ -330,7 +330,7 @@ pin := [wordname | number | var]
 var := :varname
 ```
 
-## pinout
+#### pinout
 
 Set's a PIN up to be an output. Takes the pin number off the stack.
 
@@ -340,7 +340,7 @@ pin := [wordname | number | var]
 var := :varname
 ```
 
-## pinin
+#### pinin
 
 Set's a PIN up to be an input. Takes the pin number off the stack.
 
@@ -350,7 +350,7 @@ pin := [wordname | number | var]
 var := :varname
 ```
 
-## aout
+#### aout
 
 Output's a value to an analog output. Takes the pin number and value off the stack.
 
@@ -360,6 +360,13 @@ pin := [wordname | number | var]
 value := [wordname | number | var]
 var := :varname
 ```
+### UCBLogo differences
+
+- On page 4, we don't implement the setter notation, SETFOO is just the name of a defined
+word and the variable AllowGetSet is as if it's TRUE.
+- Most of section 1.4 might be different, especially comments which can just be a # and then
+anything else.
+- Only a few of the words are defined (see above) there are no lists, just strings and numbers.
 
 ## Static code
 
@@ -549,9 +556,9 @@ https://forum.arduino.cc/t/how-to-properly-use-wire-onreceive/891195/12
 
 ## Current development focus
 
-### Get a serial connection working from a PI to the Arduino
+### Following along with the UCBLogo manual. So far everything up to page 4 works. 
 
-### Do the I2C stuff for PI and include test scripts etc to make that easy to do.
+### Get a serial connection working from a PI to the Arduino
 
 ## Change Log
 
@@ -595,6 +602,10 @@ your sketch.
 
 ### 17 Jun 2023
 - Get arithmetic grouping working. So you can write (3+3)/4 now.
+
+### 18 Jun 2023
+- Arguments don't need : in TO X AA now. More work following along with the UCB manual.
+
 
 
 
