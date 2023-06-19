@@ -47,30 +47,36 @@ char cmdbuf[64];
 //#LOGO FILE=../logo/ledflash.lgo NAME=led
 static const char strings_led[] PROGMEM = {
 // words
+	"ID\n"
 	"FLASH\n"
 	"GO\n"
 	"STOP\n"
 // variables
 // strings
+	"ledflash\n"
 };
 static const short code_led[][INST_LENGTH] PROGMEM = {
-	{ OPTYPE_JUMP, 9, 0 },		// 0
+	{ OPTYPE_JUMP, 12, 0 },		// 0
 	{ OPTYPE_HALT, 0, 0 },		// 1
-	{ OPTYPE_BUILTIN, 0, 0 },		// 2
-	{ OPTYPE_BUILTIN, 6, 1 },		// 3
-	{ OPTYPE_INT, 500, 0 },		// 4
-	{ OPTYPE_BUILTIN, 1, 0 },		// 5
+	{ OPTYPE_BUILTIN, 18, 1 },		// 2
+	{ OPTYPE_STRING, 4, 8 },		// 3
+	{ OPTYPE_RETURN, 0, 0 },		// 4
+	{ OPTYPE_BUILTIN, 0, 0 },		// 5
 	{ OPTYPE_BUILTIN, 6, 1 },		// 6
-	{ OPTYPE_INT, 1000, 0 },		// 7
-	{ OPTYPE_RETURN, 0, 0 },		// 8
-	{ OPTYPE_BUILTIN, 2, 1 },		// 9
-	{ OPTYPE_JUMP, 2, 0 },		// 10
+	{ OPTYPE_INT, 500, 0 },		// 7
+	{ OPTYPE_BUILTIN, 1, 0 },		// 8
+	{ OPTYPE_BUILTIN, 6, 1 },		// 9
+	{ OPTYPE_INT, 1000, 0 },		// 10
 	{ OPTYPE_RETURN, 0, 0 },		// 11
-	{ OPTYPE_BUILTIN, 1, 0 },		// 12
-	{ OPTYPE_RETURN, 0, 0 },		// 13
+	{ OPTYPE_BUILTIN, 2, 1 },		// 12
+	{ OPTYPE_JUMP, 5, 0 },		// 13
+	{ OPTYPE_RETURN, 0, 0 },		// 14
+	{ OPTYPE_BUILTIN, 1, 0 },		// 15
+	{ OPTYPE_RETURN, 0, 0 },		// 16
 	{ SCOPTYPE_WORD, 2, 0 }, 
-	{ SCOPTYPE_WORD, 9, 0 }, 
+	{ SCOPTYPE_WORD, 5, 0 }, 
 	{ SCOPTYPE_WORD, 12, 0 }, 
+	{ SCOPTYPE_WORD, 15, 0 }, 
 	{ SCOPTYPE_END, 0, 0 } 
 };
 //#LOGO ENDFILE

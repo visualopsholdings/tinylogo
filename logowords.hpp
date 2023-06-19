@@ -106,7 +106,7 @@ public:
   static void output(Logo &logo);
   static short outputArity;
 
-  static void word(Logo &logo);
+  static void wordWord(Logo &logo);
   static short wordArity;
 
   static void first(Logo &logo);

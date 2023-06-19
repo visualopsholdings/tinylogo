@@ -47,7 +47,7 @@ LogoBuiltinWord Logo::core[] = {
   { "AOUT", LogoWords::aout, LogoWords::aoutArity },
   { "THING", LogoWords::thing, LogoWords::thingArity },
   { "OUTPUT", LogoWords::output, LogoWords::outputArity },
-  { "WORD", LogoWords::word, LogoWords::wordArity },
+  { "WORD", LogoWords::wordWord, LogoWords::wordArity },
   { "FIRST", LogoWords::first, LogoWords::firstArity },
 };
 

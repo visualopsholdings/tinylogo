@@ -14,6 +14,10 @@
 #   https://github.com/visualopsholdings/tinylogo  
 #
 
+TO ID
+  PRINT "trafficlights
+END
+
 # change your pins here
 to B1PIN
   2

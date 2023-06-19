@@ -411,7 +411,7 @@ void LogoWords::output(Logo &logo) {
 
 short LogoWords::wordArity = 2;
 
-void LogoWords::word(Logo &logo) {
+void LogoWords::wordWord(Logo &logo) {
 
   LogoStringResult s1;
   logo.popstring(&s1);
