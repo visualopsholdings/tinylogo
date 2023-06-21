@@ -1612,6 +1612,12 @@ void Logo::optypename(short optype, ostream &str) const {
   case OPTYPE_POPREF:
     str << "OPTYPE_POPREF";
     break;
+  case OPTYPE_GSTART:
+    str << "OPTYPE_GSTART";
+    break;
+  case OPTYPE_GEND:
+    str << "OPTYPE_GEND";
+    break;
   case SOPTYPE_ARITY:
     str << "SOPTYPE_ARITY";
     break;

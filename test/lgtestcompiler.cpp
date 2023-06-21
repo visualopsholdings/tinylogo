@@ -151,37 +151,6 @@ BOOST_AUTO_TEST_CASE( scanWordNonWS2 )
 
 }
 
-#ifdef LOGO_SENTENCES
-BOOST_AUTO_TEST_CASE( dosentences )
-{
-  cout << "=== dosentences ===" << endl;
-  
-  Logo logo;
-  LogoCompiler compiler(&logo);
-
-  char str[50];
-  strcpy(str, "aaaaa;[ON] [WAIT 10] [OFF] [WAIT 20];bbbb");
-  const char *s = strstr(str, "[");
-  compiler.dosentences(str, strlen(str), s);
-  BOOST_CHECK_EQUAL(str, "aaaaa;&0 &1 &2 &3;bbbb");
-  
-}
-
-BOOST_AUTO_TEST_CASE( dosentencesStart )
-{
-  cout << "=== dosentencesStart ===" << endl;
-  
-  Logo logo;
-  LogoCompiler compiler(&logo);
-
-  char str[50];
-  strcpy(str, "[ON] [WAIT 10] [OFF] [WAIT 20];bbbb");
-  compiler.dosentences(str, strlen(str), 0);
-  BOOST_CHECK_EQUAL(str, "&0 &1 &2 &3;bbbb");
-  
-}
-#endif
-
 BOOST_AUTO_TEST_CASE( staticPrimitivesfind )
 {
   cout << "=== staticPrimitivesfind ===" << endl;
@@ -292,4 +261,27 @@ BOOST_AUTO_TEST_CASE( switchtokenWord )
   BOOST_CHECK(!compiler.switchtoken('>', '=', false));
   BOOST_CHECK(!compiler.switchtoken('<', '=', false));
   
+}
+
+BOOST_AUTO_TEST_CASE( blankLines )
+{
+  cout << "=== blankLines ===" << endl;
+  
+  Logo logo(0, 0, Logo::core);
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("TO MULT A B");
+  compiler.compile(" ");
+  compiler.compile("  :A * :B");
+  compiler.compile("\t\n");
+  compiler.compile("END");
+  compiler.compile("MULT 10 20");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+//   DEBUG_STEP_DUMP(20, false);
+//   BOOST_CHECK_EQUAL(logo.run(), 0);
+//   BOOST_CHECK_EQUAL(logo.popint(), 200);
+//   DEBUG_DUMP(false);
+
 }

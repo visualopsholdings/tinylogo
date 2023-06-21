@@ -1,0 +1,30 @@
+# goals. Can't do this :-)
+
+; Periskopov RACEK / Ferdinand and LOGO
+; Example: Hundred
+;
+; Find all expressions with value 100 from the sequence of digits  
+;    9 8 7 6 5 4 3 2 1.
+; Between two digits you can insert operation + or -, or join them.
+;
+; (c)1987,1991,1996 V. Batagelj
+
+TO Eq100 :s
+  MAKE "k :k + 1
+  IF 100 = RUN :s [(PR FORM :k 6 0 "  :s)] 
+END
+
+TO Expression :n :s
+  IF :n = 0 [Eq100 :s Eq100 FPUT (- FIRST :s ) BF :s STOP]
+  Expression :n - 1 LPUT :n (SE :s [ + ])
+  Expression :n - 1 LPUT :n (SE :s [ - ])
+  Expression :n - 1 LPUT 10*(LAST :s) + :n BL :s
+END
+
+TO Hundred
+  TS CT MAKE "k 0
+  PR [100 = ]  
+  Expression 8 [ 9 ] 
+END
+
+Hundred

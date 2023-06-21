@@ -407,8 +407,15 @@ short LogoCompiler::scan(short *strstart, short *strsize, LogoString *str, short
   }
 
   // skip ws
-  while (start < (start+len) && isspace((*str)[start])) {
+  while (start < len && isspace((*str)[start])) {
     start++;
+  }
+  
+  if (start >= len) {
+    *strstart = start;
+    *strsize = 0;
+    DEBUG_RETURN(" all whitespace %i", -1);
+    return -1;
   }
   
   short end = start;

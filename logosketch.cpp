@@ -13,7 +13,7 @@
 
 #include "logosketch.hpp"
 
-#include <HardwareSerial.h>
+#include <Arduino.h>
 
 LogoSketch::LogoSketch(char strings[] PROGMEM, const PROGMEM short *code, LogoBuiltinWord builtins[], int size): 
   _strings(strings), _code(code), _primitives(builtins, size), 
