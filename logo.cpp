@@ -580,9 +580,48 @@ void Logo::halt() {
   }
 }
 
+bool Logo::isnum(LogoString *stri, short wordstart, short wordlen) {
+
+  if (wordlen == 0) {
+    return false;
+  }
+  for (short i=0; i<wordlen; i++) {
+    if (!isdigit((*stri)[i + wordstart])) {
+      return false;
+    }
+  }
+  
+  return true;
+  
+}
+
+
 int Logo::callword(const char *word) {
 
+  DEBUG_IN_ARGS(Logo, "callword", "%s", word);
+  
   LogoSimpleString s(word);
+  
+  // allow vars to be set.
+  int equals = s.find('=', 0, s.length());
+  if (equals > 0) {
+    short start = equals+1;
+    short len = s.length()-equals-1;
+    if (isnum(&s, start, len)) {
+      short var = findvariable(&s, 0, equals);
+      short val = s.toi(start, len);
+      if (var < 0) {
+        newintvar(addstring(&s, 0, equals), equals, val);
+      }
+      else {
+        setintvar(var, val);
+      }
+      return 0;
+    }
+    else {
+      return LG_NOT_INT;
+    }
+  }
   
   // true for a builtin.
   short index = -1, category = 0;

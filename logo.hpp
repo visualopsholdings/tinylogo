@@ -358,6 +358,7 @@ public:
   void setintvar(short var, short n);
   bool varisint(short var);
   short varintvalue(short var);
+  bool isnum(LogoString *str, short wordstart, short wordlen);
   
   // logo words can be self modifying code but be careful!
   

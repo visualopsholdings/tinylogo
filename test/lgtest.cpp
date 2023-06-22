@@ -824,7 +824,7 @@ BOOST_AUTO_TEST_CASE( getstring )
   
   Logo logo;
 
-   const char *s1 = "XXX";
+  const char *s1 = "XXX";
   LogoSimpleString ss1(s1);
   short len1 = ss1.length();
   short str1 = logo.addstring(&ss1, 0, len1);
@@ -885,31 +885,6 @@ static const char static_program[] PROGMEM =
   "TO TEST2; OFF WAIT 30 ON WAIT 40; END;"
   "TEST1;"
   ;
-static const short code_staticCode[][INST_LENGTH] PROGMEM = {
-	{ OPTYPE_JUMP, 2, 0 },		// 0
-	{ OPTYPE_HALT, 0, 0 },		// 1
-	{ OPTYPE_BUILTIN, 0, 0 },		// 2
-	{ OPTYPE_BUILTIN, 2, 0 },		// 3
-	{ OPTYPE_INT, 10, 0 },		// 4
-	{ OPTYPE_BUILTIN, 1, 0 },		// 5
-	{ OPTYPE_BUILTIN, 2, 0 },		// 6
-	{ OPTYPE_INT, 20, 0 },		// 7
-	{ OPTYPE_RETURN, 0, 0 },		// 8
-	{ OPTYPE_BUILTIN, 1, 0 },		// 9
-	{ OPTYPE_BUILTIN, 2, 0 },		// 10
-	{ OPTYPE_INT, 30, 0 },		// 11
-	{ OPTYPE_BUILTIN, 0, 0 },		// 12
-	{ OPTYPE_BUILTIN, 2, 0 },		// 13
-	{ OPTYPE_INT, 40, 0 },		// 14
-	{ OPTYPE_RETURN, 0, 0 },		// 15
-	{ SCOPTYPE_WORD, 2, 0 }, 
-	{ SCOPTYPE_WORD, 9, 0 }, 
-	{ SCOPTYPE_END, 0, 0 } 
-};
-static const char strings_staticCode[] PROGMEM = {
-	"TEST1\n"
-	"TEST2\n"
-};
 
 BOOST_AUTO_TEST_CASE( staticProgUse )
 {
@@ -936,6 +911,35 @@ BOOST_AUTO_TEST_CASE( staticProgUse )
   
 }
 
+static const char strings_staticCode[] PROGMEM = {
+// words
+	"TEST1\n"
+	"TEST2\n"
+// variables
+// strings
+};
+static const short code_staticCode[][INST_LENGTH] PROGMEM = {
+	{ OPTYPE_JUMP, 2, 0 },		// 0
+	{ OPTYPE_HALT, 0, 0 },		// 1
+	{ OPTYPE_BUILTIN, 0, 0 },		// 2
+	{ OPTYPE_BUILTIN, 2, 0 },		// 3
+	{ OPTYPE_INT, 10, 0 },		// 4
+	{ OPTYPE_BUILTIN, 1, 0 },		// 5
+	{ OPTYPE_BUILTIN, 2, 0 },		// 6
+	{ OPTYPE_INT, 20, 0 },		// 7
+	{ OPTYPE_RETURN, 0, 0 },		// 8
+	{ OPTYPE_BUILTIN, 1, 0 },		// 9
+	{ OPTYPE_BUILTIN, 2, 0 },		// 10
+	{ OPTYPE_INT, 30, 0 },		// 11
+	{ OPTYPE_BUILTIN, 0, 0 },		// 12
+	{ OPTYPE_BUILTIN, 2, 0 },		// 13
+	{ OPTYPE_INT, 40, 0 },		// 14
+	{ OPTYPE_RETURN, 0, 0 },		// 15
+	{ SCOPTYPE_WORD, 2, 0 }, 
+	{ SCOPTYPE_WORD, 9, 0 }, 
+	{ SCOPTYPE_END, 0, 0 } 
+};
+
 BOOST_AUTO_TEST_CASE( staticCodeUse )
 {
   cout << "=== staticCodeUse ===" << endl;
@@ -957,5 +961,77 @@ BOOST_AUTO_TEST_CASE( staticCodeUse )
   BOOST_CHECK_EQUAL(gCmds[1], "WAIT 10");
   BOOST_CHECK_EQUAL(gCmds[2], "LED OFF");
   BOOST_CHECK_EQUAL(gCmds[3], "WAIT 20");
+  
+}
+
+BOOST_AUTO_TEST_CASE( callword )
+{
+  cout << "=== callword ===" << endl;
+  
+  LogoBuiltinWord builtins[] = {
+    { "ON", &ledOn },
+    { "OFF", &ledOff },
+    { "WAIT", &wait, 1 }
+  };
+  ArduinoFlashCode code((const PROGMEM short *)code_staticCode);
+  ArduinoFlashString strings(strings_staticCode);
+  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
+  Logo logo(&primitives, 0, 0, &strings, &code);
+
+  gCmds.clear();
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(gCmds.size(), 4);
+  BOOST_CHECK_EQUAL(gCmds[0], "LED ON");
+  BOOST_CHECK_EQUAL(gCmds[1], "WAIT 10");
+  BOOST_CHECK_EQUAL(gCmds[2], "LED OFF");
+  BOOST_CHECK_EQUAL(gCmds[3], "WAIT 20");
+  
+  gCmds.clear();
+  logo.resetcode();
+  logo.callword("TEST2");
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(gCmds.size(), 4);
+  BOOST_CHECK_EQUAL(gCmds[0], "LED OFF");
+  BOOST_CHECK_EQUAL(gCmds[1], "WAIT 30");
+  BOOST_CHECK_EQUAL(gCmds[2], "LED ON");
+  BOOST_CHECK_EQUAL(gCmds[3], "WAIT 40");
+  
+}
+
+static const char strings_setvar[] PROGMEM = {
+// words
+	"TEST1\n"
+// variables
+// strings
+};
+static const short code_setvar[][INST_LENGTH] PROGMEM = {
+	{ OPTYPE_JUMP, 2, 0 },		// 0
+	{ OPTYPE_HALT, 0, 0 },		// 1
+	{ OPTYPE_REF, 1, 3 },		// 2
+	{ OPTYPE_RETURN, 0, 0 },		// 3
+	{ SCOPTYPE_WORD, 2, 0 }, 
+	{ SCOPTYPE_END, 0, 0 } 
+};
+
+BOOST_AUTO_TEST_CASE( setvar )
+{
+  cout << "=== setvar ===" << endl;
+  
+  ArduinoFlashCode code((const PROGMEM short *)code_setvar);
+  ArduinoFlashString strings(strings_setvar);
+  Logo logo(0, 0, Logo::core, &strings, &code);
+  LogoCompiler compiler(&logo);
+
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popint(), 0);
+  
+  logo.resetcode();
+  logo.callword("VAR=2");
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+
+  logo.resetcode();
+  logo.callword("TEST1");
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popint(), 2);
   
 }

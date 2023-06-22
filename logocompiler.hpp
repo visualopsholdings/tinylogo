@@ -122,7 +122,6 @@ private:
   // parser
   bool dodefine(LogoString *str, short wordstart, short wordlen, bool eol);
   void compilewords(LogoString *str, short start, short len, bool define);
-  bool isnum(LogoString *str, short wordstart, short wordlen);
   void compileword(tJump *next, LogoString *str, short wordstart, short wordlen, short op);
   void finishword(short word, short wordlen, short jump, short arity);
   short findword(LogoString *str, short wordstart, short wordlen) const;

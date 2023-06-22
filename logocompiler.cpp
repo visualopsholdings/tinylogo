@@ -121,7 +121,7 @@ void LogoCompiler::compileword(tJump *next, LogoString *stri, short wordstart, s
     return;
   }
 
-  if (isnum(stri, wordstart, wordlen)) {
+  if (_logo->isnum(stri, wordstart, wordlen)) {
     _logo->addop(next, OPTYPE_INT, stri->toi(wordstart, wordlen));
     return;
   }
@@ -141,21 +141,6 @@ void LogoCompiler::compileword(tJump *next, LogoString *stri, short wordstart, s
   _logo->addop(next, OPTYPE_STRING, op, wordlen);
   
 
-}
-
-bool LogoCompiler::isnum(LogoString *stri, short wordstart, short wordlen) {
-
-  if (wordlen == 0) {
-    return false;
-  }
-  for (short i=0; i<wordlen; i++) {
-    if (!isdigit((*stri)[i + wordstart])) {
-      return false;
-    }
-  }
-  
-  return true;
-  
 }
 
 short LogoCompiler::findword(LogoString *str, short wordstart, short wordlen) const {

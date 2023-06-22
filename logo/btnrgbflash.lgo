@@ -12,49 +12,61 @@
 #   https://github.com/visualopsholdings/tinylogo  
 #
 
-TO ID
-  PRINT "btnrgbflash
-END
+to ID
+  print "btnrgbflash
+end
 
 # change your pins here
-TO LEDPIN
+to LEDPIN
   2
-END
+end
 
-TO BTNPIN
+to BTNPIN
   7
-END
+end
 
-TO SETUP
-  PINOUT LEDPIN
-  AOUT LEDPIN 255
-  PININ BTNPIN
-END
+to SETUP
+  pinout LEDPIN
+  aout LEDPIN 255
+  pinin BTNPIN
+end
 
-TO ON
-  AOUT LEDPIN 0
-END
+to ON
+  print "ON
+  aout LEDPIN 0
+end
 
-TO OFF
-  AOUT LEDPIN 255
-END
+to OFF
+  print "OFF
+  aout LEDPIN 255
+end
 
-TO BUTTON
-  DREAD BTNPIN
-END
+to BUTTON
+  dread BTNPIN
+end
 
-TO FLASH
-  ON WAIT 1000 OFF
-END
+to FLASH
+  ON wait 1000 OFF
+end
 
-TO TESTSTATE
-  MAKE "OLDVALUE :VALUE
-  IF :VALUE = 1 FLASH
-END
+to TESTPRESS
+  if :PRESS = 1 FLASH
+  make "PRESS 0
+end
 
-TO TESTBTN
-  MAKE "VALUE BUTTON
-  IF :VALUE != :OLDVALUE TESTSTATE 
-END
+to TESTSTATE
+  make "OLDVALUE :VALUE
+  if :VALUE = 1 FLASH
+end
 
-FOREVER TESTBTN
+to TESTBTN
+  make "VALUE BUTTON
+  if :VALUE != :OLDVALUE TESTSTATE
+  TESTPRESS
+end
+
+to RUN
+  forever TESTBTN
+end
+
+RUN
