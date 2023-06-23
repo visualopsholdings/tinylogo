@@ -126,22 +126,27 @@ end
 # the named colors we use for each LED
 
 to AMBER1
- SET1 100 75 0
+  print "SLOW
+  SET1 100 75 0
 end
 
 to RED1
+  print "STOP
   SET1 100 0 0
 end
 
 to GREEN1
+  print "RUN
   SET1 0 100 0
 end
 
 to RED2
+  print "ON
   SET2 8 2 2
 end
 
 to GREEN2
+  print "OFF
   SET2 2 8 2
 end
 
@@ -208,14 +213,14 @@ to TESTB
   TESTB2
 end
 
-to START
+to RUN
   make "STATE2 1
   GREEN2
   RED1
   FOREVER TESTB
 end
 
-START
+RUN
 
 
  
