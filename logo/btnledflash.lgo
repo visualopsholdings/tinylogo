@@ -22,13 +22,13 @@ to LEDPIN
 end
 
 to BTNPIN
-  7
+  9
 end
 
 to SETUP
   pinout LEDPIN
   dlow LEDPIN
-  pinin BTNPIN
+  pininup BTNPIN
 end
 
 to ON

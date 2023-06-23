@@ -49,6 +49,7 @@ LogoBuiltinWord Logo::core[] = {
   { "OUTPUT", LogoWords::output, LogoWords::outputArity },
   { "WORD", LogoWords::wordWord, LogoWords::wordArity },
   { "FIRST", LogoWords::first, LogoWords::firstArity },
+  { "PININUP", LogoWords::pininup, LogoWords::pininupArity },
 };
 
 #endif // H_logowordnames

@@ -387,6 +387,19 @@ void LogoWords::pinin(Logo &logo) {
   
 }
 
+short LogoWords::pininupArity = 1;
+
+void LogoWords::pininup(Logo &logo) {
+
+  int pin = logo.popint();
+#ifdef ARDUINO
+  pinMode(pin, INPUT_PULLUP);
+#else
+  cout << "pin in with pullup " << pin << endl;
+#endif
+  
+}
+
 short LogoWords::aoutArity = 2;
 
 void LogoWords::aout(Logo &logo) {

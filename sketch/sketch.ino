@@ -51,13 +51,13 @@ static const short code_sketch[][INST_LENGTH] PROGMEM = {
 	{ OPTYPE_RETURN, 0, 0 },		// 4
 	{ OPTYPE_INT, 13, 0 },		// 5
 	{ OPTYPE_RETURN, 0, 0 },		// 6
-	{ OPTYPE_INT, 7, 0 },		// 7
+	{ OPTYPE_INT, 9, 0 },		// 7
 	{ OPTYPE_RETURN, 0, 0 },		// 8
 	{ OPTYPE_BUILTIN, 23, 1 },		// 9
 	{ OPTYPE_JUMP, 5, 0 },		// 10
 	{ OPTYPE_BUILTIN, 22, 1 },		// 11
 	{ OPTYPE_JUMP, 5, 0 },		// 12
-	{ OPTYPE_BUILTIN, 24, 1 },		// 13
+	{ OPTYPE_BUILTIN, 30, 1 },		// 13
 	{ OPTYPE_JUMP, 7, 0 },		// 14
 	{ OPTYPE_RETURN, 0, 0 },		// 15
 	{ OPTYPE_BUILTIN, 18, 1 },		// 16

@@ -97,6 +97,9 @@ public:
   static void pinin(Logo &logo);
   static short pininArity;
 
+  static void pininup(Logo &logo);
+  static short pininupArity;
+
   static void aout(Logo &logo);
   static short aoutArity;
 
