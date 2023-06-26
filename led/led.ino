@@ -4,6 +4,10 @@
   Author: Paul Hamilton
   Date: 5-May-2023
   
+  This is an example of building the actual compiler into the arduino. the
+  sketch example shows how you can put a much larger program in by using
+  the flash code functionality.
+
   This work is licensed under the Creative Commons Attribution 4.0 International License. 
   To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0/ or 
   send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
@@ -11,103 +15,40 @@
   https://github.com/visualopsholdings/tinylogo
 */
 
-// if you uncomment this, also uncomment the USE_FLASH_CODE in logo.hpp
-#define FLASH_CODE
+// this sketch relies on the USE_FLASH_CODE being commented out in logo.hpp
 
 #include "ringbuffer.hpp"
 #include "cmd.hpp"
 #include "logo.hpp"
 #include "arduinotimeprovider.hpp"
-#include "arduinoflashstring.hpp"
-#ifdef FLASH_CODE
 #include "arduinoflashcode.hpp"
-#else
 #include "logocompiler.hpp"
-#endif
+#include "logowords.hpp"
 
 #include <Wire.h>
 
 #define I2C_ADDRESS 8
 #define LED_PIN     13
 
-void ledOn() {
-  digitalWrite(LED_PIN, HIGH);
-}
-
-void ledOff() {
-  digitalWrite(LED_PIN, LOW);
-}
-
 RingBuffer buffer;
 Cmd cmd;
-char cmdbuf[64];
+char cmdbuf[32];
 
-#ifdef FLASH_CODE
-
-//#LOGO FILE=../logo/ledflash.lgo NAME=led
-static const char strings_led[] PROGMEM = {
-// words
-	"ID\n"
-	"FLASH\n"
-	"GO\n"
-	"STOP\n"
-// variables
-// strings
-	"ledflash\n"
-};
-static const short code_led[][INST_LENGTH] PROGMEM = {
-	{ OPTYPE_JUMP, 12, 0 },		// 0
-	{ OPTYPE_HALT, 0, 0 },		// 1
-	{ OPTYPE_BUILTIN, 18, 1 },		// 2
-	{ OPTYPE_STRING, 4, 8 },		// 3
-	{ OPTYPE_RETURN, 0, 0 },		// 4
-	{ OPTYPE_BUILTIN, 0, 0 },		// 5
-	{ OPTYPE_BUILTIN, 6, 1 },		// 6
-	{ OPTYPE_INT, 500, 0 },		// 7
-	{ OPTYPE_BUILTIN, 1, 0 },		// 8
-	{ OPTYPE_BUILTIN, 6, 1 },		// 9
-	{ OPTYPE_INT, 1000, 0 },		// 10
-	{ OPTYPE_RETURN, 0, 0 },		// 11
-	{ OPTYPE_BUILTIN, 2, 1 },		// 12
-	{ OPTYPE_JUMP, 5, 0 },		// 13
-	{ OPTYPE_RETURN, 0, 0 },		// 14
-	{ OPTYPE_BUILTIN, 1, 0 },		// 15
-	{ OPTYPE_RETURN, 0, 0 },		// 16
-	{ SCOPTYPE_WORD, 2, 0 }, 
-	{ SCOPTYPE_WORD, 5, 0 }, 
-	{ SCOPTYPE_WORD, 12, 0 }, 
-	{ SCOPTYPE_WORD, 15, 0 }, 
-	{ SCOPTYPE_END, 0, 0 } 
-};
-//#LOGO ENDFILE
-
-#else
 static const char program_led[] PROGMEM = 
-  "TO FLASH; ON WAIT 500 OFF WAIT 1000; END;"
-  "TO GO; FOREVER FLASH; END;"
-  "TO STOP; OFF; END;"
+  "to ON; dhigh 13; end;"
+  "to OFF; dlow 13; end;"
+  "to FLASH; ON wait 500 OFF wait 1000; end;"
+  "to GO; forever FLASH; end;"
+  "to STOP; OFF; end;"
   ;
-#endif
 
-LogoBuiltinWord builtins[] = {
-  { "ON", &ledOn },
-  { "OFF", &ledOff },
-};
 ArduinoTimeProvider time;
-LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
-#ifdef FLASH_CODE
-ArduinoFlashString strings(strings_led);
-ArduinoFlashCode code((const PROGMEM short *)code_led);
-Logo logo(&primitives, &time, Logo::core, &strings, &code);
-#else
-Logo logo(&primitives, &time, Logo::core);
+Logo logo(&time);
 LogoCompiler compiler(&logo);
-#endif
-
 
 void showErr(int mode, int n) {
   Serial.print(mode);
-  Serial.print(", ");
+  Serial.print(",");
   Serial.println(n);
 }
 
@@ -121,13 +62,12 @@ void setup() {
    // Setup the serial port
   Serial.begin(9600);
 
-  // Setup I2C bus address
+  // // Setup I2C bus address
   Wire.begin(I2C_ADDRESS);
   
   // Register handler for when data comes in
   Wire.onReceive(receiveEvent);
 
-#ifndef FLASH_CODE
  // Compile a little program into the LOGO interpreter :-)
   ArduinoFlashString str(program_led);
   compiler.compile(&str);
@@ -136,9 +76,8 @@ void setup() {
     showErr(1, err + 2);
   }
  
-  // this would make it just run straight away
-//  compiler.compile("GO");
-#endif
+  // this makes it run straight away.
+  compiler.compile("GO");
 
 }
 
@@ -171,14 +110,10 @@ void loop() {
     // reset the code but keep all our words we have defined.
     logo.resetcode();
     
-#ifdef FLASH_CODE
-    int err = logo.callword(cmdbuf);
- #else
-     // // compile whatever it is into the LOGO interpreter and if there's
-    // // a compile error flash the LED
+    // compile whatever it is into the LOGO interpreter and if there's
+    // a compile error flash the LED
     compiler.compile(cmdbuf);
     int err = logo.geterr();
- #endif
     if (err) {
       showErr(1, err);
     }

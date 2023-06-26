@@ -55,8 +55,7 @@ int main(int argc, char *argv[]) {
     }
     else {
       RealTimeProvider time;
-      LogoStaticPrimitives primitives;
-      Logo logo(&primitives, &time, Logo::core);
+      Logo logo(&time);
       LogoCompiler compiler(&logo);
       compiler.compile(file);
       int err = logo.geterr();

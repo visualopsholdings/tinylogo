@@ -15,9 +15,9 @@
 
 #include <Arduino.h>
 
-LogoSketch::LogoSketch(char strings[] PROGMEM, const PROGMEM short *code, LogoBuiltinWord builtins[], int size): 
-  _strings(strings), _code(code), _primitives(builtins, size), 
-  _logo(&_primitives, &_time, Logo::core, &_strings, &_code) {
+LogoSketch::LogoSketch(char strings[] PROGMEM, const PROGMEM short *code): 
+  _strings(strings), _code(code),
+  _logo(&_time, &_strings, &_code) {
 }
 
 void LogoSketch::setup()  {
@@ -69,9 +69,9 @@ void LogoSketch::loop() {
 
 void LogoSketch::showErr(int mode, int n) {
 
-  Serial.print("err ");
+  Serial.print("e=");
   Serial.print(mode);
-  Serial.print(", ");
+  Serial.print(",");
   Serial.println(n);
 
 }

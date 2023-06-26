@@ -38,27 +38,6 @@ typedef struct {
  tByte      _arity; // smaller than 256?
 } LogoWord;
 
-class LogoStaticPrimitives: public LogoPrimitives {
-
-public:
-  LogoStaticPrimitives() {
-    _builtindef[0] = 0;
-  }
-  
-  // LogoPrimitives
-  virtual short find(LogoString *str, short start, short slen);
-  virtual void name(short index, char *s, int len);
-  virtual short arity(short index);
-  virtual void exec(short index, Logo *logo);
-  virtual void set(LogoString *str, short start, short slen);
-
-private:
-  char _builtindef[LINE_LEN];
-  
-  void str(short index, char *s, int len);
-  
-};
-
 class LogoCompiler {
 
 public:

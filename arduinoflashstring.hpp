@@ -16,7 +16,6 @@
 #ifndef H_arduinoflashstring
 #define H_arduinoflashstring
 
-#include "logo.hpp"
 #include "logostring.hpp"
 
 #ifdef ARDUINO

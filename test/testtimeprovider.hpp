@@ -19,12 +19,6 @@ public:
   void delayms(unsigned long ms) {
   }
   bool testing(short ms) {
-    strstream str;
-    str << "WAIT " << ms;
-    gCmds.push_back(str.str());
-  #ifdef PRINT_RESULT
-    cout << gCmds.back() << endl;
-  #endif
     return true;
   }
   void settime(unsigned long time) {

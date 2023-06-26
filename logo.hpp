@@ -10,24 +10,14 @@
   
   Use it like this:
   
-  void ledOn() {
-   ... turn a LED on
-  }
-
-  void ledOff() {
-    ... turn an LED off
-  }
-
-  LogoBuiltinWord builtins[] = {
-    { "ON", &ledOn },
-    { "OFF", &ledOff },
-  };
   ArduinoTimeProvider time;
-  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
-  Logo logo(&primitives, &time, &Logo::core);
+  Logo logo(&time);
   LogoCompiler compiler(&logo);
   
-  compiler.compile("TO GO; FOREVER [ON WAIT 100 OFF WAIT 1000]; END;");
+  compiler.compiler("to ON; dhigh 13; end;");
+  compiler.compiler("to OFF; dlow 13; end;");
+  compiler.compiler("to FLASH; ON wait 100 OFF wait 100; end;");
+  compiler.compiler("to GO; forever FLASH; end;");
 
   ... then on some trigger
   compiler.compile("GO");
@@ -53,15 +43,7 @@
   
   ... or completely reset the machines code
   logo.reset();
-  
-  If your code is so simple it only uses YOUR builtins, you can make 
-  the runtime smaller by NOT including the core words (at the moment
-  this will only save about 8 bytes):
-  
-  Logo logo(builtins, sizeof(builtins));
-  
-  ....
-  
+    
   This work is licensed under the Creative Commons Attribution 4.0 International License. 
   To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0/ or 
   send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
@@ -71,6 +53,8 @@
 
 #ifndef H_logo
 #define H_logo
+
+#include "arduinoflashstring.hpp"
 
 //#define LOGO_DEBUG
 
@@ -86,7 +70,7 @@
 
 // it's really important with these numbers that after you compile your code it 
 // leaves about 200 bytes for local variables. Otherwise your sketch won't work.
-
+// 
 #ifdef USE_FLASH_CODE
 #ifdef ARDUINO
 // when we are allocating strings on the ARDUINO, this will be too small but
@@ -172,7 +156,7 @@
 #define OPTYPE_NOOP           0 //
 #define OPTYPE_RETURN         1 //
 #define OPTYPE_HALT           2 //
-#define OPTYPE_BUILTIN        3 // FIELD_OP = index of builtin, FIELD_OPAND = category 0 = builtin, 1 = core 
+#define OPTYPE_BUILTIN        3 // FIELD_OP = index of builtin
 #define OPTYPE_ERR            4 // FIELD_OP = error
 #define OPTYPE_JUMP           5 // FIELD_OP = where to jump, FIELD_OPAND = possible arity
 #define OPTYPE_STRING         6 // FIELD_OP = index of string (-fixedcount), FIELD_OPAND = length of string
@@ -217,11 +201,7 @@ typedef short tJump;
 #define NO_JUMP   -1
 #endif
 
-typedef struct {
-  const char    *_name;
-  tLogoFp       _code;
-  tByte         _arity; // smaller than 256?
-} LogoBuiltinWord;
+#define INFIX_ARITY   -1
 
 // a single instruction.
 #define INST_LENGTH   3 // in shorts
@@ -270,40 +250,11 @@ class ArduinoFlashCode;
 class LogoString;
 class LogoStringResult;
 
-class LogoPrimitives {
-
-public:
-  
-  virtual short find(LogoString *str, short start, short slen) = 0;
-  virtual void name(short op, char *s, int len) = 0;
-  virtual short arity(short op) = 0;
-  virtual void exec(short index, Logo *logo) = 0;
-  virtual void set(LogoString *str, short start, short slen) = 0;
-  
-};
-
-class LogoFunctionPrimitives: public LogoPrimitives {
-
-public:
-  LogoFunctionPrimitives(LogoBuiltinWord *builtins, short size);
-  
-  // LogoPrimitives
-  virtual short find(LogoString *str, short start, short slen);
-  virtual void name(short index, char *s, int len);
-  virtual short arity(short index);
-  virtual void exec(short index, Logo *logo);
-  virtual void set(LogoString *str, short start, short slen) {}
-
-private:
-  LogoBuiltinWord *_builtins;
-  short _count;
-};
-
 class Logo {
 
 public:
-  Logo(LogoPrimitives *primitives=0, LogoTimeProvider *time=0, LogoBuiltinWord *core=0, LogoString *strings=0, ArduinoFlashCode *code=0);
-  ~Logo() {}
+  Logo(LogoTimeProvider *time=0, LogoString *strings=0, ArduinoFlashCode *code=0);
+  ~Logo();
   
   // find any errors in the code.
   short geterr();
@@ -326,15 +277,13 @@ public:
   void error(short error);
   void outofcode();
   void addop(tJump *next, short type, short op=0, short opand=0);
-  void findbuiltin(LogoString *str, short start, short slen, short *index, short *category);
-  short addstring(LogoString *str, short start, short slen);
+  short findbuiltin(LogoString *str, short start, short slen);
+  short addstring(const LogoString *str, short start, short slen);
   short addstring(LogoStringResult *stri);
   void getstring(LogoStringResult *stri, tStrPool str, tStrPool len) const;
-  bool stringcmp(LogoString *str, short start, short slen, tStrPool stri, tStrPool len) const;
+  bool stringcmp(const LogoString *str, short start, short slen, tStrPool stri, tStrPool len) const;
   bool stringcmp(LogoStringResult *str, tStrPool stri, tStrPool len) const;
-  const LogoBuiltinWord *getbuiltin(short op, short opand) const;
   void getbuiltinname(short op, short opand, char *s, int len) const;
-  void setprimitives(LogoString *str, short start, short slen);
   
   // compiler needs direct access to these?
   
@@ -373,6 +322,12 @@ public:
   void jumpskip(short rel);
   void jump(short rel);
 
+  // so we can test.
+  short findfixed(const LogoString *str, short start, short slen) const;
+  
+  // allow to be abstracted.
+  void callbuiltin(short index);
+
 #ifdef LOGO_DEBUG
   void outstate() const;
 #endif
@@ -398,9 +353,16 @@ public:
   void printvarcode(const LogoVar &var, std::ostream &str) const;
   void dump(short indent, short type, short op, short opand) const;
   void mark(short i, short mark, const char *name) const;
+  std::ostream &out();
+  void setout(std::ostream *s);
+  std::ostream *_ostream;
 #endif
 
-  static LogoBuiltinWord core[];
+  static const char coreNames[];
+  static const char coreArity[];
+  
+  static short findcrstring(const LogoString *strings, const LogoString *stri, short strstart, short slen);
+  static bool getfixedcr(const LogoString *strings, LogoStringResult *result, short index);
 
 private:
   
@@ -410,12 +372,9 @@ private:
   char _strings[STRING_POOL_SIZE];
   tStrPool _nextstring;
   
-  // the builtin words.
-  LogoPrimitives *_primitives;
-  
-  // the core words if needed.
-  LogoBuiltinWord *_core;
-  short _corecount;
+  // the core names iand arity.
+  ArduinoFlashString _corenames;
+  ArduinoFlashString _corearity;
   
   // buffer to hold a number conversion
   char _numbuf[NUM_LEN];
@@ -442,8 +401,7 @@ private:
   bool parsestring(short type, short op, short oplen, LogoStringResult *str);
 
   // fixed strings
-  short findfixed(LogoString *str, short start, short slen) const;
-  bool fixedcmp(LogoString *stri, short strstart, short slen, tStrPool str, tStrPool len) const;
+  bool fixedcmp(const LogoString *stri, short strstart, short slen, tStrPool str, tStrPool len) const;
   bool getfixed(LogoStringResult *reuslt, tStrPool str) const;
 
   // the machine
@@ -460,7 +418,7 @@ private:
   short instField(short pc, short field) const;
   void splitdouble(double n, short *op, short *opand);
   double joindouble(short op, short opand) const;
-  
+   
 };
 
 #ifdef LOGO_DEBUG

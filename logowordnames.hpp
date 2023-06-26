@@ -16,40 +16,112 @@
 #ifndef H_logowordnames
 #define H_logowordnames
 
-// all the core words are here. To make it smaller you can comment them
-// in and out here.
-LogoBuiltinWord Logo::core[] = {
-  { "ERR", LogoWords::err, LogoWords::errArity },
-  { "MAKE", LogoWords::make, LogoWords::makeArity },
-  { "FOREVER", LogoWords::forever, LogoWords::foreverArity },
-  { "REPEAT", LogoWords::repeat, LogoWords::repeatArity },
-  { "IFELSE", LogoWords::ifelse, LogoWords::ifelseArity },
-  { "IF", LogoWords::ifWord, LogoWords::ifArity },
-  { "WAIT", LogoWords::wait, LogoWords::waitArity },
-  { "=", LogoWords::eq, LogoWords::eqArity },
-  { "!=", LogoWords::neq, LogoWords::neqArity },
-  { "-", LogoWords::subtract, LogoWords::subtractArity },
-  { "+", LogoWords::add, LogoWords::addArity },
-  { "/", LogoWords::divide, LogoWords::divideArity },
-  { "*", LogoWords::multiply, LogoWords::multiplyArity },
-  { ">", LogoWords::gt, LogoWords::gtArity },
-  { ">=", LogoWords::gte, LogoWords::gteArity },
-  { "<", LogoWords::lt, LogoWords::ltArity },
-  { "<=", LogoWords::lte, LogoWords::lteArity },
-  { "DUMPVARS", LogoWords::dumpvars, LogoWords::dumpvarsArity },
-  { "PRINT", LogoWords::print, LogoWords::printArity },
-  { "!", LogoWords::notWord, LogoWords::notArity },
-  { "DREAD", LogoWords::dread, LogoWords::dreadArity },
-  { "DHIGH", LogoWords::dhigh, LogoWords::dhighArity },
-  { "DLOW", LogoWords::dlow, LogoWords::dlowArity },
-  { "PINOUT", LogoWords::pinout, LogoWords::pinoutArity },
-  { "PININ", LogoWords::pinin, LogoWords::pininArity },
-  { "AOUT", LogoWords::aout, LogoWords::aoutArity },
-  { "THING", LogoWords::thing, LogoWords::thingArity },
-  { "OUTPUT", LogoWords::output, LogoWords::outputArity },
-  { "WORD", LogoWords::wordWord, LogoWords::wordArity },
-  { "FIRST", LogoWords::first, LogoWords::firstArity },
-  { "PININUP", LogoWords::pininup, LogoWords::pininupArity },
+const char Logo::coreNames[] PROGMEM = {
+  "ERR\n"
+  "MAKE\n"
+  "FOREVER\n"
+  "REPEAT\n"
+  "IFELSE\n"
+  "IF\n"
+  "WAIT\n"
+  "=\n"
+  "!=\n"
+  "-\n"
+  "+\n"
+  "/\n"
+  "*\n"
+  ">\n"
+  ">=\n"
+  "<\n"
+  "<=\n"
+  "DUMPVARS\n"
+  "PRINT\n"
+  "!\n"
+  "DREAD\n"
+  "DHIGH\n"
+  "DLOW\n"
+  "PINOUT\n"
+  "PININ\n"
+  "AOUT\n"
+  "THING\n"
+  "OUTPUT\n"
+  "WORD\n"
+  "FIRST\n"
+  "PININUP\n"
 };
+
+// this arity array matches the above.
+const char Logo::coreArity[] PROGMEM = {
+  0, // ERR
+  2, // MAKE
+  0, // FOREVER
+  1, // REPEAT
+  1, // IFELSE
+  1, // IF
+  1, // WAIT
+  INFIX_ARITY, // =
+  INFIX_ARITY, // !=
+  INFIX_ARITY, // -
+  INFIX_ARITY, // +
+  INFIX_ARITY, // /
+  INFIX_ARITY, // *
+  INFIX_ARITY, // >
+  INFIX_ARITY, // >=
+  INFIX_ARITY, // <
+  INFIX_ARITY, // <=
+  0, // DUMPVARS
+  1, // PRINT
+  1, // !
+  1, // DREAD
+  1, // DHIGH
+  1, // DLOW
+  1, // PINOUT
+  1, // PININ
+  2, // AOUT
+  1, // THING
+  0, // OUTPUT
+  2, // WORD
+  1, // FIRST
+  1, // PININUP
+};
+
+// these indexes match the other 2 arrays.
+void Logo::callbuiltin(short index) {
+  switch (index) {
+    case 0: LogoWords::err(*this); break;
+    case 1: LogoWords::make(*this); break;
+    case 2: LogoWords::forever(*this); break;
+    case 3: LogoWords::repeat(*this); break;
+    case 4: LogoWords::ifelse(*this); break;
+    case 5: LogoWords::ifWord(*this); break;
+    case 6: LogoWords::wait(*this); break;
+    case 7: LogoWords::eq(*this); break;
+    case 8: LogoWords::neq(*this); break;
+    case 9: LogoWords::subtract(*this); break;
+    case 10: LogoWords::add(*this); break;
+    case 11: LogoWords::divide(*this); break;
+    case 12: LogoWords::multiply(*this); break;
+    case 13: LogoWords::gt(*this); break;
+    case 14: LogoWords::gte(*this); break;
+    case 15: LogoWords::lt(*this); break;
+    case 16: LogoWords::lte(*this); break;
+    case 17: LogoWords::dumpvars(*this); break;
+    case 18: LogoWords::print(*this); break;
+    case 19: LogoWords::notWord(*this); break;
+    case 20: LogoWords::dread(*this); break;
+    case 21: LogoWords::dhigh(*this); break;
+    case 22: LogoWords::dlow(*this); break;
+    case 23: LogoWords::pinout(*this); break;
+    case 24: LogoWords::pinin(*this); break;
+    case 25: LogoWords::aout(*this); break;
+    case 26: LogoWords::thing(*this); break;
+    case 27: LogoWords::output(*this); break;
+    case 28: LogoWords::wordWord(*this); break;
+    case 29: LogoWords::first(*this); break;
+    case 30: LogoWords::pininup(*this); break;
+    default:
+      break;
+  }
+}
 
 #endif // H_logowordnames

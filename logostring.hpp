@@ -17,17 +17,12 @@
 #ifndef H_logostring
 #define H_logostring
 
-#include "logo.hpp"
-
 #include <string.h>
-
-#ifndef min
-#define min(a,b)            (((a) < (b)) ? (a) : (b))
-#endif
 
 class LogoString {
 
 public:
+  virtual ~LogoString() {}
   
   virtual size_t length() const = 0;
   virtual char operator[](int index) const = 0;
@@ -35,9 +30,9 @@ public:
   virtual int ncmp(const char *to, size_t offset, size_t len) const = 0;
   virtual int ncasecmp(const char *to, size_t offset, size_t len) const = 0;
  
-  short toi(size_t offset, size_t len);
+  short toi(size_t offset, size_t len) const;
   short find(char c, size_t offset, size_t len);
-  short ncmp2(LogoString *to, short offsetto, short offset, short len) const;
+  short ncmp2(const LogoString *to, short offsetto, short offset, short len) const;
   void dump(const char *msg, short start, short len) const;
 
 };
@@ -94,7 +89,7 @@ public:
   double tof();
   
   LogoSimpleString _simple;
-  LogoString *_fixed;
+  const LogoString *_fixed;
   short _fixedstart;
   short _fixedlen;
 };

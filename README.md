@@ -17,6 +17,12 @@ a look at the source for led/led.ino and you
 can see some cool code that takes this LOGO program:
 
 ```
+to ON
+  dhigh 13
+end
+to OFF
+  dlow 13
+end
 to FLASH
   ON WAIT 100 OFF WAIT 1000
 end
@@ -35,13 +41,18 @@ You can send it any of that code ON THE FLY, so even word definitions.
 So You could send it:
 
 ```
-to FLASH; ON WAIT 20 OFF WAIT 200; end;
+FLASH
 ```
 
-To make it flash faster, or even completely write a new thing like a morse code
-tapper etc without reflashing your Arduino :-)
+And it would flash and
 
-And that code above fits happily on a Leonardo with 32k of memory (it about fills it though).
+```
+STOP
+```
+
+to stop it.
+
+And that code above fits happily on a Leonardo with 32k of memory.
 
 After you compile an example with LOGO in it, make sure you have at least 100 bytes for local
 variables or it just won't work!!
@@ -62,33 +73,19 @@ You can read more about logo here https://en.wikipedia.org/wiki/Logo_(programmin
 
 Declare Logo like this:
 
-You need to define your "primitives" which can do the various physical things your sketch needs to do.
-So to flash an LED on or off it might be:
-
-```
-void ledOn(Logo &logo) {
-  digitalWrite(LED_PIN, HIGH);
-}
-void ledOff(Logo &logo) {
-  digitalWrite(LED_PIN, LOW);
-}
-```
-
 Now you can declare the logo runtime and compiler ready to use.
 
 ```
-LogoBuiltinWord builtins[] = {
-  { "ON", &ledOn },
-  { "OFF", &ledOff }
-};
 ArduinoTimeProvider time;
-Logo logo(builtins, sizeof(builtins), &time, Logo::core);
+Logo logo(&time);
 LogoCompiler compiler(&logo);
 ```
 
 Now in your "setup()", compile your LOGO program:
 
 ```
+compiler.compiler("to ON; dhigh 13; end;");
+compiler.compiler("to OFF; dlow 13; end;");
 compiler.compiler("to FLASH; ON WAIT 100 OFF WAIT 100; end;");
 compiler.compiler("to GO; FOREVER FLASH; end;");
 compiler.compiler("to STOP; OFF; end;");
@@ -428,7 +425,8 @@ you can dispense with the compiler completely and use your code like this:
 ```
 ArduinoFlashString strings(strings_rgb);
 ArduinoFlashCode code((const PROGMEM short *)code_rgb);
-Logo logo(builtins, sizeof(builtins), &time, Logo::core, &strings, &code);
+ArduinoTimeProvider time;
+Logo logo(&time, &strings, &code);
 ```
 
 And now instead of COMPILING your commands into the runtime in your loop, you can call any of the

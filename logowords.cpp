@@ -23,15 +23,11 @@
 using namespace std;
 #endif
 
-short LogoWords::errArity = 0;
-
 void LogoWords::err(Logo &logo) {
 
   logo.fail(LG_STOP);
   
 }
-
-short LogoWords::makeArity = 2;
 
 void LogoWords::make(Logo &logo) {
 
@@ -56,8 +52,6 @@ void LogoWords::make(Logo &logo) {
 
 }
 
-short LogoWords::thingArity = 1;
-
 void LogoWords::thing(Logo &logo) {
 
   LogoStringResult result;
@@ -72,18 +66,12 @@ void LogoWords::thing(Logo &logo) {
 
 }
 
-
-
-short LogoWords::foreverArity = 0;
-
 void LogoWords::forever(Logo &logo) {
 
   // change the next return address to be 1 minus what we have 
   logo.modifyreturn(-1, -1);
 
 }
-
-short LogoWords::repeatArity = 1;
 
 void LogoWords::repeat(Logo &logo) {
 
@@ -113,8 +101,6 @@ bool LogoWords::pushliterals(Logo &logo, short rel) {
   return false;
   
 }
-
-short LogoWords::ifelseArity = 1;
 
 void LogoWords::ifelse(Logo &logo) {
 
@@ -149,8 +135,6 @@ void LogoWords::ifelse(Logo &logo) {
     
 }
 
-short LogoWords::ifArity = 1;
-
 void LogoWords::ifWord(Logo &logo) {
 
   // this is a very special trick to allow us to manipulate the PC
@@ -173,8 +157,6 @@ void LogoWords::ifWord(Logo &logo) {
 
 }
 
-short LogoWords::waitArity = 1;
-
 void LogoWords::wait(Logo &logo) {
 
   // schedule the next word to execute after a certain time.
@@ -182,23 +164,17 @@ void LogoWords::wait(Logo &logo) {
   
 }
 
-short LogoWords::eqArity = 255;
-
 void LogoWords::eq(Logo &logo) {
 
   logo.pushint(logo.popint() == logo.popint());
   
 }
 
-short LogoWords::neqArity = 255;
-
 void LogoWords::neq(Logo &logo) {
 
   logo.pushint(logo.popint() != logo.popint());
   
 }
-
-short LogoWords::gtArity = 255;
 
 void LogoWords::gt(Logo &logo) {
 
@@ -209,8 +185,6 @@ void LogoWords::gt(Logo &logo) {
   
 }
 
-short LogoWords::ltArity = 255;
-
 void LogoWords::lt(Logo &logo) {
 
   // args are backwards.
@@ -219,8 +193,6 @@ void LogoWords::lt(Logo &logo) {
   logo.pushint(i2 < i1);
   
 }
-
-short LogoWords::gteArity = 255;
 
 void LogoWords::gte(Logo &logo) {
 
@@ -231,8 +203,6 @@ void LogoWords::gte(Logo &logo) {
   
 }
 
-short LogoWords::lteArity = 255;
-
 void LogoWords::lte(Logo &logo) {
 
   // args are backwards.
@@ -242,15 +212,11 @@ void LogoWords::lte(Logo &logo) {
   
 }
 
-short LogoWords::notArity = 1;
-
 void LogoWords::notWord(Logo &logo) {
 
   logo.pushint(!logo.popint());
   
 }
-
-short LogoWords::subtractArity = 255;
 
 void LogoWords::subtract(Logo &logo) {
 
@@ -261,8 +227,6 @@ void LogoWords::subtract(Logo &logo) {
   
 }
 
-short LogoWords::addArity = 255;
-
 void LogoWords::add(Logo &logo) {
 
   double a1 = logo.popdouble();
@@ -270,8 +234,6 @@ void LogoWords::add(Logo &logo) {
   logo.pushdouble(a2 + a1);
   
 }
-
-short LogoWords::divideArity = 255;
 
 void LogoWords::divide(Logo &logo) {
 
@@ -285,8 +247,6 @@ void LogoWords::divide(Logo &logo) {
   
 }
 
-short LogoWords::multiplyArity = 255;
-
 void LogoWords::multiply(Logo &logo) {
 
   double a1 = logo.popdouble();
@@ -295,8 +255,6 @@ void LogoWords::multiply(Logo &logo) {
   
 }
 
-short LogoWords::dumpvarsArity = 0;
-
 void LogoWords::dumpvars(Logo &logo) {
 
 #ifndef ARDUINO
@@ -304,8 +262,6 @@ void LogoWords::dumpvars(Logo &logo) {
 #endif
     
 }
-
-short LogoWords::printArity = 1;
 
 void LogoWords::print(Logo &logo) {
 
@@ -316,12 +272,11 @@ void LogoWords::print(Logo &logo) {
 #ifdef ARDUINO
   Serial.println(s);
 #else
-  cout << "=== " << s << endl;
+  logo.out() << "=== " << s << endl;
+//  cout << "=== " << s << endl;
 #endif
   
 }
-
-short LogoWords::dreadArity = 1;
 
 void LogoWords::dread(Logo &logo) {
 
@@ -330,12 +285,10 @@ void LogoWords::dread(Logo &logo) {
   logo.pushint(digitalRead(pin));
 #else
   cout << "d read pin " << pin << endl;
-  logo.pushint(1);
+  logo.pushint(0);
 #endif
   
 }
-
-short LogoWords::dhighArity = 1;
 
 void LogoWords::dhigh(Logo &logo) {
 
@@ -348,8 +301,6 @@ void LogoWords::dhigh(Logo &logo) {
   
 }
 
-short LogoWords::dlowArity = 1;
-
 void LogoWords::dlow(Logo &logo) {
 
   int pin = logo.popint();
@@ -360,8 +311,6 @@ void LogoWords::dlow(Logo &logo) {
 #endif
   
 }
-
-short LogoWords::pinoutArity = 1;
 
 void LogoWords::pinout(Logo &logo) {
 
@@ -374,8 +323,6 @@ void LogoWords::pinout(Logo &logo) {
   
 }
 
-short LogoWords::pininArity = 1;
-
 void LogoWords::pinin(Logo &logo) {
 
   int pin = logo.popint();
@@ -387,8 +334,6 @@ void LogoWords::pinin(Logo &logo) {
   
 }
 
-short LogoWords::pininupArity = 1;
-
 void LogoWords::pininup(Logo &logo) {
 
   int pin = logo.popint();
@@ -399,8 +344,6 @@ void LogoWords::pininup(Logo &logo) {
 #endif
   
 }
-
-short LogoWords::aoutArity = 2;
 
 void LogoWords::aout(Logo &logo) {
 
@@ -414,15 +357,11 @@ void LogoWords::aout(Logo &logo) {
   
 }
 
-short LogoWords::outputArity = 0;
-
 void LogoWords::output(Logo &logo) {
 
   // just leaves whatever is on the stack on the stack.
   
 }
-
-short LogoWords::wordArity = 2;
 
 void LogoWords::wordWord(Logo &logo) {
 
@@ -438,8 +377,6 @@ void LogoWords::wordWord(Logo &logo) {
   logo.pushstring(&str);
   
 }
-
-short LogoWords::firstArity = 1;
 
 void LogoWords::first(Logo &logo) {
 

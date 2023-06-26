@@ -22,7 +22,11 @@
 using namespace std;
 #endif
 
-short LogoString::toi(size_t offset, size_t len) {
+#ifndef min
+#define min(a,b)            (((a) < (b)) ? (a) : (b))
+#endif
+
+short LogoString::toi(size_t offset, size_t len) const {
 
   short res = 0;
   short sign = 1;
@@ -77,7 +81,7 @@ double LogoSimpleString::tof() {
   return atof(_code);
 }
 
-short LogoString::ncmp2(LogoString *to, short offsetto, short offset, short len) const {
+short LogoString::ncmp2(const LogoString *to, short offsetto, short offset, short len) const {
 
 //    to->dump("ncmp2 to", 0, to->length());
 //    dump("ncmp2", offset, len);
@@ -89,7 +93,7 @@ short LogoString::ncmp2(LogoString *to, short offsetto, short offset, short len)
 	short imax = length();
 	short jmax = to->length();
 	do {
-		if ((*this)[i] != (*to)[j]) {
+		if (toupper((*this)[i]) != toupper((*to)[j])) {
       return -1;
 		}
 		if ((*this)[i++] == 0) {

@@ -151,48 +151,6 @@ BOOST_AUTO_TEST_CASE( scanWordNonWS2 )
 
 }
 
-BOOST_AUTO_TEST_CASE( staticPrimitivesfind )
-{
-  cout << "=== staticPrimitivesfind ===" << endl;
-  
-  LogoStaticPrimitives primitives;
-  LogoSimpleString string("ABC,DEFG:2,DEF");
-  primitives.set(&string, 0, string.length());
-
-  LogoSimpleString string1("ABC");
-  BOOST_CHECK_EQUAL(primitives.find(&string1, 0, string1.length()), 0);
-  
-  LogoSimpleString string2("DEFG");
-  BOOST_CHECK_EQUAL(primitives.find(&string2, 0, string2.length()), 1);
-  
-  LogoSimpleString string3("DEF");
-  BOOST_CHECK_EQUAL(primitives.find(&string3, 0, string3.length()), 2);
-  
-  LogoSimpleString string4("XYZ");
-  BOOST_CHECK_EQUAL(primitives.find(&string4, 0, string4.length()), -1);
-  
-}
-
-BOOST_AUTO_TEST_CASE( staticPrimitivesname )
-{
-  cout << "=== staticPrimitivesname ===" << endl;
-  
-  LogoStaticPrimitives primitives;
-  LogoSimpleString string("ABC,DEFG:2,DEF");
-  primitives.set(&string, 0, string.length());
-
-  char name[128];
-  primitives.name(0, name, sizeof(name));
-  BOOST_CHECK_EQUAL(name, "ABC");
-
-  primitives.name(1, name, sizeof(name));
-  BOOST_CHECK_EQUAL(name, "DEFG");
-
-  primitives.name(2, name, sizeof(name));
-  BOOST_CHECK_EQUAL(name, "DEF");
-
-}
-
 void alnumswitchcheck(LogoCompiler &compiler, char c) {
 
   BOOST_CHECK(compiler.switchtoken('A', c, false));
@@ -267,7 +225,7 @@ BOOST_AUTO_TEST_CASE( blankLines )
 {
   cout << "=== blankLines ===" << endl;
   
-  Logo logo(0, 0, Logo::core);
+  Logo logo(0);
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO MULT A B");
@@ -279,9 +237,9 @@ BOOST_AUTO_TEST_CASE( blankLines )
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
-//   DEBUG_STEP_DUMP(20, false);
-//   BOOST_CHECK_EQUAL(logo.run(), 0);
-//   BOOST_CHECK_EQUAL(logo.popint(), 200);
-//   DEBUG_DUMP(false);
+  DEBUG_STEP_DUMP(20, false);
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popint(), 200);
+  DEBUG_DUMP(false);
 
 }

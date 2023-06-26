@@ -93,11 +93,10 @@ void LogoCompiler::compileword(tJump *next, LogoString *stri, short wordstart, s
     return;
   }
   
-  short index = -1, category = 0;
-  _logo->findbuiltin(stri, wordstart, wordlen, &index, &category);
+  short index =_logo->findbuiltin(stri, wordstart, wordlen);
   
   if (index >= 0) {
-    _logo->addop(next, OPTYPE_BUILTIN, index, category);
+    _logo->addop(next, OPTYPE_BUILTIN, index);
     DEBUG_RETURN(" builtin ", 0);
     return;
   }
@@ -205,16 +204,6 @@ void LogoCompiler::compile(LogoString *str) {
     // skip comments.
     if ((*str)[linestart] == '#') {
       DEBUG_OUT(" comment", 0);
-      continue;
-    }
-    
-    if (str->ncasecmp("BUILTIN", linestart, linestart+7) == 0) {
-      if (linelen < 9) {
-        _logo->error(LG_WORD_NOT_FOUND);
-      }
-      else {
-        _logo->setprimitives(str, linestart+8, linelen-9);
-      }
       continue;
     }
     
@@ -450,102 +439,6 @@ short LogoCompiler::scan(short *strstart, short *strsize, LogoString *str, short
 
 #ifndef ARDUINO
 
-void LogoStaticPrimitives::exec(short index, Logo *logo) {
-
-  char s[LINE_LEN];
-  name(index, s, sizeof(s));
-  int ar = arity(index);
-  cout << s;
-  while (ar) {
-    cout << " " << logo->popint();
-    ar--;
-  }
-  cout << endl;
-  
-}
-
-short LogoStaticPrimitives::find(LogoString *stri, short wordstart, short wordlen) {
-
-#ifdef LOGO_DEBUG
-  stri->dump("find", wordstart, wordlen);
-  cout << _builtindef << endl;
-#endif
-  
-  short i = 0;
-  const char *end = _builtindef;
-  while (*end) {
-    const char *start = end;
-    while (*end && !(*end == ',' || *end == ':')) {
-      end++;
-    }
-    int len = end - start;
-    if (len == wordlen && stri->ncmp(start, wordstart, wordlen) == 0) {
-      return i;
-    }
-    if (*end) {
-      if (*end == ':') {
-        end += 2;
-      }
-      if (*end) {
-        end++;
-      }
-    }
-    i++;
-  }
-  
-  return -1;
-}
-
-void LogoStaticPrimitives::str(short index, char *s, int len) {
-
-  short i = 0;
-  const char *end = _builtindef;
-  while (*end) {
-    const char *start = end;
-    while (*end && *end != ',') {
-      end++;
-    }
-    if (i == index) {
-      int l = end-start;
-      strncpy(s, start, l);
-      s[l] = 0;
-      return;
-    }
-    if (*end) {
-      end++;
-    }
-    i++;
-  }
-  *s = 0;
-
-}
-
-void LogoStaticPrimitives::name(short index, char *s, int len) {
-
-  str(index, s, len);
-  char *colon = strchr(s, ':');
-  if (colon) {
-    *colon = 0;
-  }
-  
-}
-
-short LogoStaticPrimitives::arity(short index) {
-  
-  char s[LINE_LEN];
-  str(index, s, sizeof(s));
-  char *colon = strchr(s, ':');
-  if (colon) {
-    return atoi(colon+1);
-  }
-  return 0;
-  
-}
-
-void LogoStaticPrimitives::set(LogoString *str, short start, short slen) {
-  str->ncpy(_builtindef, start, slen);
-}
-
 void LogoCompiler::dumpwordscode(short offset, ostream &str) const {
 
   if (!_wordcount) {
@@ -626,8 +519,7 @@ int LogoCompiler::generatecode(fstream &file, const string &name, ostream &str) 
 
   // first compile the code so we can dump the strings from it in 
   // the correct order
-  LogoStaticPrimitives primitives;
-  Logo logo(&primitives, 0, Logo::core);
+  Logo logo(0);
   LogoCompiler compiler(&logo);
   compiler.compile(file);
 //  compiler.dump(false);
@@ -650,8 +542,7 @@ int LogoCompiler::generatecode(fstream &file, const string &name, ostream &str) 
   LogoSimpleString strings(list);
   {
     // build a new engine with these strings and compile again.
-    LogoStaticPrimitives primitives2;
-    Logo logo2(&primitives2, 0, Logo::core, &strings);
+    Logo logo2(0, &strings);
     LogoCompiler compiler2(&logo2);
     compiler2.compile(file);
     int err = logo2.geterr();

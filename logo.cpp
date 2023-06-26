@@ -48,22 +48,16 @@ using namespace std;
 
 #include "logowordnames.hpp"
 
-LogoFunctionPrimitives::LogoFunctionPrimitives(LogoBuiltinWord *builtins, short size) : _builtins(builtins) {
-
-  _count = size / sizeof(LogoBuiltinWord);
-
-}
-
-Logo::Logo(LogoPrimitives *primitives, LogoTimeProvider *time, LogoBuiltinWord *core, LogoString *strings, ArduinoFlashCode *code) : 
+Logo::Logo(LogoTimeProvider *time, LogoString *strings, ArduinoFlashCode *code) : 
   _nextcode(0), 
-  _primitives(primitives), 
-  _core(core), 
+  _corenames(coreNames), 
+  _corearity(coreArity), 
   _nextstring(0), _fixedstrings(strings), _fixedcount(0), 
   _pc(0), _tos(0), _schedule(time),
-  _staticcode(code) {
+  _staticcode(code)
+  {
   
   _varcount = 0;
-  _corecount = _core ? sizeof(Logo::core) / sizeof(LogoBuiltinWord) : 0;
   _nextjcode = START_JCODE;
 
   reset();
@@ -101,6 +95,12 @@ Logo::Logo(LogoPrimitives *primitives, LogoTimeProvider *time, LogoBuiltinWord *
       }
     }
   }
+#ifndef ARDUINO
+  _ostream = 0;
+#endif
+}
+
+Logo::~Logo() {
 }
 
 short Logo::run() {
@@ -595,7 +595,6 @@ bool Logo::isnum(LogoString *stri, short wordstart, short wordlen) {
   
 }
 
-
 int Logo::callword(const char *word) {
 
   DEBUG_IN_ARGS(Logo, "callword", "%s", word);
@@ -624,24 +623,9 @@ int Logo::callword(const char *word) {
   }
   
   // true for a builtin.
-  short index = -1, category = 0;
-  findbuiltin(&s, 0, s.length(), &index, &category);
+  short index = findbuiltin(&s, 0, s.length());
   if (index >= 0) {
-  
-    if (category == 0 && _primitives) {
-      _primitives->exec(index, this);
-      // need to leave the PC at HALT after this so we don't
-      // accidentally start executing more code.
-      halt();
-      return 0;
-    }
-    
-    const LogoBuiltinWord *builtin = getbuiltin(index, category);
-    if (!builtin) {
-      // problem with the code, no actual builtin?
-      return LG_OUT_OF_CODE;
-    }
-    builtin->_code(*this);
+    callbuiltin(index);
     return 0;
   }
 
@@ -678,25 +662,14 @@ void Logo::schedulenext(short delay) {
 }
 
 void Logo::getbuiltinname(short op, short opand, char *s, int len) const {
-  if (opand == 0 && _primitives) {
-    _primitives->name(op, s, len);
+  LogoStringResult result;
+  if (getfixedcr(&_corenames, &result, opand == 1 ? op : 0)) {
+    result.ncpy(s, len);
+    s[len-1] = 0;
   }
   else {
-    int len = min(len, strlen(_core[opand == 1 ? op : 0]._name));
-    strncpy(s, _core[opand == 1 ? op : 0]._name, len);
-    s[len] = 0;
+    s[0] = 0;
   }
-}
-
-const LogoBuiltinWord *Logo::getbuiltin(short op, short opand) const {
-
-  if (opand == 1) {
-    return &_core[op];
-  }
-  else {
-    return &Logo::core[0];
-  }
-  
 }
 
 short Logo::step() {
@@ -822,21 +795,8 @@ bool Logo::doinfix() {
   if (instField(_pc, FIELD_OPTYPE) == OPTYPE_BUILTIN) {
   
     short op = instField(_pc, FIELD_OP);
-    short opand = instField(_pc, FIELD_OPAND);
     
-    // find the arity of the builtin.
-    short arity = 0;
-    if (_primitives && opand == 0) {
-      arity = _primitives->arity(op);
-    }
-    else {
-      const LogoBuiltinWord *builtin = getbuiltin(op, opand);
-      if (builtin) {
-        arity = builtin->_arity;
-      }
-    }
-    
-    if (arity == 255) {
+   if (_corearity[op] == INFIX_ARITY) {
     
       // open up a spot in the stack with the current whatever it is.
       memmove(_stack + _tos, _stack + _tos - 1, (1) * sizeof(tLogoInstruction));
@@ -884,7 +844,7 @@ bool Logo::doarity() {
     return false;
   }
   
-  if (_stack[ar][FIELD_OPAND] == 255) {
+  if (_stack[ar][FIELD_OPAND] == INFIX_ARITY) {
     _stack[ar][FIELD_OPAND] = 0;
     DEBUG_RETURN(" going once more for infix", 0);
     return false;
@@ -910,18 +870,11 @@ bool Logo::doarity() {
     _tos--;
 
     short op = instField(pc, FIELD_OP);
-    short opand = instField(pc, FIELD_OPAND);
     
-    DEBUG_OUT("calling builtin %i%i", op, opand);
+    DEBUG_OUT("calling builtin %i%i", op);
     
 //    dumpstack(0, false);
-    if (_primitives && opand == 0) {
-      // call the primitive.
-      _primitives->exec(op, this);
-    }
-    else {
-      getbuiltin(op, opand)->_code(*this);
-    }
+    callbuiltin(op);
 //    dumpstack(0, false);
     
     DEBUG_RETURN(" called builtin", 0);
@@ -945,34 +898,6 @@ bool Logo::doarity() {
   }
 
   return false;
-}
-
-short LogoFunctionPrimitives::find(LogoString *str, short start, short slen) {
-
-  for (short i=0; i<_count; i++) {
-    if (strlen(_builtins[i]._name) == slen && str->ncasecmp(_builtins[i]._name, start, slen) == 0) {
-      return i;
-    }
-  }
-  return -1;
-}
-
-short LogoFunctionPrimitives::arity(short index) {
-  return _builtins[index]._arity;
-}
-
-void LogoFunctionPrimitives::exec(short index, Logo *logo) {
-  if (_builtins) {
-    _builtins[index]._code(*logo);
-  }
-}
-
-void LogoFunctionPrimitives::name(short index, char *s, int len) {
-  if (_builtins) {
-    len = min(len, strlen(_builtins[index]._name));
-    strncpy(s, _builtins[index]._name, len);
-    s[len] = 0;
-  }
 }
 
 short Logo::startgroup() {
@@ -1014,38 +939,12 @@ short Logo::dobuiltin() {
   // save away where we will call to.
   short call = _pc;
   
-  short opand = instField(call, FIELD_OPAND);
   short op = instField(call, FIELD_OP);
-  
-  if (_primitives && opand == 0) {
-    short arity = _primitives->arity(op);
-    
-    if (arity == 0) {
-      // call the primitive.
-      _primitives->exec(op, this);
-      return 0;
-    }
-    
-    // push arity. We need to wait for this many calls.
-    if (!push(SOPTYPE_ARITY, call, arity)) {
-      return LG_STACK_OVERFLOW;
-    }
-  
-    return 0;
-    
-  }
-  
-  // get the builtin.
-  const LogoBuiltinWord *builtin = getbuiltin(op, opand);
-  if (!builtin) {
-      // problem with the code, no actual builtin?
-      return LG_OUT_OF_CODE;
-  }
-  short arity = builtin->_arity;
+  short arity = _corearity[op];
   
   if (arity == 0) {
     // call the builtin.
-    builtin->_code(*this);
+    callbuiltin(op);
     return 0;
   }
   
@@ -1127,12 +1026,6 @@ short Logo::doreturn() {
     
 }
 
-void Logo::setprimitives(LogoString *str, short start, short slen) {
-  if (_primitives) {
-    _primitives->set(str, start, slen);
-  }
-}
-
 void Logo::addop(tJump *next, short type, short op, short opand) {
 
   DEBUG_IN_ARGS(Logo, "addop", "%i%i%i", type, op, opand);
@@ -1151,45 +1044,22 @@ void Logo::addop(tJump *next, short type, short op, short opand) {
   
 }
 
-void Logo::findbuiltin(LogoString *str, short start, short slen, short *index, short *category) {
+short Logo::findbuiltin(LogoString *str, short start, short slen) {
 
-  DEBUG_IN_ARGS(Logo, "findbuiltin", "%i%i", start, slen);
+  return findcrstring(&_corenames, str, start, slen);
   
-  *index = -1;
-  *category = 0;
-  if (_primitives) {
-    *index = _primitives->find(str, start, slen);
-  }
-  
-  if (*index < 0) {
-    for (short i=0; i<_corecount; i++) {
-      if (strlen(_core[i]._name) == slen && str->ncasecmp(_core[i]._name, start, slen) == 0) {
-        *index = i;
-        *category = 1;
-        return;
-      }
-    }
-  }
-
-  DEBUG_RETURN(" %i%i", *index, *category);
-
 }
 
-short Logo::findfixed(LogoString *stri, short strstart, short slen) const {
+short Logo::findcrstring(const LogoString *strings, const LogoString *stri, short strstart, short slen) {
 
-  DEBUG_IN_ARGS(Logo, "findfixed", "%i%i", strstart, slen);
-  
-//  stri->dump("findfixed", strstart, slen);
-  
-  if (_fixedstrings) {
-//    _fixedstrings->dump("findfixed", 0, _fixedstrings->length());
-    short len = _fixedstrings->length();
+  if (strings) {
+//    strings->dump("findfixed", 0, strings->length());
+    short len = strings->length();
     short start = 0;
     short index = 0;
     for (int i=0; i<len; i++) {
-      if ((*_fixedstrings)[i] == '\n') {
-        if (_fixedstrings->ncmp2(stri, strstart, start, i-start) == 0) {
-          DEBUG_RETURN(" found %i", index);
+      if ((*strings)[i] == '\n') {
+        if (slen == (i - start) && strings->ncmp2(stri, strstart, start, i-start) == 0) {
           return index;
         }
         start = i + 1;
@@ -1198,11 +1068,19 @@ short Logo::findfixed(LogoString *stri, short strstart, short slen) const {
     }
   }
   
-  DEBUG_RETURN(" %i", -1);
   return -1;
+  
 }
 
-bool Logo::fixedcmp(LogoString *stri, short strstart, short slen, tStrPool str, tStrPool len) const {
+short Logo::findfixed(const LogoString *stri, short strstart, short slen) const {
+
+  DEBUG_IN_ARGS(Logo, "findfixed", "%i%i", strstart, slen);
+  
+  return findcrstring(_fixedstrings, stri, strstart, slen);
+
+}
+
+bool Logo::fixedcmp(const LogoString *stri, short strstart, short slen, tStrPool str, tStrPool len) const {
 
 //  DEBUG_IN_ARGS(Logo, "fixedcmp", "%i%i%i%i", strstart, slen, str, len);
   
@@ -1227,21 +1105,18 @@ bool Logo::fixedcmp(LogoString *stri, short strstart, short slen, tStrPool str, 
   
 }
 
-bool Logo::getfixed(LogoStringResult *result, tStrPool str) const {
+bool Logo::getfixedcr(const LogoString *strings, LogoStringResult *result, short ind) {
 
-//  DEBUG_IN_ARGS(Logo, "getfixed", "%i", str);
-  
-  if (_fixedstrings && str < _fixedcount) {
+  if (strings) {
     short start = 0;
     short index = 0;
-    short len = _fixedstrings->length();
+    short len = strings->length();
     for (int i=0; i<len; i++) {
-      if ((*_fixedstrings)[i] == '\n') {
-        if (index == str) {
-          result->_fixed = _fixedstrings;
+      if ((*strings)[i] == '\n') {
+        if (index == ind) {
+          result->_fixed = strings;
           result->_fixedstart = start;
           result->_fixedlen = i-start;
-//          DEBUG_RETURN(" %b", true);
           return true;
         }
         start = i + 1;
@@ -1250,11 +1125,22 @@ bool Logo::getfixed(LogoStringResult *result, tStrPool str) const {
     }
   }
   
+  return false;
+}
+
+bool Logo::getfixed(LogoStringResult *result, tStrPool str) const {
+
+//  DEBUG_IN_ARGS(Logo, "getfixed", "%i", str);
+  
+  if (str < _fixedcount) {
+    return getfixedcr(_fixedstrings, result, str);
+  }
+  
 //  DEBUG_RETURN(" %b", false);
   return false;
 }
 
-short Logo::addstring(LogoString *str, short start, short slen) {
+short Logo::addstring(const LogoString *str, short start, short slen) {
 
   DEBUG_IN_ARGS(Logo, "addstring", "%i%i", start, slen);
   
@@ -1287,7 +1173,7 @@ short Logo::addstring(LogoStringResult *stri) {
 
 }
 
-bool Logo::stringcmp(LogoString *stri, short start, short slen, tStrPool str, tStrPool len) const {
+bool Logo::stringcmp(const LogoString *stri, short start, short slen, tStrPool str, tStrPool len) const {
 
   if (slen != len) {
     return false;
@@ -1345,6 +1231,7 @@ short Logo::findvariable(LogoString *stri, short start, short slen) const {
   
   return -1;
 }
+
 short Logo::findvariable(LogoStringResult *stri) const {
 
   DEBUG_IN_ARGS(Logo, "findvariable", "%i", _varcount);
@@ -1994,6 +1881,18 @@ void Logo::dumpstack(const LogoCompiler *compiler, bool all) const {
   }
   
 }
+
+ostream &Logo::out() {
+  if (_ostream) {
+    return *_ostream;
+  }
+  return cout;
+}
+
+void Logo::setout(ostream *s) {
+  _ostream = s;
+}
+
 
 #endif // !defined(ARDUINO)
 

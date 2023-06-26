@@ -16,6 +16,7 @@
 #include "../logo.hpp"
 #include "../logocompiler.hpp"
 #include "../arduinoflashcode.hpp"
+#include "../arduinoflashstring.hpp"
 
 #define BOOST_AUTO_TEST_MAIN
 #include <boost/test/auto_unit_test.hpp>
@@ -26,79 +27,22 @@
 
 using namespace std;
 
-vector<string> gCmds;
-
-//#define PRINT_RESULT
-
-void ledOn(Logo &logo) {
-  gCmds.push_back("LED ON");
-#ifdef PRINT_RESULT
-  cout << gCmds.back() << endl;
-#endif
-}
-
-void ledOff(Logo &logo) {
-  gCmds.push_back("LED OFF");
-#ifdef PRINT_RESULT
-  cout << gCmds.back() << endl;
-#endif
-}
-
-void wait(Logo &logo) {
-  strstream str;
-  str << "WAIT " << logo.popint();
-  gCmds.push_back(str.str());
-#ifdef PRINT_RESULT
-  cout << gCmds.back() << endl;
-#endif
-}
-
-BOOST_AUTO_TEST_CASE( builtin )
-{
-  cout << "=== builtin ===" << endl;
-  
-  LogoBuiltinWord builtins[] = {
-    { "ON", &ledOn }
-  };
-  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
-  Logo logo(&primitives);
-  LogoCompiler compiler(&logo);
-
-  compiler.compile("ON");
-  BOOST_CHECK_EQUAL(logo.geterr(), 0);
-  DEBUG_DUMP(false);
-  
-  gCmds.clear();
-  BOOST_CHECK_EQUAL(logo.step(), 0);
-  BOOST_CHECK_EQUAL(gCmds[0], "LED ON");
-  DEBUG_DUMP(false);
-  
-}
-
 BOOST_AUTO_TEST_CASE( compound )
 {
   cout << "=== compound ===" << endl;
   
-  LogoBuiltinWord builtins[] = {
-    { "ON", &ledOn },
-    { "OFF", &ledOff },
-    { "WAIT", &wait, 1 }
-  };
-  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
-  Logo logo(&primitives);
+  Logo logo(0);
   LogoCompiler compiler(&logo);
 
-  compiler.compile("ON WAIT 100 OFF WAIT 20");
+  compiler.compile("print \"ON print \"OFF");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
+  stringstream s;
+  logo.setout(&s);
 
-  gCmds.clear();
   DEBUG_STEP_DUMP(3, false);
   BOOST_CHECK_EQUAL(logo.run(), 0);
-  BOOST_CHECK_EQUAL(gCmds[0], "LED ON");
-  BOOST_CHECK_EQUAL(gCmds[1], "WAIT 100");
-  BOOST_CHECK_EQUAL(gCmds[2], "LED OFF");
-  BOOST_CHECK_EQUAL(gCmds[3], "WAIT 20");
+  BOOST_CHECK_EQUAL(s.str(), "=== ON\n=== OFF\n");
   
 }
 
@@ -106,32 +50,20 @@ BOOST_AUTO_TEST_CASE( defineSimpleWord )
 {
   cout << "=== defineSimpleWord ===" << endl;
   
-  LogoBuiltinWord builtins[] = {
-    { "ON", &ledOn },
-    { "OFF", &ledOff }
-  };
-  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
-  Logo logo(&primitives);
+  Logo logo(0);
   LogoCompiler compiler(&logo);
 
-  compiler.compile("TO TURNON; ON; END;");
-  compiler.compile("TURNON;");
-  compiler.compile("OFF;");
+  compiler.compile("to ON; print \"ON; end");
+  compiler.compile("ON");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
-  gCmds.clear();
-  BOOST_CHECK_EQUAL(logo.step(), 0);
-  DEBUG_DUMP(false);
-  BOOST_CHECK_EQUAL(logo.step(), 0);
-  DEBUG_DUMP(false);
-  BOOST_CHECK_EQUAL(logo.step(), 0);
-  DEBUG_DUMP(false);
-  BOOST_CHECK_EQUAL(logo.step(), 0);
-  DEBUG_DUMP(false);
-  BOOST_CHECK_EQUAL(gCmds.size(), 2);
-  BOOST_CHECK_EQUAL(gCmds[0], "LED ON");
-  BOOST_CHECK_EQUAL(gCmds[1], "LED OFF");
+  stringstream s;
+  logo.setout(&s);
+
+  DEBUG_STEP_DUMP(3, false);
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(s.str(), "=== ON\n");
   
 }
 
@@ -139,66 +71,45 @@ BOOST_AUTO_TEST_CASE( defineCompoundWord )
 {
   cout << "=== defineCompoundWord ===" << endl;
   
-  LogoBuiltinWord builtins[] = {
-    { "ON", &ledOn },
-    { "OFF", &ledOff },
-    { "WAIT", &wait, 1 }
-  };
-  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
-  Logo logo(&primitives);
+  Logo logo(0);
   LogoCompiler compiler(&logo);
 
+  compiler.compile("TO ON; print \"ON; END");
+  compiler.compile("TO OFF; print \"OFF; END");
   compiler.compile("TO TEST1; ON WAIT 100 OFF WAIT 20; END;");
   compiler.compile("TO TEST2; OFF WAIT 30 ON WAIT 40; END;");
   compiler.compile("TEST1; TEST2;");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
-  gCmds.clear();
+  stringstream s;
+  logo.setout(&s);
+
   BOOST_CHECK_EQUAL(logo.run(), 0);
-  BOOST_CHECK_EQUAL(gCmds.size(), 8);
-  BOOST_CHECK_EQUAL(gCmds[0], "LED ON");
-  BOOST_CHECK_EQUAL(gCmds[1], "WAIT 100");
-  BOOST_CHECK_EQUAL(gCmds[2], "LED OFF");
-  BOOST_CHECK_EQUAL(gCmds[3], "WAIT 20");
-  BOOST_CHECK_EQUAL(gCmds[4], "LED OFF");
-  BOOST_CHECK_EQUAL(gCmds[5], "WAIT 30");
-  BOOST_CHECK_EQUAL(gCmds[6], "LED ON");
-  BOOST_CHECK_EQUAL(gCmds[7], "WAIT 40");
+  BOOST_CHECK_EQUAL(s.str(), "=== ON\n=== OFF\n=== OFF\n=== ON\n");
   
 }
-
 
 BOOST_AUTO_TEST_CASE( defineMixedCase )
 {
   cout << "=== defineCompoundWord ===" << endl;
   
-  LogoBuiltinWord builtins[] = {
-    { "ON", &ledOn },
-    { "OFF", &ledOff },
-    { "WAIT", &wait, 1 }
-  };
-  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
-  Logo logo(&primitives);
+  Logo logo(0);
   LogoCompiler compiler(&logo);
 
+  compiler.compile("TO ON; print \"ON; END");
+  compiler.compile("TO OFF; print \"OFF; END");
   compiler.compile("to test1; ON WAIT 100 OFF WAIT 20; END;");
   compiler.compile("TO Test2; OFF wait 30 ON WAIT 40; end;");
   compiler.compile("test1; Test2;");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
-  gCmds.clear();
+  stringstream s;
+  logo.setout(&s);
+
   BOOST_CHECK_EQUAL(logo.run(), 0);
-  BOOST_CHECK_EQUAL(gCmds.size(), 8);
-  BOOST_CHECK_EQUAL(gCmds[0], "LED ON");
-  BOOST_CHECK_EQUAL(gCmds[1], "WAIT 100");
-  BOOST_CHECK_EQUAL(gCmds[2], "LED OFF");
-  BOOST_CHECK_EQUAL(gCmds[3], "WAIT 20");
-  BOOST_CHECK_EQUAL(gCmds[4], "LED OFF");
-  BOOST_CHECK_EQUAL(gCmds[5], "WAIT 30");
-  BOOST_CHECK_EQUAL(gCmds[6], "LED ON");
-  BOOST_CHECK_EQUAL(gCmds[7], "WAIT 40");
+  BOOST_CHECK_EQUAL(s.str(), "=== ON\n=== OFF\n=== OFF\n=== ON\n");
   
 }
 
@@ -206,28 +117,22 @@ BOOST_AUTO_TEST_CASE( nestedWord )
 {
   cout << "=== nestedWord ===" << endl;
   
-  LogoBuiltinWord builtins[] = {
-    { "ON", &ledOn },
-    { "OFF", &ledOff },
-    { "WAIT", &wait, 1 }
-  };
-  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
-  Logo logo(&primitives);
+  Logo logo(0);
   LogoCompiler compiler(&logo);
 
+  compiler.compile("TO ON; print \"ON; END");
+  compiler.compile("TO OFF; print \"OFF; END");
   compiler.compile("TO TEST1; ON WAIT 100 OFF WAIT 20; END;");
   compiler.compile("TO TEST2; TEST1; END;");
   compiler.compile("TEST2;");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
-  gCmds.clear();
+  stringstream s;
+  logo.setout(&s);
+
   BOOST_CHECK_EQUAL(logo.run(), 0);
-  BOOST_CHECK_EQUAL(gCmds.size(), 4);
-  BOOST_CHECK_EQUAL(gCmds[0], "LED ON");
-  BOOST_CHECK_EQUAL(gCmds[1], "WAIT 100");
-  BOOST_CHECK_EQUAL(gCmds[2], "LED OFF");
-  BOOST_CHECK_EQUAL(gCmds[3], "WAIT 20");
+  BOOST_CHECK_EQUAL(s.str(), "=== ON\n=== OFF\n");
   
 }
 
@@ -235,28 +140,22 @@ BOOST_AUTO_TEST_CASE( defineCompoundWordRun1 )
 {
   cout << "=== defineCompoundWord ===" << endl;
   
-  LogoBuiltinWord builtins[] = {
-    { "ON", &ledOn },
-    { "OFF", &ledOff },
-    { "WAIT", &wait, 1 }
-  };
-  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
-  Logo logo(&primitives);
+  Logo logo(0);
   LogoCompiler compiler(&logo);
 
+  compiler.compile("TO ON; print \"ON; END");
+  compiler.compile("TO OFF; print \"OFF; END");
   compiler.compile("TO TEST1; ON WAIT 10 OFF WAIT 20; END;");
   compiler.compile("TO TEST2; OFF WAIT 30 ON WAIT 40; END;");
   compiler.compile("TEST1;");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
-  gCmds.clear();
+  stringstream s;
+  logo.setout(&s);
+
   BOOST_CHECK_EQUAL(logo.run(), 0);
-  BOOST_CHECK_EQUAL(gCmds.size(), 4);
-  BOOST_CHECK_EQUAL(gCmds[0], "LED ON");
-  BOOST_CHECK_EQUAL(gCmds[1], "WAIT 10");
-  BOOST_CHECK_EQUAL(gCmds[2], "LED OFF");
-  BOOST_CHECK_EQUAL(gCmds[3], "WAIT 20");
+  BOOST_CHECK_EQUAL(s.str(), "=== ON\n=== OFF\n");
   
 }
 
@@ -272,129 +171,31 @@ BOOST_AUTO_TEST_CASE( defineEmptyWord )
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
-  gCmds.clear();
+  stringstream s;
+  logo.setout(&s);
+
   BOOST_CHECK_EQUAL(logo.run(), 0);
-  BOOST_CHECK_EQUAL(gCmds.size(), 0);
+  BOOST_CHECK_EQUAL(s.str(), "");
   
 }
-
-void sarg(Logo &logo) {
-
-  char s[LINE_LEN];
-  LogoStringResult result;
-  logo.popstring(&result);
-  result.ncpy(s, sizeof(s));
-
-  strstream str;
-  str << "SARG " << s;
-  gCmds.push_back(str.str());
-#ifdef PRINT_RESULT
-  cout << gCmds.back() << endl;
-#endif  
-}
-
-#ifdef LOGO_SENTENCES
-
-BOOST_AUTO_TEST_CASE( sentence )
-{
-  cout << "=== sentence ===" << endl;
-  
-  LogoBuiltinWord builtins[] = {
-    { "ON", &ledOn },
-    { "OFF", &ledOff },
-    { "WAIT", &wait, 1 }
-  };
-  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
-  Logo logo(&primitives);
-  LogoCompiler compiler(&logo);
-
-  compiler.compile("[ON WAIT 10 OFF WAIT 20];");
-  BOOST_CHECK_EQUAL(logo.geterr(), 0);
-  DEBUG_DUMP(false);
-
-  gCmds.clear();
-  BOOST_CHECK_EQUAL(logo.run(), 0);
-  BOOST_CHECK_EQUAL(gCmds.size(), 4);
-  BOOST_CHECK_EQUAL(gCmds[0], "LED ON");
-  BOOST_CHECK_EQUAL(gCmds[1], "WAIT 10");
-  BOOST_CHECK_EQUAL(gCmds[2], "LED OFF");
-  BOOST_CHECK_EQUAL(gCmds[3], "WAIT 20");
-  
-}
-
-BOOST_AUTO_TEST_CASE( sentences )
-{
-  cout << "=== sentences ===" << endl;
-  
-  LogoBuiltinWord builtins[] = {
-    { "ON", &ledOn },
-    { "OFF", &ledOff },
-    { "WAIT", &wait, 1 }
-  };
-  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
-  Logo logo(&primitives);
-  LogoCompiler compiler(&logo);
-
-  compiler.compile("[ON] [WAIT 10] [OFF] [WAIT 20];");
-  BOOST_CHECK_EQUAL(logo.geterr(), 0);
-  DEBUG_DUMP(false);
-
-  gCmds.clear();
-//   DEBUG_STEP_DUMP(10, false);
-  BOOST_CHECK_EQUAL(logo.run(), 0);
-  BOOST_CHECK_EQUAL(gCmds.size(), 4);
-  BOOST_CHECK_EQUAL(gCmds[0], "LED ON");
-  BOOST_CHECK_EQUAL(gCmds[1], "WAIT 10");
-  BOOST_CHECK_EQUAL(gCmds[2], "LED OFF");
-  BOOST_CHECK_EQUAL(gCmds[3], "WAIT 20");
-  
-}
-
-BOOST_AUTO_TEST_CASE( sentenceInWord )
-{
-  cout << "=== sentenceInWord ===" << endl;
-  
-  LogoBuiltinWord builtins[] = {
-    { "SARG", &sarg, 1 }
-  };
-  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
-  Logo logo(&primitives);
-  LogoCompiler compiler(&logo);
-
-  compiler.compile("TO TEST; SARG [XXX]; END;");
-  compiler.compile("TEST;");
-  BOOST_CHECK_EQUAL(logo.geterr(), 0);
-  DEBUG_DUMP(false);
-
-  gCmds.clear();
-  DEBUG_STEP_DUMP(7, 0);
-  BOOST_CHECK_EQUAL(logo.run(), 0);
-  BOOST_CHECK_EQUAL(gCmds.size(), 1);
-  BOOST_CHECK_EQUAL(gCmds[0], "SARG XXX");
-  
-}
-
-#endif // LOGO_SENTENCES
 
 BOOST_AUTO_TEST_CASE( arityLiteral1 )
 {
   cout << "=== arityLiteral1 ===" << endl;
   
-  LogoBuiltinWord builtins[] = {
-    { "WAIT", &wait, 1 }
-  };
-  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
-  Logo logo(&primitives);
+  Logo logo(0);
   LogoCompiler compiler(&logo);
 
-  compiler.compile("WAIT 20");
+  compiler.compile("TO W :N;PRINT :N;END");
+  compiler.compile("W 20");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
-  gCmds.clear();
+  stringstream s;
+  logo.setout(&s);
+
   BOOST_CHECK_EQUAL(logo.run(), 0);
-  BOOST_CHECK_EQUAL(gCmds.size(), 1);
-  BOOST_CHECK_EQUAL(gCmds[0], "WAIT 20");
+  BOOST_CHECK_EQUAL(s.str(), "=== 20\n");
   
 }
 
@@ -402,63 +203,40 @@ BOOST_AUTO_TEST_CASE( arityWord1 )
 {
   cout << "=== arityWord1 ===" << endl;
   
-  LogoBuiltinWord builtins[] = {
-    { "WAIT", &wait, 1 }
-  };
-  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
-  Logo logo(&primitives);
+  Logo logo(0);
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO TIME; 20; END");
-  compiler.compile("WAIT TIME");
+  compiler.compile("TO W :N;PRINT :N;END");
+  compiler.compile("W TIME");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
-  gCmds.clear();
-  DEBUG_STEP_DUMP(5, false);
+  stringstream s;
+  logo.setout(&s);
+
   BOOST_CHECK_EQUAL(logo.run(), 0);
-  BOOST_CHECK_EQUAL(gCmds.size(), 1);
-  BOOST_CHECK_EQUAL(gCmds[0], "WAIT 20");
+  BOOST_CHECK_EQUAL(s.str(), "=== 20\n");
   
-}
-
-void args2(Logo &logo) {
-
-  char s[LINE_LEN];
-  LogoStringResult result;
-  logo.popstring(&result);
-  result.ncpy(s, sizeof(s));
-
-  int n = logo.popint();
-  strstream str;
-  str << "ARGS2 " << n << ", " << s;
-  gCmds.push_back(str.str());
-#ifdef PRINT_RESULT
-  cout << gCmds.back() << endl;
-#endif
-
 }
 
 BOOST_AUTO_TEST_CASE( arityLiteral )
 {
   cout << "=== arityLiteral ===" << endl;
   
-  LogoBuiltinWord builtins[] = {
-    { "ARGS2", &args2, 2 }
-  };
-  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
-  Logo logo(&primitives);
+  Logo logo(0);
   LogoCompiler compiler(&logo);
 
+  compiler.compile("TO ARGS2 :A :B;PRINT :A PRINT :B;END");
   compiler.compile("ARGS2 20 XXXX");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
-  gCmds.clear();
-  DEBUG_STEP_DUMP(10, false);
+  stringstream s;
+  logo.setout(&s);
+
   BOOST_CHECK_EQUAL(logo.run(), 0);
-  BOOST_CHECK_EQUAL(gCmds.size(), 1);
-  BOOST_CHECK_EQUAL(gCmds[0], "ARGS2 20, XXXX");
+  BOOST_CHECK_EQUAL(s.str(), "=== XXXX\n=== 20\n");
   
 }
 
@@ -466,71 +244,42 @@ BOOST_AUTO_TEST_CASE( arityWord )
 {
   cout << "=== arityWord ===" << endl;
   
-  LogoBuiltinWord builtins[] = {
-    { "ARGS2", &args2, 2 }
-  };
-  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
-  Logo logo(&primitives);
+  Logo logo(0);
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO TIME; 20; END");
-  compiler.compile("TO THING; XXXX; END");
-  compiler.compile("ARGS2 TIME THING");
+  compiler.compile("TO AAA; XXXX; END");
+  compiler.compile("TO ARGS2 :A :B;PRINT :A PRINT :B;END");
+  compiler.compile("ARGS2 TIME AAA");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
-  gCmds.clear();
-  DEBUG_STEP_DUMP(10, false);
+  stringstream s;
+  logo.setout(&s);
+
   BOOST_CHECK_EQUAL(logo.run(), 0);
-  BOOST_CHECK_EQUAL(gCmds.size(), 1);
-  BOOST_CHECK_EQUAL(gCmds[0], "ARGS2 20, XXXX");
+  BOOST_CHECK_EQUAL(s.str(), "=== XXXX\n=== 20\n");
   
-}
-
-void ar1(Logo &logo) {
-  strstream str;
-  str << "AR1 " << logo.popint();
-  gCmds.push_back(str.str());
-#ifdef PRINT_RESULT
-  cout << gCmds.back() << endl;
-#endif
-}
-
-void ar2(Logo &logo) {
-
-  int val = logo.popint();
-  logo.pushint(val * 2);
-  
-  strstream str;
-  str << "AR2 " << val;
-  gCmds.push_back(str.str());
-#ifdef PRINT_RESULT
-  cout << gCmds.back() << endl;
-#endif
 }
 
 BOOST_AUTO_TEST_CASE( arityNested )
 {
   cout << "=== arityNested ===" << endl;
   
-  LogoBuiltinWord builtins[] = {
-    { "AR1", &ar1, 1 },
-    { "AR2", &ar2, 1 }
-  };
-  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
-  Logo logo(&primitives);
+  Logo logo(0);
   LogoCompiler compiler(&logo);
 
+  compiler.compile("TO AR1 :N2; PRINT :N2; END");
+  compiler.compile("TO AR2 :N1; :N1; END");
   compiler.compile("AR1 AR2 20");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
+  
+  stringstream s;
+  logo.setout(&s);
 
-  gCmds.clear();
-  DEBUG_STEP_DUMP(10, false);
   BOOST_CHECK_EQUAL(logo.run(), 0);
-  BOOST_CHECK_EQUAL(gCmds.size(), 2);
-  BOOST_CHECK_EQUAL(gCmds[0], "AR2 20");
-  BOOST_CHECK_EQUAL(gCmds[1], "AR1 40");
+  BOOST_CHECK_EQUAL(s.str(), "=== 20\n");
   
 }
 
@@ -538,13 +287,10 @@ BOOST_AUTO_TEST_CASE( seperateLines )
 {
   cout << "=== seperateLines ===" << endl;
   
-  LogoBuiltinWord builtins[] = {
-    { "SARG", &sarg, 1 }
-  };
-  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
-  Logo logo(&primitives);
+  Logo logo(0);
   LogoCompiler compiler(&logo);
 
+  compiler.compile("TO SARG :S; PRINT :S; END");
   compiler.compile("TO TEST\n");
   compiler.compile("  SARG \"XXX\n");
   compiler.compile("END\n");
@@ -552,10 +298,11 @@ BOOST_AUTO_TEST_CASE( seperateLines )
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
-  gCmds.clear();
+  stringstream s;
+  logo.setout(&s);
+
   BOOST_CHECK_EQUAL(logo.run(), 0);
-  BOOST_CHECK_EQUAL(gCmds.size(), 1);
-  BOOST_CHECK_EQUAL(gCmds[0], "SARG XXX");
+  BOOST_CHECK_EQUAL(s.str(), "=== XXX\n");
   
 }
 
@@ -563,124 +310,46 @@ BOOST_AUTO_TEST_CASE( newLines )
 {
   cout << "=== newLines ===" << endl;
   
-  LogoBuiltinWord builtins[] = {
-    { "SARG", &sarg, 1 }
-  };
-  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
-  Logo logo(&primitives);
+  Logo logo(0);
   LogoCompiler compiler(&logo);
 
+  compiler.compile("TO SARG :S; PRINT :S; END");
   compiler.compile("TO TEST\n\tSARG \"XXX\nEND\nTEST");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
-  gCmds.clear();
+  stringstream s;
+  logo.setout(&s);
+
   BOOST_CHECK_EQUAL(logo.run(), 0);
-  BOOST_CHECK_EQUAL(gCmds.size(), 1);
-  BOOST_CHECK_EQUAL(gCmds[0], "SARG XXX");
+  BOOST_CHECK_EQUAL(s.str(), "=== XXX\n");
   
 }
 
-BOOST_AUTO_TEST_CASE( reset )
+BOOST_AUTO_TEST_CASE( restart )
 {
-  cout << "=== reset ===" << endl;
+  cout << "=== restart ===" << endl;
   
-  LogoBuiltinWord builtins[] = {
-    { "SARG", &sarg, 1 }
-  };
-  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
-  Logo logo(&primitives);
+  Logo logo(0);
   LogoCompiler compiler(&logo);
 
+  compiler.compile("TO SARG :S; PRINT :S; END");
   compiler.compile("TO TEST\n\tSARG \"XXX\nEND\nTEST");
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
-  gCmds.clear();
+  stringstream s;
+  logo.setout(&s);
+
   BOOST_CHECK_EQUAL(logo.run(), 0);
-  BOOST_CHECK_EQUAL(gCmds.size(), 1);
-  BOOST_CHECK_EQUAL(gCmds[0], "SARG XXX");
+  BOOST_CHECK_EQUAL(s.str(), "=== XXX\n");
   
-  gCmds.clear();
+  stringstream s2;
+  logo.setout(&s2);
   logo.restart();
   BOOST_CHECK_EQUAL(logo.run(), 0);
-  BOOST_CHECK_EQUAL(gCmds.size(), 1);
-  BOOST_CHECK_EQUAL(gCmds[0], "SARG XXX");
+  BOOST_CHECK_EQUAL(s2.str(), "=== XXX\n");
   
-}
-
-void infixfn(Logo &logo) {
-
-  strstream str;
-  int v1 = logo.popint();
-  int v2 = logo.popint();
-  str << "INFIX " << v1 << ", " << v2;
-  logo.pushint(v1 + v2);
-  gCmds.push_back(str.str());
-#ifdef PRINT_RESULT
-  cout << gCmds.back() << endl;
-#endif
-
-}
-
-BOOST_AUTO_TEST_CASE( infix )
-{
-  cout << "=== infix ===" << endl;
-  
-  LogoBuiltinWord builtins[] = {
-    { "INFIX", &infixfn, 255 },
-  };
-  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
-  Logo logo(&primitives);
-  LogoCompiler compiler(&logo);
-
-  compiler.compile("1 INFIX 5");
-  BOOST_CHECK_EQUAL(logo.geterr(), 0);
-  DEBUG_DUMP(false);
-
-  gCmds.clear();
-  DEBUG_STEP_DUMP(5, false);
-  BOOST_CHECK_EQUAL(logo.run(), 0);
-  BOOST_CHECK_EQUAL(logo.popint(), 6);
-  BOOST_CHECK_EQUAL(gCmds.size(), 1);
-  BOOST_CHECK_EQUAL(gCmds[0], "INFIX 5, 1");
-
-}
-
-void ar3(Logo &logo) {
-  strstream str;
-  str << "AR3 " << logo.popint();
-  gCmds.push_back(str.str());
-#ifdef PRINT_RESULT
-  cout << gCmds.back() << endl;
-#endif
-}
-
-BOOST_AUTO_TEST_CASE( infixArityNested )
-{
-  cout << "=== infixArityNested ===" << endl;
-  
-  LogoBuiltinWord builtins[] = {
-    { "AR3", &ar3, 1 },
-    { "+", &infixfn, 255 },
-  };
-  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
-  Logo logo(&primitives);
-  LogoCompiler compiler(&logo);
-
-  compiler.compile("TO A;1;END");
-//  compiler.compile("AR3 1 + 5 3 A");
-  compiler.compile("AR3 1 + 5 A");
-  BOOST_CHECK_EQUAL(logo.geterr(), 0);
-  DEBUG_DUMP(false);
-
-  gCmds.clear();
-  DEBUG_STEP_DUMP(10, false);
-  BOOST_CHECK_EQUAL(logo.run(), 0);
-  BOOST_CHECK_EQUAL(gCmds.size(), 2);
-  BOOST_CHECK_EQUAL(gCmds[0], "INFIX 5, 1");
-  BOOST_CHECK_EQUAL(gCmds[1], "AR3 6");
- 
 }
 
 BOOST_AUTO_TEST_CASE( literalsOnStack )
@@ -694,7 +363,6 @@ BOOST_AUTO_TEST_CASE( literalsOnStack )
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
-  gCmds.clear();
   BOOST_CHECK_EQUAL(logo.run(), 0);
   BOOST_CHECK_EQUAL(logo.popint(), 3);
   BOOST_CHECK_EQUAL(logo.popint(), 2);
@@ -708,7 +376,6 @@ BOOST_AUTO_TEST_CASE( sizes )
   cout << "=== sizes ===" << endl;
   
   // half this size on an arduino
-  BOOST_CHECK_EQUAL(sizeof(LogoBuiltinWord), 24);
   BOOST_CHECK_EQUAL(sizeof(tLogoInstruction), 6);
   BOOST_CHECK_EQUAL(sizeof(LogoWord), 6);
   BOOST_CHECK_EQUAL(sizeof(LogoVar), 10);
@@ -719,7 +386,7 @@ BOOST_AUTO_TEST_CASE( arguments )
 {
   cout << "=== arguments ===" << endl;
   
-  Logo logo(0, 0, Logo::core);
+  Logo logo(0);
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO MULT :A :B; :A * :B; END;");
@@ -727,7 +394,6 @@ BOOST_AUTO_TEST_CASE( arguments )
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
-  gCmds.clear();
   DEBUG_STEP_DUMP(20, false);
   BOOST_CHECK_EQUAL(logo.run(), 0);
   BOOST_CHECK_EQUAL(logo.popint(), 200);
@@ -739,7 +405,7 @@ BOOST_AUTO_TEST_CASE( argumentsNoColons )
 {
   cout << "=== argumentsNoColons ===" << endl;
   
-  Logo logo(0, 0, Logo::core);
+  Logo logo(0);
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO MULT A B; :A * :B; END;");
@@ -747,15 +413,12 @@ BOOST_AUTO_TEST_CASE( argumentsNoColons )
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
-  gCmds.clear();
   DEBUG_STEP_DUMP(20, false);
   BOOST_CHECK_EQUAL(logo.run(), 0);
   BOOST_CHECK_EQUAL(logo.popint(), 200);
   DEBUG_DUMP(false);
   
 }
-
-#include "../arduinoflashstring.hpp"
 
 static const char program_flash[] PROGMEM = 
   "TO MULT :A :B; :A * :B; END;"
@@ -766,7 +429,7 @@ BOOST_AUTO_TEST_CASE( flash )
 {
   cout << "=== flash ===" << endl;
   
-  Logo logo(0, 0, Logo::core);
+  Logo logo(0);
   LogoCompiler compiler(&logo);
 
   ArduinoFlashString program(program_flash);
@@ -774,7 +437,6 @@ BOOST_AUTO_TEST_CASE( flash )
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
   DEBUG_DUMP(false);
 
-  gCmds.clear();
   DEBUG_STEP_DUMP(20, false);
   BOOST_CHECK_EQUAL(logo.run(), 0);
   BOOST_CHECK_EQUAL(logo.popint(), 200);
@@ -800,7 +462,7 @@ BOOST_AUTO_TEST_CASE( fixedStrings )
   cout << "=== fixedStrings ===" << endl;
   
   ArduinoFlashString strings(strings_fixedStrings);
-  Logo logo(0, 0, Logo::core, &strings);
+  Logo logo(0, &strings);
   LogoCompiler compiler(&logo);
 
   ArduinoFlashString program(program_fixedStrings);
@@ -810,7 +472,6 @@ BOOST_AUTO_TEST_CASE( fixedStrings )
 
 //  logo.dumpstringscode(&compiler, "strings_fixedStrings");
   
-  gCmds.clear();
   DEBUG_STEP_DUMP(20, false);
   BOOST_CHECK_EQUAL(logo.run(), 0);
   BOOST_CHECK_EQUAL(logo.popint(), 200);
@@ -847,8 +508,8 @@ BOOST_AUTO_TEST_CASE( stringcmp )
 {
   cout << "=== stringcmp ===" << endl;
   
-  ArduinoFlashString strings(strings_fixedStrings);
-  Logo logo(0, 0, 0, &strings);
+  LogoSimpleString strings(strings_fixedStrings);
+  Logo logo(0, &strings);
 
   LogoSimpleString s1("XXX");
   short len1 = s1.length();
@@ -881,6 +542,8 @@ BOOST_AUTO_TEST_CASE( stringcmp )
 }
 
 static const char static_program[] PROGMEM = 
+  "TO ON; print \"ON; END;"
+  "TO OFF; print \"OFF; END;"
   "TO TEST1; ON WAIT 10 OFF WAIT 20; END;"
   "TO TEST2; OFF WAIT 30 ON WAIT 40; END;"
   "TEST1;"
@@ -890,53 +553,57 @@ BOOST_AUTO_TEST_CASE( staticProgUse )
 {
   cout << "=== staticProgUse ===" << endl;
   
-  LogoBuiltinWord builtins[] = {
-    { "ON", &ledOn },
-    { "OFF", &ledOff },
-    { "WAIT", &wait, 1 }
-  };
-  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
-  Logo logo(&primitives);
+  Logo logo(0);
   LogoCompiler compiler(&logo);
   
   compiler.compile(static_program);
   
-  gCmds.clear();
+  stringstream s;
+  logo.setout(&s);
+
   BOOST_CHECK_EQUAL(logo.run(), 0);
-  BOOST_CHECK_EQUAL(gCmds.size(), 4);
-  BOOST_CHECK_EQUAL(gCmds[0], "LED ON");
-  BOOST_CHECK_EQUAL(gCmds[1], "WAIT 10");
-  BOOST_CHECK_EQUAL(gCmds[2], "LED OFF");
-  BOOST_CHECK_EQUAL(gCmds[3], "WAIT 20");
+  BOOST_CHECK_EQUAL(s.str(), "=== ON\n=== OFF\n");
   
 }
 
 static const char strings_staticCode[] PROGMEM = {
 // words
+	"ON\n"
+	"OFF\n"
 	"TEST1\n"
 	"TEST2\n"
 // variables
 // strings
+	"ON\n"
+	"OFF\n"
 };
 static const short code_staticCode[][INST_LENGTH] PROGMEM = {
-	{ OPTYPE_JUMP, 2, 0 },		// 0
+	{ OPTYPE_JUMP, 8, 0 },		// 0
 	{ OPTYPE_HALT, 0, 0 },		// 1
-	{ OPTYPE_BUILTIN, 0, 0 },		// 2
-	{ OPTYPE_BUILTIN, 2, 0 },		// 3
-	{ OPTYPE_INT, 10, 0 },		// 4
-	{ OPTYPE_BUILTIN, 1, 0 },		// 5
-	{ OPTYPE_BUILTIN, 2, 0 },		// 6
-	{ OPTYPE_INT, 20, 0 },		// 7
-	{ OPTYPE_RETURN, 0, 0 },		// 8
-	{ OPTYPE_BUILTIN, 1, 0 },		// 9
-	{ OPTYPE_BUILTIN, 2, 0 },		// 10
-	{ OPTYPE_INT, 30, 0 },		// 11
-	{ OPTYPE_BUILTIN, 0, 0 },		// 12
-	{ OPTYPE_BUILTIN, 2, 0 },		// 13
-	{ OPTYPE_INT, 40, 0 },		// 14
-	{ OPTYPE_RETURN, 0, 0 },		// 15
+	{ OPTYPE_BUILTIN, 18, 1 },		// 2
+	{ OPTYPE_STRING, 0, 2 },		// 3
+	{ OPTYPE_RETURN, 0, 0 },		// 4
+	{ OPTYPE_BUILTIN, 18, 1 },		// 5
+	{ OPTYPE_STRING, 1, 3 },		// 6
+	{ OPTYPE_RETURN, 0, 0 },		// 7
+	{ OPTYPE_JUMP, 2, 0 },		// 8
+	{ OPTYPE_BUILTIN, 6, 1 },		// 9
+	{ OPTYPE_INT, 10, 0 },		// 10
+	{ OPTYPE_JUMP, 5, 0 },		// 11
+	{ OPTYPE_BUILTIN, 6, 1 },		// 12
+	{ OPTYPE_INT, 20, 0 },		// 13
+	{ OPTYPE_RETURN, 0, 0 },		// 14
+	{ OPTYPE_JUMP, 5, 0 },		// 15
+	{ OPTYPE_BUILTIN, 6, 1 },		// 16
+	{ OPTYPE_INT, 30, 0 },		// 17
+	{ OPTYPE_JUMP, 2, 0 },		// 18
+	{ OPTYPE_BUILTIN, 6, 1 },		// 19
+	{ OPTYPE_INT, 40, 0 },		// 20
+	{ OPTYPE_RETURN, 0, 0 },		// 21
 	{ SCOPTYPE_WORD, 2, 0 }, 
-	{ SCOPTYPE_WORD, 9, 0 }, 
+	{ SCOPTYPE_WORD, 5, 0 }, 
+	{ SCOPTYPE_WORD, 8, 0 }, 
+	{ SCOPTYPE_WORD, 15, 0 }, 
 	{ SCOPTYPE_END, 0, 0 } 
 };
 
@@ -944,23 +611,15 @@ BOOST_AUTO_TEST_CASE( staticCodeUse )
 {
   cout << "=== staticCodeUse ===" << endl;
   
-  LogoBuiltinWord builtins[] = {
-    { "ON", &ledOn },
-    { "OFF", &ledOff },
-    { "WAIT", &wait, 1 }
-  };
   ArduinoFlashCode code((const PROGMEM short *)code_staticCode);
   ArduinoFlashString strings(strings_staticCode);
-  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
-  Logo logo(&primitives, 0, 0, &strings, &code);
+  Logo logo(0, &strings, &code);
 
-  gCmds.clear();
+  stringstream s;
+  logo.setout(&s);
+
   BOOST_CHECK_EQUAL(logo.run(), 0);
-  BOOST_CHECK_EQUAL(gCmds.size(), 4);
-  BOOST_CHECK_EQUAL(gCmds[0], "LED ON");
-  BOOST_CHECK_EQUAL(gCmds[1], "WAIT 10");
-  BOOST_CHECK_EQUAL(gCmds[2], "LED OFF");
-  BOOST_CHECK_EQUAL(gCmds[3], "WAIT 20");
+  BOOST_CHECK_EQUAL(s.str(), "=== ON\n=== OFF\n");
   
 }
 
@@ -968,33 +627,24 @@ BOOST_AUTO_TEST_CASE( callword )
 {
   cout << "=== callword ===" << endl;
   
-  LogoBuiltinWord builtins[] = {
-    { "ON", &ledOn },
-    { "OFF", &ledOff },
-    { "WAIT", &wait, 1 }
-  };
   ArduinoFlashCode code((const PROGMEM short *)code_staticCode);
   ArduinoFlashString strings(strings_staticCode);
-  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
-  Logo logo(&primitives, 0, 0, &strings, &code);
+  Logo logo(0, &strings, &code);
 
-  gCmds.clear();
+  stringstream s;
+  logo.setout(&s);
+
   BOOST_CHECK_EQUAL(logo.run(), 0);
-  BOOST_CHECK_EQUAL(gCmds.size(), 4);
-  BOOST_CHECK_EQUAL(gCmds[0], "LED ON");
-  BOOST_CHECK_EQUAL(gCmds[1], "WAIT 10");
-  BOOST_CHECK_EQUAL(gCmds[2], "LED OFF");
-  BOOST_CHECK_EQUAL(gCmds[3], "WAIT 20");
+  BOOST_CHECK_EQUAL(s.str(), "=== ON\n=== OFF\n");
   
-  gCmds.clear();
   logo.resetcode();
   logo.callword("TEST2");
+  
+  stringstream s2;
+  logo.setout(&s2);
+
   BOOST_CHECK_EQUAL(logo.run(), 0);
-  BOOST_CHECK_EQUAL(gCmds.size(), 4);
-  BOOST_CHECK_EQUAL(gCmds[0], "LED OFF");
-  BOOST_CHECK_EQUAL(gCmds[1], "WAIT 30");
-  BOOST_CHECK_EQUAL(gCmds[2], "LED ON");
-  BOOST_CHECK_EQUAL(gCmds[3], "WAIT 40");
+  BOOST_CHECK_EQUAL(s2.str(), "=== OFF\n=== ON\n");
   
 }
 
@@ -1019,7 +669,7 @@ BOOST_AUTO_TEST_CASE( setvar )
   
   ArduinoFlashCode code((const PROGMEM short *)code_setvar);
   ArduinoFlashString strings(strings_setvar);
-  Logo logo(0, 0, Logo::core, &strings, &code);
+  Logo logo(0, &strings, &code);
   LogoCompiler compiler(&logo);
 
   BOOST_CHECK_EQUAL(logo.run(), 0);
@@ -1035,3 +685,35 @@ BOOST_AUTO_TEST_CASE( setvar )
   BOOST_CHECK_EQUAL(logo.popint(), 2);
   
 }
+
+BOOST_AUTO_TEST_CASE( findfixed )
+{
+  cout << "=== findfixed ===" << endl;
+  
+  char fixedstrings[] = {
+	"TE\n"
+	"TEST\n"
+	"OFF\n"
+	"O\n"
+	"OF\n"
+  };
+  LogoSimpleString strings(fixedstrings);
+  Logo logo(0, &strings);
+
+  LogoSimpleString str1("TE");
+  BOOST_CHECK_EQUAL(logo.findfixed(&str1, 0, str1.length()), 0);
+  
+  LogoSimpleString str2("TEST");
+  BOOST_CHECK_EQUAL(logo.findfixed(&str2, 0, str2.length()), 1);
+  
+  LogoSimpleString str3("OFF");
+  BOOST_CHECK_EQUAL(logo.findfixed(&str3, 0, str3.length()), 2);
+  
+  LogoSimpleString str4("O");
+  BOOST_CHECK_EQUAL(logo.findfixed(&str4, 0, str4.length()), 3);
+  
+  LogoSimpleString str5("OF");
+  BOOST_CHECK_EQUAL(logo.findfixed(&str5, 0, str5.length()), 4);
+  
+}
+

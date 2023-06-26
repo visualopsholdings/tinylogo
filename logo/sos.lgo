@@ -1,9 +1,9 @@
-#   btnledflash.lgo
+#   sos.lgo
 #
 #   Author: Paul Hamilton (paul@visualops.com)
 #   Date: 2-Jun-2023
 #
-#   Flash a LED with a button
+#   Signal for help when a button is pressed.
 #
 #   This work is licensed under the Creative Commons Attribution 4.0 International License. 
 #   To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0/ or 
@@ -13,7 +13,7 @@
 #
 
 to ID
-  PRINT "btnledflash
+  PRINT "sos
 end
 
 # change your pins here
@@ -32,17 +32,39 @@ to SETUP
 end
 
 to ON
-  print "ON
   dhigh LEDPIN
 end
 
 to OFF
-  print "OFF
   dlow LEDPIN
 end
 
-to FLASH
-  ON wait 1000 OFF
+to DOT
+  ON wait 300 OFF wait 300
+end
+
+to DASH
+  ON wait 800 OFF wait 100
+end
+
+to SPACE
+  wait 200
+end
+
+to S
+  DOT DOT DOT
+  SPACE
+end
+
+to O
+  DASH DASH DASH
+  SPACE
+end
+
+to HELP
+  print "HELP
+  S O S
+  print "OK
 end
 
 # handling the button
@@ -53,7 +75,7 @@ end
 
 to TESTSTATE
   make "OLDVALUE :VALUE
-  if :VALUE = 1 FLASH
+  if :VALUE = 0 HELP
 end
 
 to TESTBTN

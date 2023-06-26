@@ -1,9 +1,9 @@
-#   ledflash.lgo
+#   ledflash1.lgo
 #
 #   Author: Paul Hamilton (paul@visualops.com)
 #   Date: 2-Jun-2023
 #
-#   Flash an LED
+#   Flash an LED, this is all internal, no external words needed.
 #
 #   This work is licensed under the Creative Commons Attribution 4.0 International License. 
 #   To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0/ or 
@@ -12,12 +12,22 @@
 #   https://github.com/visualopsholdings/tinylogo  
 #
 
-# turn an LED on or off
-BUILTIN(ON,OFF)
+to ID
+  print "ledflash
+end
 
-TO ID
-  PRINT "ledflash
-END
+# change your pins here
+to LEDPIN
+  13
+end
+
+to ON
+  dhigh LEDPIN
+end
+
+to OFF
+  dlow LEDPIN
+end
 
 to FLASH
   ON wait 500 OFF wait 1000

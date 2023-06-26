@@ -28,20 +28,19 @@
 class LogoSketch {
 
 public:
-  LogoSketch(char strings[] PROGMEM, const PROGMEM short *code, LogoBuiltinWord builtins[]=0, int size=0);
+  LogoSketch(char strings[] PROGMEM, const PROGMEM short *code);
   
   void setup();
   void loop();
   
 private:
-  ArduinoTimeProvider _time;
-  ArduinoFlashString _strings;
-  ArduinoFlashCode _code;
-  LogoFunctionPrimitives _primitives;
-  Logo _logo;
-  RingBuffer _buffer;
-  Cmd _cmd;
-  char _cmdbuf[64];
+  ArduinoTimeProvider _time; // adds 12 bytes of dynamic memory
+  ArduinoFlashString _strings; // adds 18 bytes
+  ArduinoFlashCode _code; // 2 bytes
+  Logo _logo; // 700 bytes (stack, string pool and variables)
+  RingBuffer _buffer; // 64 bytes
+  Cmd _cmd; // 32 bytes
+  char _cmdbuf[STRING_LEN]; // 32 bytes
 
   void showErr(int mode, int n);
 

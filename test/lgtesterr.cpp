@@ -18,16 +18,13 @@
 
 #include "../logo.hpp"
 #include "../logocompiler.hpp"
+#include "../arduinoflashstring.hpp"
 
 #include <iostream>
 #include <vector>
 #include <strstream>
 
 using namespace std;
-
-vector<string> gCmds;
-
-//#define PRINT_RESULT
 
 BOOST_AUTO_TEST_CASE( unknownWord )
 {
@@ -120,7 +117,7 @@ BOOST_AUTO_TEST_CASE( tooManyVariables )
 {
   cout << "=== tooManyVariables ===" << endl;
   
-  Logo logo(0, 0, Logo::core);
+  Logo logo(0);
   LogoCompiler compiler(&logo);
 
   for (short i=1; i<MAX_VARS+2; i++) {
@@ -131,30 +128,4 @@ BOOST_AUTO_TEST_CASE( tooManyVariables )
   DEBUG_DUMP(false);
   BOOST_CHECK_EQUAL(logo.run(), LG_TOO_MANY_VARS);
   
-}
-
-void wantsstring(Logo &logo) {
-  
-  tStrPool s, l;
-  logo.codetostring(1, &s, &l);
-
-}
-
-BOOST_AUTO_TEST_CASE( notString )
-{
-  cout << "=== notString ===" << endl;
-  
-  LogoBuiltinWord builtins[] = {
-    { "WANTSSTRING", &wantsstring, 0 }
-  };
-  LogoFunctionPrimitives primitives(builtins, sizeof(builtins));
-  Logo logo(&primitives);
-  LogoCompiler compiler(&logo);
-
-  compiler.compile("WANTSSTRING 1");
-  BOOST_CHECK_EQUAL(logo.geterr(), 0);
-  DEBUG_DUMP(false);
-
-  BOOST_CHECK_EQUAL(logo.run(), LG_NOT_STRING);
-
 }
