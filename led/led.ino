@@ -21,7 +21,6 @@
 #include "cmd.hpp"
 #include "logo.hpp"
 #include "arduinotimeprovider.hpp"
-#include "arduinoflashcode.hpp"
 #include "logocompiler.hpp"
 #include "logowords.hpp"
 
