@@ -18,7 +18,7 @@
 
 #include "logo.hpp"
 
-#ifdef ARDUINO
+#if defined(ARDUINO) && defined(__AVR__)
 #include <avr/pgmspace.h>
 #endif
 

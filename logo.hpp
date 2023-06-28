@@ -437,7 +437,7 @@ private:
 #define DEBUG_STEP_DUMP(count, all)
 #endif
 
-#ifndef ARDUINO
+#if !(defined(ARDUINO) && defined(__AVR__))
 #define PROGMEM
 #endif
 

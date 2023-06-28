@@ -14,7 +14,7 @@
 #include "arduinoflashcode.hpp"
 
 short ArduinoFlashInstruction::operator[](int index) const {
-#ifdef ARDUINO
+#if defined(ARDUINO) && defined(__AVR__)
   short val = pgm_read_word(_inst + index);
 #else
   short val = *(_inst + index);

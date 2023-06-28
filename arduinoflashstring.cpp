@@ -13,6 +13,8 @@
 
 #include "arduinoflashstring.hpp"
 
+#if defined(ARDUINO) && defined(__AVR__)
+
 size_t ArduinoFlashString::length() const {
 
   return strlen_P(_str);
@@ -43,3 +45,5 @@ int ArduinoFlashString::ncasecmp(const char *to, size_t offset, size_t len) cons
   return strncasecmp_P(to, _str + offset, len);
   
 }
+
+#endif

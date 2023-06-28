@@ -556,7 +556,7 @@ https://forum.arduino.cc/t/how-to-properly-use-wire-onreceive/891195/12
 
 ### Following along with the UCBLogo manual. So far everything up to page 4 works. 
 
-### Get a serial connection working from a PI to the Arduino
+### Get analog write working for the w32 modules.
 
 ## Change Log
 
@@ -603,6 +603,9 @@ your sketch.
 
 ### 18 Jun 2023
 - Arguments don't need : in TO X AA now. More work following along with the UCB manual.
+
+### 26 Jun 2023
+- Get working for non AVR arduinos like the esp32 modules.
 
 
 

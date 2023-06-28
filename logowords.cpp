@@ -350,7 +350,11 @@ void LogoWords::aout(Logo &logo) {
   int value = logo.popint();
   int pin = logo.popint();
 #ifdef ARDUINO
+#ifdef __AVR__
   analogWrite(pin, value);
+#else
+  // need to implement this on the w32 etc.
+#endif
 #else
   cout << "aout " << pin << "=" << value << endl;
 #endif
