@@ -556,8 +556,10 @@ https://forum.arduino.cc/t/how-to-properly-use-wire-onreceive/891195/12
 
 ### Following along with the UCBLogo manual. So far everything up to page 4 works. 
 
-### Get analog write working for the w32 modules.
-
+### W32
+  - Get analog write working for the w32 modules.
+  - get wifi access and io working.
+  
 ## Change Log
 
 ### 24 May 2023
