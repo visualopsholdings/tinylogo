@@ -55,6 +55,7 @@
 #define H_logo
 
 #include "arduinoflashstring.hpp"
+#include "list.hpp"
 
 //#define LOGO_DEBUG
 
@@ -164,8 +165,11 @@
 #define OPTYPE_DOUBLE         8 // FIELD_OP = literal integer part of double, FIELD_OPAND is fractional
 #define OPTYPE_REF            9 // FIELD_OP = index of string (-fixedcount) with a var in it, FIELD_OPAND = length of string
 #define OPTYPE_POPREF         10 // FIELD_OP = index of var to pop into
-#define OPTYPE_GSTART         11 //
-#define OPTYPE_GEND           12 //
+#define OPTYPE_GSTART         11 // (
+#define OPTYPE_GEND           12 // )
+#define OPTYPE_LSTART         13 // [
+#define OPTYPE_LEND           14 // ]
+#define OPTYPE_LIST           15 // FIELD_OP = the head of the list, FIELD_OPAND = tail
 
 // only on the stack
 #define SOP_START             100
@@ -174,6 +178,7 @@
 #define SOPTYPE_MRETADDR      SOP_START + 3 // FIELD_OP = the offset to modify by
 #define SOPTYPE_SKIP          SOP_START + 4 // skip the next instruction if on the stack under a return
 #define SOPTYPE_GSTART        SOP_START + 5 // we are grouping on the stack.
+#define SOPTYPE_OPENLIST      SOP_START + 6 // FIELD_OP = the head of the list, FIELD_OPAND = tail
 
 // only in static code
 #define SCOP_START            200
@@ -283,7 +288,8 @@ public:
   void getstring(LogoStringResult *stri, tStrPool str, tStrPool len) const;
   bool stringcmp(const LogoString *str, short start, short slen, tStrPool stri, tStrPool len) const;
   bool stringcmp(LogoStringResult *str, tStrPool stri, tStrPool len) const;
-  void getbuiltinname(short op, short opand, char *s, int len) const;
+  void getbuiltinname(short op, char *s, int len) const;
+  void splitdouble(double n, short *op, short *opand);
   
   // compiler needs direct access to these?
   
@@ -299,7 +305,9 @@ public:
   void pushdouble(double n);
   void popstring(LogoStringResult *result);  
   void pushstring(tStrPool n, tStrPool len);  
-  void pushstring(LogoString *str);  
+  void pushstring(LogoString *str);
+  bool isstacklist();
+  List poplist();
   bool pop();
   short findvariable(LogoString *str, short start, short slen) const;
   short findvariable(LogoStringResult *str) const;
@@ -308,6 +316,7 @@ public:
   bool varisint(short var);
   short varintvalue(short var);
   bool isnum(LogoString *str, short wordstart, short wordlen);
+  bool getlistval(const ListNodeVal &val, LogoStringResult *str);
   
   // logo words can be self modifying code but be careful!
   
@@ -392,6 +401,9 @@ private:
   LogoVar _variables[MAX_VARS];
   short _varcount;
 
+  // Lists
+  ListPool _lists;
+  
   short getvarfromref(short op, short opand);
   
   // the schdeuler for WAIT
@@ -414,10 +426,12 @@ private:
   bool doinfix();
   short startgroup();
   short endgroup();
+  short startlist();
+  short endlist();
   bool call(short jump, tByte opand2);
   short instField(short pc, short field) const;
-  void splitdouble(double n, short *op, short *opand);
   double joindouble(short op, short opand) const;
+  short pushvalue(short type, short op, short opand);
    
 };
 

@@ -266,16 +266,47 @@ void LogoWords::dumpvars(Logo &logo) {
 void LogoWords::print(Logo &logo) {
 
   LogoStringResult result;
-  logo.popstring(&result);
   char s[256];
-  result.ncpy(s, sizeof(s));
-#ifdef ARDUINO
-  Serial.println(s);
-#else
-  logo.out() << "=== " << s << endl;
-//  cout << "=== " << s << endl;
+
+  if (logo.isstacklist()) {
+    List l = logo.poplist();
+    ListNodeVal val;
+    tNodeType node = l.head();
+#ifndef ARDUINO
+    logo.out() << "=== ";
 #endif
-  
+    bool first = true;
+    while (l.iter(&node, &val)) {
+      if (logo.getlistval(val, &result)) {
+        result.ncpy(s, sizeof(s));
+        if (!first) {
+#ifdef ARDUINO
+          Serial.print(' '');
+#else
+          logo.out() << " ";
+#endif
+        }
+#ifdef ARDUINO
+        Serial.print(s);
+#else
+        logo.out() << s;
+#endif
+      }
+      first = false;
+    }
+#ifndef ARDUINO
+    logo.out() << endl;
+#endif
+  }
+  else {
+    logo.popstring(&result);
+    result.ncpy(s, sizeof(s));
+#ifdef ARDUINO
+    Serial.println(s);
+#else
+    logo.out() << "=== " << s << endl;
+#endif
+  }
 }
 
 void LogoWords::dread(Logo &logo) {

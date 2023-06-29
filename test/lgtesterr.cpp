@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE( tooManyVariables )
 {
   cout << "=== tooManyVariables ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   for (short i=1; i<MAX_VARS+2; i++) {

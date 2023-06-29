@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE( compound )
 {
   cout << "=== compound ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("print \"ON print \"OFF");
@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE( defineSimpleWord )
 {
   cout << "=== defineSimpleWord ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("to ON; print \"ON; end");
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE( defineCompoundWord )
 {
   cout << "=== defineCompoundWord ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO ON; print \"ON; END");
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE( defineMixedCase )
 {
   cout << "=== defineCompoundWord ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO ON; print \"ON; END");
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE( nestedWord )
 {
   cout << "=== nestedWord ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO ON; print \"ON; END");
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE( defineCompoundWordRun1 )
 {
   cout << "=== defineCompoundWord ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO ON; print \"ON; END");
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE( arityLiteral1 )
 {
   cout << "=== arityLiteral1 ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO W :N;PRINT :N;END");
@@ -203,7 +203,7 @@ BOOST_AUTO_TEST_CASE( arityWord1 )
 {
   cout << "=== arityWord1 ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO TIME; 20; END");
@@ -224,7 +224,7 @@ BOOST_AUTO_TEST_CASE( arityLiteral )
 {
   cout << "=== arityLiteral ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO ARGS2 :A :B;PRINT :A PRINT :B;END");
@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE( arityWord )
 {
   cout << "=== arityWord ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO TIME; 20; END");
@@ -266,7 +266,7 @@ BOOST_AUTO_TEST_CASE( arityNested )
 {
   cout << "=== arityNested ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO AR1 :N2; PRINT :N2; END");
@@ -287,7 +287,7 @@ BOOST_AUTO_TEST_CASE( seperateLines )
 {
   cout << "=== seperateLines ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO SARG :S; PRINT :S; END");
@@ -310,7 +310,7 @@ BOOST_AUTO_TEST_CASE( newLines )
 {
   cout << "=== newLines ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO SARG :S; PRINT :S; END");
@@ -330,7 +330,7 @@ BOOST_AUTO_TEST_CASE( restart )
 {
   cout << "=== restart ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO SARG :S; PRINT :S; END");
@@ -386,7 +386,7 @@ BOOST_AUTO_TEST_CASE( arguments )
 {
   cout << "=== arguments ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO MULT :A :B; :A * :B; END;");
@@ -405,7 +405,7 @@ BOOST_AUTO_TEST_CASE( argumentsNoColons )
 {
   cout << "=== argumentsNoColons ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO MULT A B; :A * :B; END;");
@@ -429,7 +429,7 @@ BOOST_AUTO_TEST_CASE( flash )
 {
   cout << "=== flash ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   ArduinoFlashString program(program_flash);
@@ -553,7 +553,7 @@ BOOST_AUTO_TEST_CASE( staticProgUse )
 {
   cout << "=== staticProgUse ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
   
   compiler.compile(static_program);

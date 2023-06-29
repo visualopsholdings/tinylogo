@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE( make )
 {
   cout << "=== make ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("MAKE \"VAR 10");
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE( makeCompound1 )
 {
   cout << "=== makeCompound1 ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("MAKE \"VAR 1");
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE( makeCompound2 )
 {
   cout << "=== makeCompound2 ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("MAKE \"VAR 1");
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE( thing )
 {
   cout << "=== thing ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("make \"VAR 1");
@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE( word )
 {
   cout << "=== word ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("word \"START \"END");
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE( first )
 {
   cout << "=== first ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("first \"START");
@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE( eqWord )
 {
   cout << "=== eqWord ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("1 = 3");
@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE( neqWord )
 {
   cout << "=== neqWord ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("1!= 3");
@@ -272,7 +272,7 @@ BOOST_AUTO_TEST_CASE( gtWord )
 {
   cout << "=== gtWord ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("3  >1");
@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE( gteWord )
 {
   cout << "=== gteWord ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("3>=1 ");
@@ -324,7 +324,7 @@ BOOST_AUTO_TEST_CASE( ltWord )
 {
   cout << "=== ltWord ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("3 <1");
@@ -350,7 +350,7 @@ BOOST_AUTO_TEST_CASE( lteWord )
 {
   cout << "=== lteWord ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("3<=  1");
@@ -376,7 +376,7 @@ BOOST_AUTO_TEST_CASE( notWord )
 {
   cout << "=== notWord ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("! 1");
@@ -402,7 +402,7 @@ BOOST_AUTO_TEST_CASE( ifelseFalse )
 {
   cout << "=== ifelseFalse ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO TEST; 0; END");
@@ -423,7 +423,7 @@ BOOST_AUTO_TEST_CASE( ifelseTrue )
 {
   cout << "=== ifelseTrue ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO TEST; 1; END");
@@ -444,7 +444,7 @@ BOOST_AUTO_TEST_CASE( ifFalse )
 {
   cout << "=== ifFalse ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("IF 0 2");
@@ -462,7 +462,7 @@ BOOST_AUTO_TEST_CASE( ifTrue )
 {
   cout << "=== ifTrue ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("IF 1 2");
@@ -480,7 +480,7 @@ BOOST_AUTO_TEST_CASE( ifTrueNested )
 {
   cout << "=== ifTrueNested ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO T1;2;END");
@@ -499,7 +499,7 @@ BOOST_AUTO_TEST_CASE( ifFalseNested )
 {
   cout << "=== ifFalseNested ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO T1;2;END");
@@ -517,7 +517,7 @@ BOOST_AUTO_TEST_CASE( ifelseCond )
 {
   cout << "=== ifelseCond ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
 //  compiler.compile("TO COND;1 = 0;END");
@@ -538,7 +538,7 @@ BOOST_AUTO_TEST_CASE( ifelseLiteralTrueCond )
 {
   cout << "=== ifelseLiteralTrueCond ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("IFELSE 1 2 3");
@@ -556,7 +556,7 @@ BOOST_AUTO_TEST_CASE( ifelseLiteralFalseCond )
 {
   cout << "=== ifelseLiteralFalseCond ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("IFELSE 0 2 3");
@@ -574,7 +574,7 @@ BOOST_AUTO_TEST_CASE( ifelseTrueLiteralNumBranches )
 {
   cout << "=== ifelseTrueLiteralNumBranches ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("IFELSE 1 2 3");
@@ -592,7 +592,7 @@ BOOST_AUTO_TEST_CASE( ifelseFalseLiteralNumBranches )
 {
   cout << "=== ifelseFalseLiteralNumBranches ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("IFELSE 0 2 3");
@@ -610,7 +610,7 @@ BOOST_AUTO_TEST_CASE( ifelseTrueLiteralStringBranches )
 {
   cout << "=== ifelseTrueLiteralStringBranches ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("IFELSE 1 \"A \"B");
@@ -630,7 +630,7 @@ BOOST_AUTO_TEST_CASE( ifelseFalseLiteralStringBranches )
 {
   cout << "=== ifelseTrueLiteralStringBranches ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("IFELSE 0 \"A \"B");
@@ -650,7 +650,7 @@ BOOST_AUTO_TEST_CASE( ifelseVarRef )
 {
   cout << "=== ifelseVarRef ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("MAKE \"VAR 1");
@@ -671,7 +671,7 @@ BOOST_AUTO_TEST_CASE( ifelseCondVarRefStringRet )
 {
   cout << "=== ifelseCondVarRefStringRet ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO COND;:VAR;END");
@@ -693,7 +693,7 @@ BOOST_AUTO_TEST_CASE( ifelseMissingVar )
 {
   cout << "=== ifelseMissingVar ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("IFELSE :VAR \"A \"B");
@@ -713,7 +713,7 @@ BOOST_AUTO_TEST_CASE( ifelseGT )
 {
   cout << "=== ifelseGT ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO COND;2 > 3;END");
@@ -793,7 +793,11 @@ BOOST_AUTO_TEST_CASE( waitWordNotReady )
   stringstream s;
   logo.setout(&s);
 
+#ifdef LOGO_DEBUG
+  for (int i=0; i<10; i++) {
+#else
   for (int i=0; i<1000; i++) {
+#endif
     BOOST_CHECK_EQUAL(logo.step(), 0);
   }
   BOOST_CHECK_EQUAL(s.str(), "");
@@ -807,7 +811,7 @@ BOOST_AUTO_TEST_CASE( arithmetic )
 {
   cout << "=== arithmetic ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("3-1");
@@ -825,7 +829,7 @@ BOOST_AUTO_TEST_CASE( arithmeticCompound )
 {
   cout << "=== arithmeticCompound ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   // sanity check :-)
@@ -850,7 +854,7 @@ BOOST_AUTO_TEST_CASE( arithmeticGrouping )
 {
   cout << "=== arithmeticGrouping ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("3 - 1 * 4");
@@ -885,7 +889,7 @@ BOOST_AUTO_TEST_CASE( nestedGrouping )
 {
   cout << "=== nestedGrouping ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("((3 - ((1 * 4))))");
@@ -902,7 +906,7 @@ BOOST_AUTO_TEST_CASE( arithmeticNoWSGrouping )
 {
   cout << "=== arithmeticNoWSGrouping ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   logo.resetcode();
@@ -920,7 +924,7 @@ BOOST_AUTO_TEST_CASE( arithmeticColors )
 {
   cout << "=== arithmeticColors ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   // sanity check :-)

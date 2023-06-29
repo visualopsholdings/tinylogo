@@ -426,6 +426,24 @@ void Logo::popstring(LogoStringResult *result) {
   }
 }
 
+bool Logo::isstacklist() {
+  return _tos > 0 ? _stack[_tos-1][FIELD_OPTYPE] == OPTYPE_LIST : false;
+}
+
+List Logo::poplist() {
+
+  if (isstacklist()) {
+    if (!pop()) {
+      error(LG_STACK_OVERFLOW);
+      return List(&_lists);
+    }
+    List list(&_lists, _stack[_tos][FIELD_OP], _stack[_tos][FIELD_OPAND]);
+    return list;
+  }
+  return List(&_lists);
+  
+}
+
 bool Logo::push(short type, short op, short opand) {
 
   DEBUG_IN_ARGS(Logo, "push", "%i%i", type, op);
@@ -586,7 +604,7 @@ bool Logo::isnum(LogoString *stri, short wordstart, short wordlen) {
     return false;
   }
   for (short i=0; i<wordlen; i++) {
-    if (!isdigit((*stri)[i + wordstart])) {
+    if (!isdigit((*stri)[i + wordstart]) && (*stri)[i + wordstart] != '.') {
       return false;
     }
   }
@@ -661,9 +679,9 @@ void Logo::schedulenext(short delay) {
   _schedule.schedule(delay); 
 }
 
-void Logo::getbuiltinname(short op, short opand, char *s, int len) const {
+void Logo::getbuiltinname(short op, char *s, int len) const {
   LogoStringResult result;
-  if (getfixedcr(&_corenames, &result, opand == 1 ? op : 0)) {
+  if (getfixedcr(&_corenames, &result, op)) {
     result.ncpy(s, len);
     s[len-1] = 0;
   }
@@ -715,6 +733,14 @@ short Logo::step() {
     err = endgroup();
     break;
     
+  case OPTYPE_LSTART:
+    err = startlist();
+    break;
+    
+  case OPTYPE_LEND:
+    err = endlist();
+    break;
+    
   case OPTYPE_RETURN:
     return doreturn();
     
@@ -725,27 +751,17 @@ short Logo::step() {
   case OPTYPE_STRING:
   case OPTYPE_INT:
   case OPTYPE_DOUBLE:
-    {
-      // push anything we find onto the stack.
-      if (!push(type, instField(_pc, FIELD_OP), instField(_pc, FIELD_OPAND))) {
-        err = LG_STACK_OVERFLOW;
-      }
-    }
+    err = pushvalue(type, instField(_pc, FIELD_OP), instField(_pc, FIELD_OPAND));
     break;
     
   case OPTYPE_REF:
     {
       short var = getvarfromref(instField(_pc, FIELD_OP), instField(_pc, FIELD_OPAND));
       if (var >= 0) {
-        if (!push(_variables[var]._type, _variables[var]._value, _variables[var]._valueopand)) {
-          err = LG_STACK_OVERFLOW;
-        }
+        err = pushvalue(_variables[var]._type, _variables[var]._value, _variables[var]._valueopand);
       }
       else {
-        // just push qa zero
-        if (!push(OPTYPE_INT, 0, 0)) {
-          err = LG_STACK_OVERFLOW;
-        }
+        err = pushvalue(OPTYPE_INT, 0, 0);
       }
     }
     break;
@@ -787,6 +803,25 @@ short Logo::step() {
   
 }
 
+short Logo::pushvalue(short type, short op, short opand) {
+
+  if (_stack[_tos-1][FIELD_OPTYPE] == SOPTYPE_OPENLIST) {
+    // append to the open list.
+    List l(&_lists, _stack[_tos-1][FIELD_OP], _stack[_tos-1][FIELD_OPAND]);
+    ListNodeVal val(type, op, opand);
+    l.push(val);
+    _stack[_tos-1][FIELD_OPAND] = l.tail();
+    return 0;
+  }
+
+  // push anything we find onto the stack.
+  if (!push(type, op, opand)) {
+    return LG_STACK_OVERFLOW;
+  }
+  return 0;
+  
+}
+
 // this is not quite sufficient for nested infixes. Still work to do.
 bool Logo::doinfix() {
 
@@ -825,7 +860,8 @@ bool Logo::doarity() {
   while (ar >= 0 && 
     _stack[ar][FIELD_OPTYPE] != SOPTYPE_RETADDR && 
     _stack[ar][FIELD_OPTYPE] != SOPTYPE_ARITY && 
-    _stack[ar][FIELD_OPTYPE] != SOPTYPE_GSTART) {
+    _stack[ar][FIELD_OPTYPE] != SOPTYPE_GSTART && 
+    _stack[ar][FIELD_OPTYPE] != SOPTYPE_OPENLIST) {
     ar--;
   }
   
@@ -840,7 +876,12 @@ bool Logo::doarity() {
   }
   
   if (_stack[ar][FIELD_OPTYPE] == SOPTYPE_GSTART) {
-    DEBUG_RETURN(" found gstart", 0);
+    DEBUG_RETURN(" found gstart before arity", 0);
+    return false;
+  }
+  
+  if (_stack[ar][FIELD_OPTYPE] == SOPTYPE_OPENLIST) {
+    DEBUG_RETURN(" found list before arity", 0);
     return false;
   }
   
@@ -871,7 +912,7 @@ bool Logo::doarity() {
 
     short op = instField(pc, FIELD_OP);
     
-    DEBUG_OUT("calling builtin %i%i", op);
+    DEBUG_OUT("calling builtin %i", op);
     
 //    dumpstack(0, false);
     callbuiltin(op);
@@ -930,6 +971,33 @@ short Logo::endgroup() {
   _tos--;
 
   return 0;
+}
+
+short Logo::startlist() {
+
+  DEBUG_IN(Logo, "startlist");
+
+  List list(&_lists);
+  
+  // push the fact that we have an open list.
+  if (!push(SOPTYPE_OPENLIST, list.head(), list.tail())) {
+    return LG_STACK_OVERFLOW;
+  }
+  
+  return 0;
+}
+
+short Logo::endlist() {
+
+  DEBUG_IN(Logo, "endlist");
+
+  if (_stack[_tos-1][FIELD_OPTYPE] == SOPTYPE_OPENLIST) {
+    // when a list ends, turn the stack top into an actual list.
+    _stack[_tos-1][FIELD_OPTYPE] = OPTYPE_LIST;
+  }
+
+  return 0;
+  
 }
 
 short Logo::dobuiltin() {
@@ -1332,6 +1400,12 @@ short Logo::varintvalue(short var) {
   return 0;
 }
 
+bool Logo::getlistval(const ListNodeVal &val, LogoStringResult *str) {
+
+  return parsestring(val.type(), val.data1(), val.data2(), str);
+
+}
+
 void LogoScheduler::schedule(short ms) {
   if (!_provider) {
     return;
@@ -1662,7 +1736,7 @@ void Logo::dump(short indent, short type, short op, short opand) const {
       cout << "halt";
       break;
     case OPTYPE_BUILTIN:
-      getbuiltinname(op, opand, str, sizeof(str));
+      getbuiltinname(op, str, sizeof(str));
       cout << "builtin " << str;
       break;
     case OPTYPE_JUMP:
@@ -1696,6 +1770,12 @@ void Logo::dump(short indent, short type, short op, short opand) const {
     case OPTYPE_GEND:
       cout << "gend";
       break;
+    case OPTYPE_LSTART:
+      cout << "lstart";
+      break;
+    case OPTYPE_LEND:
+      cout << "lend";
+      break;
     case SOPTYPE_ARITY:
       cout << "(stack) arity pc " << op << " to go " << opand;
       break;
@@ -1710,6 +1790,14 @@ void Logo::dump(short indent, short type, short op, short opand) const {
       break;
     case SOPTYPE_GSTART:
       cout << "(stack) gstart ";
+      break;
+    case SOPTYPE_OPENLIST:
+    case OPTYPE_LIST:
+      {
+        cout << "(stack) list ";
+        List l((ListPool *)&_lists, (tNodeType)op, (tNodeType)opand);
+        cout << l.length();
+      }
       break;
      default:
       cout << "unknown optype " << type;

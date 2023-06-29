@@ -21,8 +21,7 @@ project (logotest)
 #  add_definitions(-DLOGO_DEBUG) 
   enable_testing()
 
-
-add_library (Logo STATIC ../logo.cpp ../logocompiler.cpp ../logostring.cpp ../arduinoflashcode.cpp ../logowords.cpp)
+add_library (Logo STATIC ../logo.cpp ../logocompiler.cpp ../logostring.cpp ../arduinoflashcode.cpp ../logowords.cpp ../list.cpp)
   target_link_libraries(Logo ${Boost_FILESYSTEM_LIBRARY})
 
 add_executable(LGTestCompiler lgtestcompiler.cpp)
@@ -43,9 +42,13 @@ add_executable(LGTestWords lgtestwords.cpp)
 add_executable(LGTestExamples lgtestexamples.cpp)
   target_link_libraries(LGTestExamples Logo ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
+add_executable(LGTestList lgtestlist.cpp)
+  target_link_libraries(LGTestList Logo ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+
 add_test(LGTestCompiler LGTestCompiler)
 add_test(LGTestString LGTestString)
 add_test(LGTest LGTest)
 add_test(LGTestErr LGTestErr)
 add_test(LGTestWords LGTestWords)
 add_test(LGTestExamples LGTestExamples)
+add_test(LGTestList LGTestList)

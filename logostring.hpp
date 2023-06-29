@@ -31,6 +31,7 @@ public:
   virtual int ncasecmp(const char *to, size_t offset, size_t len) const = 0;
  
   short toi(size_t offset, size_t len) const;
+  double tof(size_t offset, size_t len) const;
   short find(char c, size_t offset, size_t len);
   short ncmp2(const LogoString *to, short offsetto, short offset, short len) const;
   void dump(const char *msg, short start, short len) const;
@@ -64,7 +65,6 @@ public:
   void ncpy(char *to, size_t offset, size_t len) const ;
   int ncmp(const char *to, size_t offset, size_t len) const;
   int ncasecmp(const char *to, size_t offset, size_t len) const;
-  double tof();
     
 private:
   const char *_code;

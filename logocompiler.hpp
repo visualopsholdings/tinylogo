@@ -105,7 +105,6 @@ private:
   void finishword(short word, short wordlen, short jump, short arity);
   short findword(LogoString *str, short wordstart, short wordlen) const;
   short findword(LogoStringResult *str) const;
-  void addnops(tJump *next, short op, int n);
   
 };
 

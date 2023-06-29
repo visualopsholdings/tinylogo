@@ -55,12 +55,6 @@ void LogoCompiler::reset() {
   
 }
 
-void LogoCompiler::addnops(tJump *next, short op, int n) {
-  for (int i=0; i<n; i++) {
-    _logo->addop(next, op);
-  }
-}
-
 void LogoCompiler::compileword(tJump *next, LogoString *stri, short wordstart, short wordlen, short op) {
 
   DEBUG_IN_ARGS(LogoCompiler, "compileword", "%i%i%i", wordstart, wordlen, op);
@@ -80,16 +74,26 @@ void LogoCompiler::compileword(tJump *next, LogoString *stri, short wordstart, s
   }
   
   if ((*stri)[wordstart] == '(') {
-    // let's just assume that we have all ( for now.
-    addnops(next, OPTYPE_GSTART, wordlen);
+    _logo->addop(next, OPTYPE_GSTART);
     DEBUG_RETURN(" gstart ", 0);
     return;
   }
   
   if ((*stri)[wordstart] == ')') {
-    // let's just assume that we have all ) for now.
-    addnops(next, OPTYPE_GEND, wordlen);
+    _logo->addop(next, OPTYPE_GEND);
     DEBUG_RETURN(" gend ", 0);
+    return;
+  }
+  
+  if ((*stri)[wordstart] == '[') {
+    _logo->addop(next, OPTYPE_LSTART);
+    DEBUG_RETURN(" lstart ", 0);
+    return;
+  }
+  
+  if ((*stri)[wordstart] == ']') {
+    _logo->addop(next, OPTYPE_LEND);
+    DEBUG_RETURN(" lend ", 0);
     return;
   }
   
@@ -121,7 +125,15 @@ void LogoCompiler::compileword(tJump *next, LogoString *stri, short wordstart, s
   }
 
   if (_logo->isnum(stri, wordstart, wordlen)) {
-    _logo->addop(next, OPTYPE_INT, stri->toi(wordstart, wordlen));
+    if (stri->find('.', wordstart, wordlen) > 0) {
+      double n = stri->tof(wordstart, wordlen);
+      short op, opand;
+      _logo->splitdouble(n, &op, &opand);
+      _logo->addop(next, OPTYPE_DOUBLE, op, opand);
+    }
+    else {
+      _logo->addop(next, OPTYPE_INT, stri->toi(wordstart, wordlen));
+    }
     return;
   }
 
@@ -258,12 +270,6 @@ bool LogoCompiler::dodefine(LogoString *str, short wordstart, short wordlen, boo
     return false;
   }
   
-  if ((*str)[wordstart] == '[') {
-    // all sentences should have been replaced!
-    _logo->error(LG_WORD_NOT_FOUND);
-    return false;
-  }
-
   if (str->ncasecmp("TO", wordstart, wordlen) == 0) {
     _inword = true;
     _inwordargs = false;
@@ -519,7 +525,7 @@ int LogoCompiler::generatecode(fstream &file, const string &name, ostream &str) 
 
   // first compile the code so we can dump the strings from it in 
   // the correct order
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
   compiler.compile(file);
 //  compiler.dump(false);

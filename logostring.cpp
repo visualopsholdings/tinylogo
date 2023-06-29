@@ -64,6 +64,34 @@ short LogoString::find(char c, size_t offset, size_t len) {
   
 }
 
+double LogoString::tof(size_t offset, size_t len) const
+{
+  float val = 0;
+  int afterdot=0;
+  float scale=1;
+  int neg = 0; 
+
+  short i = offset;
+
+  if ((*this)[i] == '-') {
+    i++;
+    neg = 1;
+  }
+  while (i < (offset + len)) {
+    if (afterdot) {
+      scale = scale/10;
+      val = val + ((*this)[i]-'0')*scale;
+    } else {
+      if ((*this)[i] == '.') 
+        afterdot++;
+      else
+        val = val * 10.0 + ((*this)[i] - '0');
+    }
+    i++;
+  }
+  return neg ? -val : val;
+}
+
 void LogoSimpleString::ncpy(char *to, size_t offset, size_t len) const { 
   strncpy(to, _code + offset, len);
   to[len] = 0;
@@ -75,10 +103,6 @@ int LogoSimpleString::ncmp(const char *to, size_t offset, size_t len) const {
 
 int LogoSimpleString::ncasecmp(const char *to, size_t offset, size_t len) const { 
   return strncasecmp(to, _code + offset, len);
-}
-
-double LogoSimpleString::tof() {
-  return atof(_code);
 }
 
 short LogoString::ncmp2(const LogoString *to, short offsetto, short offset, short len) const {
@@ -139,10 +163,9 @@ short LogoStringResult::toi() {
 
 double LogoStringResult::tof() {
   if (_fixed) {
-    // don't know how to do this yet...
-    return 0;
+    return _fixed->tof(_fixedstart, _fixedlen);
   }
-  return _simple.tof();
+  return _simple.tof(0, _simple.length());
 }
 
 void LogoString::dump(const char *msg, short start, short len) const {

@@ -25,7 +25,7 @@ BOOST_AUTO_TEST_CASE( page3_plural )
 {
   cout << "=== page3_plural ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("to PLURAL :WORD");
@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE( page3_increment )
 {
   cout << "=== page3_increment ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("to INCREMENT :MY.VAR");

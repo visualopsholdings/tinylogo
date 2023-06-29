@@ -192,6 +192,9 @@ BOOST_AUTO_TEST_CASE( switchtokenWord )
   BOOST_CHECK(!compiler.switchtoken('A', '.', false));
   BOOST_CHECK(!compiler.switchtoken('.', 'A', false));
   
+  BOOST_CHECK(!compiler.switchtoken('1', '.', false));
+  BOOST_CHECK(!compiler.switchtoken('.', '1', false));
+
   alnumsamecheck(compiler, 'A', 'a');
   alnumsamecheck(compiler, 'A', '1');
 
@@ -202,6 +205,9 @@ BOOST_AUTO_TEST_CASE( switchtokenWord )
   BOOST_CHECK(compiler.switchtoken('(', '(', false));
   BOOST_CHECK(compiler.switchtoken(')', ')', false));
   
+  BOOST_CHECK(compiler.switchtoken('[', '[', false));
+  BOOST_CHECK(compiler.switchtoken(']', ']', false));
+
   parenswitchheck(compiler, '+');
   parenswitchheck(compiler, 'A');
   parenswitchheck(compiler, 'a');
@@ -225,7 +231,7 @@ BOOST_AUTO_TEST_CASE( blankLines )
 {
   cout << "=== blankLines ===" << endl;
   
-  Logo logo(0);
+  Logo logo;
   LogoCompiler compiler(&logo);
 
   compiler.compile("TO MULT A B");

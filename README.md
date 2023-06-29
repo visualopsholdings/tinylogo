@@ -282,6 +282,27 @@ To yield 4.75 (it will give you 0.375), Just write:
 (3 / 4) + 4
 ```
 
+#### Lists
+
+Lists are represented as strings or numbers between []
+
+So the expression:
+
+```
+[ 1 2 3 ]
+```
+
+Would have a list of 3 elements on the stack. The elements can be mixed types:
+
+```
+[ a word with 1.2 and 3 ]
+```
+
+Which would have a list with 3 strings, a double another string and an integer.
+
+Note: The only thing supported is to print a list. Printing doesn't support nested
+lists.
+
 #### Logic
 
 >, >=, <, <=  and ! all work like you wold think.
@@ -292,7 +313,7 @@ Print the literal out to the serial port
 
 ```
 print word
-word := [wordname | number | string | var]
+word := [wordname | number | string | list | var]
 var := :varname
 ```
 
@@ -554,7 +575,7 @@ https://forum.arduino.cc/t/how-to-properly-use-wire-onreceive/891195/12
 
 ## Current development focus
 
-### Following along with the UCBLogo manual. So far everything up to page 4 works. 
+### Lists
 
 ### W32
   - Get analog write working for the w32 modules.
@@ -608,6 +629,10 @@ your sketch.
 
 ### 26 Jun 2023
 - Get working for non AVR arduinos like the esp32 modules.
+
+### 29 Jun 2023
+- Rudimentary support for being able to PRINT a list. This is actually full support for
+storing lists but only "PRINT" knows how to use them.
 
 
 
