@@ -68,7 +68,9 @@ int process_lgo(const string &infn, const string &name) {
     cout << "File not found " << infn << endl;
     return 1;
   }
-  LogoCompiler::generatecode(file, name, cout);
+  map<string, string> directives;
+  directives["NAME"] = name;
+  LogoCompiler::generatecode(file, directives, cout);
   file.close();
   return 0;
   

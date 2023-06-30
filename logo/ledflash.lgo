@@ -21,6 +21,10 @@ to LEDPIN
   13
 end
 
+to SETUP
+  pinout LEDPIN
+end
+
 to ON
   dhigh LEDPIN
 end

@@ -21,7 +21,7 @@ project (tinylogo)
 #  add_definitions(-DLOGO_DEBUG) 
   enable_testing()
 
-add_library (Logo STATIC ../logo.cpp ../logocompiler.cpp ../logostring.cpp ../arduinoflashcode.cpp ../logowords.cpp)
+add_library (Logo STATIC ../logo.cpp ../logocompiler.cpp ../logostring.cpp ../arduinoflashcode.cpp ../logowords.cpp ../list.cpp)
   target_link_libraries(Logo ${Boost_FILESYSTEM_LIBRARY})
 
 add_executable(flashcode flashcode.cpp realtimeprovider.cpp)

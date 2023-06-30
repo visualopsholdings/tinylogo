@@ -34,7 +34,8 @@ void Logo::outstate() const {
 #endif
 
 #ifdef ARDUINO
-#include <HardwareSerial.h>
+#include <Arduino.h>
+#define min(a,b)            (((a) < (b)) ? (a) : (b))
 #else
 #include "logocompiler.hpp"
 #include <iostream>
@@ -257,14 +258,6 @@ short Logo::popint() {
     return 0;
   }
   
-  if (_stack[_tos][FIELD_OPTYPE] == OPTYPE_REF) {
-    short var = getvarfromref(_stack[_tos][FIELD_OP], _stack[_tos][FIELD_OPAND]);
-    if (var >= 0) {
-      return parseint(_variables[var]._type, _variables[var]._value, _variables[var]._valueopand);
-    }
-    return 0;
-  }
-  
   return parseint(_stack[_tos][FIELD_OPTYPE], _stack[_tos][FIELD_OP], _stack[_tos][FIELD_OPAND]);
 }
 
@@ -274,14 +267,6 @@ double Logo::popdouble() {
   
   if (!pop()) {
     error(LG_STACK_OVERFLOW);
-    return 0;
-  }
-  
-  if (_stack[_tos][FIELD_OPTYPE] == OPTYPE_REF) {
-    short var = getvarfromref(_stack[_tos][FIELD_OP], _stack[_tos][FIELD_OPAND]);
-    if (var >= 0) {
-      return parsedouble(_variables[var]._type, _variables[var]._value, _variables[var]._valueopand);
-    }
     return 0;
   }
   
@@ -430,6 +415,18 @@ bool Logo::isstacklist() {
   return _tos > 0 ? _stack[_tos-1][FIELD_OPTYPE] == OPTYPE_LIST : false;
 }
 
+bool Logo::isstackstring() {
+  return _tos > 0 ? _stack[_tos-1][FIELD_OPTYPE] == OPTYPE_STRING : false;
+}
+
+bool Logo::isstackint() {
+  return _tos > 0 ? _stack[_tos-1][FIELD_OPTYPE] == OPTYPE_INT : false;
+}
+
+bool Logo::isstackdouble() {
+  return _tos > 0 ? _stack[_tos-1][FIELD_OPTYPE] == OPTYPE_DOUBLE : false;
+}
+
 List Logo::poplist() {
 
   if (isstacklist()) {
@@ -457,6 +454,8 @@ bool Logo::push(short type, short op, short opand) {
   _stack[_tos][FIELD_OPAND] = opand;
   _tos++;
   
+//  dumpstack(0, false);
+  
   return true;
   
 }
@@ -472,22 +471,8 @@ bool Logo::codeisint(short rel) {
 
   DEBUG_IN_ARGS(Logo, "codeisint", "%i", rel);
   
-  bool val;
-  if (instField(_pc+rel, FIELD_OPTYPE) == OPTYPE_REF) {
-    short var = getvarfromref(instField(_pc+rel, FIELD_OP), instField(_pc+rel, FIELD_OPAND));
-    if (var >= 0) {
-      val = _variables[var]._type == OPTYPE_INT;
-    }
-    else {
-      // it's missing, say it's a num.
-      val = true;
-    }
-    DEBUG_RETURN(" ref %b", val);
-    return val;
-  }
- 
-  val = instField(_pc+rel, FIELD_OPTYPE) == OPTYPE_INT;
-  DEBUG_RETURN(" num %b", val);
+  bool val = instField(_pc+rel, FIELD_OPTYPE) == OPTYPE_INT;
+  DEBUG_RETURN(" int %b", val);
   return val;
   
 }
@@ -496,31 +481,13 @@ short Logo::codetoint(short rel) {
 
   DEBUG_IN_ARGS(Logo, "codetoint", "%i", rel);
   
-  short val;
-  if (instField(_pc+rel, FIELD_OPTYPE) == OPTYPE_REF) {
-    short var = getvarfromref(instField(_pc+rel, FIELD_OP), instField(_pc+rel, FIELD_OPAND));
-    if (var >= 0) {
-      if (_variables[var]._type != OPTYPE_INT) {
-        error(LG_NOT_INT);
-        return 0;
-      }
-      val = _variables[var]._value;
-    }
-    else {
-      // a mssing var just report as 0
-      val = 0;
-    }
-    DEBUG_RETURN(" ref %i", val);
-    return val;
-  }
-  
   if (instField(_pc+rel, FIELD_OPTYPE) != OPTYPE_INT) {
     error(LG_NOT_INT);
     return 0;
   }
 
-  val = instField(_pc+rel, FIELD_OP);
-  DEBUG_RETURN(" num %i", val);
+  short val = instField(_pc+rel, FIELD_OP);
+  DEBUG_RETURN(" int %i", val);
   return val;
 
 }
@@ -664,6 +631,12 @@ int Logo::callword(const char *word) {
           // and then go for it.
           return LG_ARITY_NOT_IMPL;
         }
+        // now find the halt.
+        _pc = 0;
+        while (instField(_pc, FIELD_OPTYPE) != OPTYPE_HALT) {
+          _pc++;
+        }
+        _pc--;
         call(op+1, 0);
         return 0;
       }
@@ -831,7 +804,7 @@ bool Logo::doinfix() {
   
     short op = instField(_pc, FIELD_OP);
     
-   if (_corearity[op] == INFIX_ARITY) {
+    if (_corearity[op] == INFIX_ARITY) {
     
       // open up a spot in the stack with the current whatever it is.
       memmove(_stack + _tos, _stack + _tos - 1, (1) * sizeof(tLogoInstruction));
@@ -842,6 +815,7 @@ bool Logo::doinfix() {
       _stack[_tos-1][FIELD_OPAND] = 0;          
       _tos++;
       _pc++;
+
       DEBUG_RETURN(" true", 0);
       return true;
     }
@@ -1953,23 +1927,6 @@ void Logo::mark(short i, short mark, const char *name) const {
   }
 }
 
-void Logo::dumpstack(const LogoCompiler *compiler, bool all) const {
-
-  cout << "stack: (" << _tos << ")" << endl;
-  
-  for (short i=0; i<(all ? MAX_STACK : _tos); i++) {
-    if (compiler) {
-      compiler->dump(1 ,_stack[i][FIELD_OPTYPE] ,_stack[i][FIELD_OP] ,_stack[i][FIELD_OPAND]);
-    }
-    else {
-      dump(1 ,_stack[i][FIELD_OPTYPE] ,_stack[i][FIELD_OP] ,_stack[i][FIELD_OPAND]);
-    }
-    mark(i, _tos, "tos");
-    cout << endl;
-  }
-  
-}
-
 ostream &Logo::out() {
   if (_ostream) {
     return *_ostream;
@@ -1983,4 +1940,34 @@ void Logo::setout(ostream *s) {
 
 
 #endif // !defined(ARDUINO)
+
+void Logo::dumpstack(const LogoCompiler *compiler, bool all) const {
+
+#ifdef ARDUINO
+  Serial.print("stack: (");
+  Serial.print(_tos);
+  Serial.println(")");
+  for (short i=0; i<(all ? MAX_STACK : _tos); i++) {
+    Serial.print("\t");
+    Serial.print(_stack[i][FIELD_OPTYPE]);
+    Serial.print(",");
+    Serial.print(_stack[i][FIELD_OP]);
+    Serial.print(",");
+    Serial.println(_stack[i][FIELD_OPAND]);
+  }
+#else
+  cout << "stack: (" << _tos << ")" << endl;
+  
+  for (short i=0; i<(all ? MAX_STACK : _tos); i++) {
+    if (compiler) {
+      compiler->dump(1, _stack[i][FIELD_OPTYPE] ,_stack[i][FIELD_OP] ,_stack[i][FIELD_OPAND]);
+    }
+    else {
+      dump(1, _stack[i][FIELD_OPTYPE], _stack[i][FIELD_OP] ,_stack[i][FIELD_OPAND]);
+    }
+    mark(i, _tos, "tos");
+    cout << endl;
+  }
+#endif  
+}
 

@@ -127,6 +127,27 @@ BOOST_AUTO_TEST_CASE( thing )
   
 }
 
+BOOST_AUTO_TEST_CASE( typeWord )
+{
+  cout << "=== typeWord ===" << endl;
+  
+  Logo logo;
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("make \"VAR 1");
+  compiler.compile("type :VAR");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  DEBUG_STEP_DUMP(10, false);
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  LogoStringResult str;
+  logo.popstring(&str);  
+  BOOST_CHECK_EQUAL(str.ncmp("INTEGER"), 0);
+  BOOST_CHECK(logo.stackempty());
+  
+}
+
 BOOST_AUTO_TEST_CASE( word )
 {
   cout << "=== word ===" << endl;
@@ -266,6 +287,25 @@ BOOST_AUTO_TEST_CASE( neqWord )
   BOOST_CHECK_EQUAL(logo.popint(), 0);
   
   BOOST_CHECK(logo.stackempty());
+}
+
+BOOST_AUTO_TEST_CASE( neqRefs )
+{
+  cout << "=== neqRefs ===" << endl;
+  
+  Logo logo;
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("make \"VAR1 2");
+  compiler.compile("make \"VAR2 1");
+  compiler.compile(":VAR1 != :VAR2");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  DEBUG_STEP_DUMP(10, false);
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popint(), 1);
+
 }
 
 BOOST_AUTO_TEST_CASE( gtWord )

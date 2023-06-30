@@ -22,7 +22,7 @@ to LEDPIN
 end
 
 to BTNPIN
-  9
+  $BTNPIN
 end
 
 to SETUP

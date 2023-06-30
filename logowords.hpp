@@ -84,6 +84,10 @@ public:
 
   static void first(Logo &logo);
 
+  static void type(Logo &logo);
+
+  static void machineinfo(Logo &logo);
+  
 private:
 
   static bool pushliterals(Logo &logo, short rel);

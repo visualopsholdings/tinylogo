@@ -506,12 +506,13 @@ int LogoCompiler::wordstringslist(char *buf, int len) const {
   
 }
 
-int LogoCompiler::compile(fstream &file) {
+int LogoCompiler::compile(fstream &file, const map<string, string> &directives) {
   file.clear();
   file.seekg(0, ios::beg);
   string line;
   while (getline(file, line)) {
     line += "\n";
+    replacedirectives(&line, directives);
     compile(line.c_str());
     int err = _logo->geterr();
     if (err) {
@@ -521,13 +522,19 @@ int LogoCompiler::compile(fstream &file) {
   return 0;
 }
 
-int LogoCompiler::generatecode(fstream &file, const string &name, ostream &str) {
+int LogoCompiler::generatecode(fstream &file, const map<string, string> &directives, ostream &str) {
 
+  // check for name directive
+  map<string, string>::const_iterator name = directives.find("NAME");
+  if (name == directives.end()) {
+    return LG_OUT_OF_STRINGS;
+  }
+  
   // first compile the code so we can dump the strings from it in 
   // the correct order
   Logo logo;
   LogoCompiler compiler(&logo);
-  compiler.compile(file);
+  compiler.compile(file, directives);
 //  compiler.dump(false);
   int err = logo.geterr();
   if (err) {
@@ -535,7 +542,7 @@ int LogoCompiler::generatecode(fstream &file, const string &name, ostream &str) 
   }
   
   // can dump the strings code.
-  logo.dumpstringscode(&compiler, ("strings_" + name).c_str(), str);
+  logo.dumpstringscode(&compiler, ("strings_" + name->second).c_str(), str);
 
   // now gather the strings and specify them for the new compile
   char list[STRING_POOL_SIZE];
@@ -550,21 +557,21 @@ int LogoCompiler::generatecode(fstream &file, const string &name, ostream &str) 
     // build a new engine with these strings and compile again.
     Logo logo2(0, &strings);
     LogoCompiler compiler2(&logo2);
-    compiler2.compile(file);
+    compiler2.compile(file, directives);
     int err = logo2.geterr();
     if (err) {
       return err;
     }
     
     // ready to dump the code now.
-    logo2.dumpinst(&compiler2, ("code_" + name).c_str(), str);
+    logo2.dumpinst(&compiler2, ("code_" + name->second).c_str(), str);
   }
   
   return 0;
   
 }
 
-int LogoCompiler::includelgo(const string &infn, const string &name, fstream &outfile) {
+int LogoCompiler::includelgo(const string &infn, const map<string, string> &directives, fstream &outfile) {
 
   fstream file;
   file.open(infn, ios::in);
@@ -574,7 +581,7 @@ int LogoCompiler::includelgo(const string &infn, const string &name, fstream &ou
   }
   
   stringstream str;
-  int err = LogoCompiler::generatecode(file, name, str);
+  int err = LogoCompiler::generatecode(file, directives, str);
   file.close();
   if (err) {
     return err;
@@ -586,12 +593,49 @@ int LogoCompiler::includelgo(const string &infn, const string &name, fstream &ou
   
 }
 
+void LogoCompiler::getdirectives(const string line, map<string, string> *directives) {
+  
+  directives->clear();
+  
+  string rest = line;
+  trim(rest);
+  vector<string> directive;
+  split(directive, rest, is_any_of(" "));
+  for (vector<string>::iterator i=directive.begin(); i != directive.end(); i++) {
+    trim(*i);
+    vector<string> nvp;
+    split(nvp, *i, is_any_of("="));
+    if (nvp.size() > 0) {
+      (*directives)[nvp[0]] = nvp.size() == 2 ? nvp[1] : "";
+    }
+  }
+  
+}
+
+void LogoCompiler::replacedirectives(string *line, const map<string, string> &directives) {
+
+  while (1) {
+    size_t dollar = line->find('$');
+    if (dollar == string::npos) {
+      // loop until we find no new tokens to replace.
+      break;
+    }
+    string rest = line->substr(dollar);
+    size_t space = rest.find(' ');
+    string token = space == string::npos ? rest.substr(1) : rest.substr(1, space-1);
+    trim(token);
+    map<string, string>::const_iterator d = directives.find(token);
+    if (d == directives.end()) {
+      cout << "missing " << token << endl;
+    }
+    *line = line->substr(0, dollar) + (d == directives.end() ? "?" + token : d->second) + (space == string::npos ? "" : rest.substr(space));
+  }
+  
+}
+
 int LogoCompiler::updateino(const std::string &infn, std::fstream &infile, std::fstream &outfile) {
 
   const string logo_directive = "//#LOGO";
-  const string file_directive = "FILE=";
-  const string endfile_directive = "ENDFILE";
-  const string name_directive = "NAME=";
 
   string line;
   bool including = false;
@@ -599,36 +643,31 @@ int LogoCompiler::updateino(const std::string &infn, std::fstream &infile, std::
     size_t pos = line.find(logo_directive);
     if (pos != string::npos) {
       string rest = line.substr(pos + logo_directive.length());
-      trim(rest);
-      pos = rest.find(file_directive);
-      if (pos != string::npos) {
-        rest = rest.substr(pos + file_directive.length());
-        trim(rest);
-        pos = rest.find(name_directive);
-        if (pos != string::npos) {
-          string lfn = rest.substr(0, pos);
-          trim(lfn);
-          fs::path lgopath(lfn);
-          fs::path inpath(infn);
-          if (!lgopath.is_absolute()) {
-            lgopath = inpath.parent_path() / lgopath;
-          }
-          rest = rest.substr(pos + name_directive.length());
-          trim(rest);
-          including = true;
-          outfile << line << endl;
-          cout << "including .LGO " << lgopath.string() << endl;
-          int err = includelgo(lgopath.string(), rest, outfile);
-          if (err) {
-            return err;
-          }
+      map<string, string> directives;
+      getdirectives(rest, &directives);
+      if (directives.find("FILE") != directives.end()) {
+        string lfn = directives["FILE"];
+        fs::path lgopath(lfn);
+        fs::path inpath(infn);
+        if (!lgopath.is_absolute()) {
+          lgopath = inpath.parent_path() / lgopath;
+        }
+        including = true;
+        outfile << line << endl;
+        cout << "including .LGO " << lgopath.string() << endl;
+        int err = includelgo(lgopath.string(), directives, outfile);
+        if (err) {
+          return err;
         }
       }
+      else if (directives.find("ENDFILE") != directives.end()) {
+        outfile << line << endl;
+        including = false;
+      }
       else {
-        pos = rest.find(endfile_directive);
-        if (pos != string::npos) {
-          outfile << line << endl;
-          including = false;
+        cout << "Unknown directives:" << endl;
+        for (map<string, string>::iterator i=directives.begin(); i != directives.end(); i++) {
+          cout << i->first << " = "<< i->second << endl;
         }
       }
     }

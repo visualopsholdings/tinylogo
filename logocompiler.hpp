@@ -21,6 +21,7 @@
 
 #ifndef ARDUINO
 #include <fstream>
+#include <map>
 #endif
 
 #ifdef USE_FLASH_CODE
@@ -72,16 +73,19 @@ public:
   bool haswords() { return _wordcount > 0; }
   void entab(short indent) const;
   void printwordstring(const LogoWord &word, std::ostream &str) const;
-  static int generatecode(std::fstream &file, const std::string &name, std::ostream &str);
+  static int generatecode(std::fstream &file, const std::map<std::string, std::string> &directives, std::ostream &str);
   static int updateino(const std::string &infn, std::fstream &infile, std::fstream &outfile);
-  static int includelgo(const std::string &infn, const std::string &name, std::fstream &outfile);
-  int compile(std::fstream &file);
+  static int includelgo(const std::string &infn, const std::map<std::string, std::string> &directives, std::fstream &outfile);
+  int compile(std::fstream &file, const std::map<std::string, std::string> &directives);
+  static void getdirectives(const std::string line, std::map<std::string, std::string> *directives);
+  static void replacedirectives(std::string *line, const std::map<std::string, std::string> &directives);
 #endif
 
   // public for testing.
   short scan(short *strstart, short *strsize, LogoString *str, short len, short start, bool newline);
   bool switchtoken(char prevc, char c, bool newline);
 
+  
 private:
   
   Logo *_logo;

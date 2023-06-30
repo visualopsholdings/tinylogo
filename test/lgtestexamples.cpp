@@ -18,6 +18,7 @@
 
 #include "../logo.hpp"
 #include "../logocompiler.hpp"
+#include "../arduinoflashcode.hpp"
 
 using namespace std;
 
@@ -67,3 +68,59 @@ BOOST_AUTO_TEST_CASE( page3_increment )
   
 }
 
+static const char strings_setup[] PROGMEM = {
+// words
+	"SETUP\n"
+// variables
+// strings
+	"VAR1\n"
+	"VAR2\n"
+	"SETUP\n"
+};
+static const short code_setup[][INST_LENGTH] PROGMEM = {
+	{ OPTYPE_BUILTIN, 1, 0 },		// 0
+	{ OPTYPE_STRING, 1, 4 },		// 1
+	{ OPTYPE_INT, 1, 0 },		// 2
+	{ OPTYPE_BUILTIN, 1, 0 },		// 3
+	{ OPTYPE_STRING, 2, 4 },		// 4
+	{ OPTYPE_INT, 1, 0 },		// 5
+	{ OPTYPE_BUILTIN, 18, 0 },		// 6
+	{ OPTYPE_REF, 1, 4 },		// 7
+	{ OPTYPE_BUILTIN, 8, 0 },		// 8
+	{ OPTYPE_REF, 2, 4 },		// 9
+	{ OPTYPE_HALT, 0, 0 },		// 10
+	{ OPTYPE_BUILTIN, 18, 0 },		// 11
+	{ OPTYPE_STRING, 0, 5 },		// 12
+	{ OPTYPE_RETURN, 0, 0 },		// 13
+	{ SCOPTYPE_WORD, 11, 0 }, 
+	{ SCOPTYPE_END, 0, 0 } 
+};
+
+BOOST_AUTO_TEST_CASE( sketch_setup )
+{
+  cout << "=== sketch_setup ===" << endl;
+  
+  ArduinoFlashCode code((const PROGMEM short *)code_setup);
+  ArduinoFlashString strings(strings_setup);
+  Logo logo(0, &strings, &code);
+  LogoCompiler compiler(&logo);
+
+  DEBUG_DUMP(false);
+  
+  stringstream s;
+  logo.setout(&s);
+
+  BOOST_CHECK_EQUAL(logo.callword("SETUP"), 0);
+  DEBUG_STEP_DUMP(4, false);
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(s.str(), "=== SETUP\n");
+
+  logo.resetcode();
+
+  stringstream s2;
+  logo.setout(&s2);
+  DEBUG_STEP_DUMP(4, false);
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+   BOOST_CHECK_EQUAL(s2.str(), "=== 0\n");
+ 
+}

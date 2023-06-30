@@ -70,7 +70,9 @@ public:
   short intval() const;  
   static ListNodeVal newintval(short val);
 
+#ifndef ARDUINO
   void dump(const char *msg) const;
+#endif
 
 private:  
   tListDataType _type;
@@ -83,7 +85,9 @@ class ListPool {
 public:
   ListPool();
   
+#ifndef ARDUINO
   void dump(const char *msg, bool all) const;
+#endif
 
 private:
   friend class List;

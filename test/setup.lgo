@@ -1,0 +1,8 @@
+
+to SETUP
+  print "SETUP
+end
+
+make "VAR1 1
+make "VAR2 1
+print :VAR1 != :VAR2

@@ -265,6 +265,8 @@ void LogoWords::dumpvars(Logo &logo) {
 
 void LogoWords::print(Logo &logo) {
 
+//  logo.dumpstack(0, false);
+
   LogoStringResult result;
   char s[256];
 
@@ -281,7 +283,7 @@ void LogoWords::print(Logo &logo) {
         result.ncpy(s, sizeof(s));
         if (!first) {
 #ifdef ARDUINO
-          Serial.print(' '');
+          Serial.print(' ');
 #else
           logo.out() << " ";
 #endif
@@ -424,6 +426,59 @@ void LogoWords::first(Logo &logo) {
   LogoSimpleString str2(s);
   logo.pushstring(&str2);
   
+}
+
+void LogoWords::type(Logo &logo) {
+
+  if (logo.isstacklist()) {
+    LogoSimpleString str("LIST");
+    logo.pop();
+    logo.pushstring(&str);
+  }
+  else if (logo.isstackstring()) {
+    LogoSimpleString str("STRING");
+    logo.pop();
+    logo.pushstring(&str);
+  }
+  else if (logo.isstackint()) {
+    LogoSimpleString str("INTEGER");
+    logo.pop();
+    logo.pushstring(&str);
+  }
+  else if (logo.isstackdouble()) {
+    LogoSimpleString str("DOUBLE");
+    logo.pop();
+    logo.pushstring(&str);
+  }
+  else {
+    LogoSimpleString str("UNKNOWN");
+    logo.pop();
+    logo.pushstring(&str);
+  }
+  
+}
+
+void LogoWords::machineinfo(Logo &logo) {
+
+ #ifdef ARDUINO
+    Serial.print("TinyLogo version ");
+    Serial.println(MACHINE_VERSION);
+    Serial.print("Strings: ");
+    Serial.println(STRING_POOL_SIZE);
+    Serial.print("Code: ");
+    Serial.println(CODE_SIZE);
+    Serial.print("Stack: ");
+    Serial.println(MAX_STACK);
+    Serial.print("Vars: ");
+    Serial.println(MAX_VARS);
+#else
+    logo.out() << "TinyLogo" << endl;
+    logo.out() << "Strings: " << STRING_POOL_SIZE << endl;
+    logo.out() << "Code: " << CODE_SIZE << endl;
+    logo.out() << "Stack: " << MAX_STACK << endl;
+    logo.out() << "Vars: " << MAX_VARS << endl;
+#endif
+ 
 }
 
 

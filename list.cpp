@@ -13,9 +13,11 @@
 
 #include "list.hpp"
 
+#ifndef ARDUINO
 #include <iostream>
 
 using namespace std;
+#endif
 
 ListPool::ListPool() {
 
@@ -81,6 +83,7 @@ void ListPool::pop(tNodeType *node, ListNodeVal *val) {
 
 }
 
+#ifndef ARDUINO
 void ListNodeVal::dump(const char *msg) const {
   cout << (short)_type << " (" << _data1 << ", " << _data2 << ")" << endl;
 }
@@ -101,6 +104,7 @@ void ListPool::dump(const char *msg, bool all) const {
   }
   
 }
+#endif
 
 List::List(ListPool *pool) : _pool(pool) {
 

@@ -57,6 +57,8 @@
 #include "arduinoflashstring.hpp"
 #include "list.hpp"
 
+#define MACHINE_VERSION   1
+
 //#define LOGO_DEBUG
 
 #ifdef ARDUINO
@@ -73,7 +75,7 @@
 // leaves about 200 bytes for local variables. Otherwise your sketch won't work.
 // 
 #ifdef USE_FLASH_CODE
-#ifdef ARDUINO
+#if defined(ARDUINO) && defined(__AVR__)
 // when we are allocating strings on the ARDUINO, this will be too small but
 // for now they area all static.
 #define STRING_POOL_SIZE    64
@@ -83,21 +85,25 @@
 #else
 #define STRING_POOL_SIZE    128       // these number of bytes
 #endif
+
 #ifdef USE_FLASH_CODE
 #define MAX_CODE            512       // 6 bytes each
 #else
 #define MAX_CODE            80        // 6 bytes each
 #endif
+
 #ifdef USE_FLASH_CODE
 #define START_JCODE         80        // the start of where the JCODE lies (the words)
 #else
 #define START_JCODE         30        // the start of where the JCODE lies (the words)
 #endif
+
 #ifdef USE_FLASH_CODE
 #define MAX_STACK           64        // 6 bytes each
 #else
 #define MAX_STACK           16        // 6 bytes each
 #endif
+
 #ifdef USE_FLASH_CODE
 #define MAX_VARS             20       // 10 bytes each
 #else
@@ -105,7 +111,7 @@
 #endif
 
 #ifdef USE_FLASH_CODE
-#ifdef ARDUINO
+#if defined(ARDUINO) && defined(__AVR__)
 #define CODE_SIZE           2
 #else
 #define CODE_SIZE           MAX_CODE
@@ -206,7 +212,12 @@ typedef short tJump;
 #define NO_JUMP   -1
 #endif
 
+#if defined(ARDUINO) && !defined(__AVR__)
+// this makes it work on the ESP32
+#define INFIX_ARITY   255
+#else
 #define INFIX_ARITY   -1
+#endif
 
 // a single instruction.
 #define INST_LENGTH   3 // in shorts
@@ -307,6 +318,9 @@ public:
   void pushstring(tStrPool n, tStrPool len);  
   void pushstring(LogoString *str);
   bool isstacklist();
+  bool isstackstring();
+  bool isstackint();
+  bool isstackdouble();
   List poplist();
   bool pop();
   short findvariable(LogoString *str, short start, short slen) const;
@@ -344,7 +358,6 @@ public:
 #ifndef ARDUINO
   void entab(short indent) const;
   void dumpcode(const LogoCompiler *compiler, bool all=true) const;
-  void dumpstack(const LogoCompiler *compiler, bool all=true) const;
   void dumpvars(const LogoCompiler *compiler) const;
   void dumpvars() const;
   void dumpstaticwords(const LogoCompiler *compiler) const;
@@ -366,6 +379,8 @@ public:
   void setout(std::ostream *s);
   std::ostream *_ostream;
 #endif
+
+  void dumpstack(const LogoCompiler *compiler, bool all=true) const;
 
   static const char coreNames[];
   static const char coreArity[];

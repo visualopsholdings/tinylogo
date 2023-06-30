@@ -368,6 +368,16 @@ pin := [wordname | number | var]
 var := :varname
 ```
 
+#### pininup
+
+Set's a PIN up to be an input and use it's internal pull up resistor. Takes the pin number off the stack.
+
+```
+pininup pin
+pin := [wordname | number | var]
+var := :varname
+```
+
 #### aout
 
 Output's a value to an analog output. Takes the pin number and value off the stack.
@@ -378,6 +388,25 @@ pin := [wordname | number | var]
 value := [wordname | number | var]
 var := :varname
 ```
+
+#### type
+
+Output the type of the value on the stack.
+
+```
+type value
+value := [number | string | list | var]
+var := :varname
+```
+
+#### machineinfo
+
+Output the sizes used for TinyLogo and the version.
+
+```
+machineinfo
+```
+
 ### UCBLogo differences
 
 - On page 4, we don't implement the setter notation, SETFOO is just the name of a defined
@@ -470,7 +499,7 @@ $ tools/build/flashcode rgb/rgb.ino
 This searches for 2 lines in the file:
 
 ```
-//#LOGO FILE=../logo/rgb.lgo NAME=rgb
+//#LOGO FILE=../logo/rgb.lgo NAME=rgb BTNPIN=9
 //#LOGO ENDFILE
 ```
 
@@ -478,6 +507,9 @@ And modifies whatever is between 2 lines to output the actual compiled runtime f
 This allows development to be very quick. You can modify and run your .lgo file in a dev
 environment and then run flashcode and then in the IDE upload directly to your Arduino
 to try the code out.
+
+If you had "$BTNPIN" inside your .lgo file, it would be replaced by "9". Have as many
+directives as you want.
 
 ## Running a .lgo file and seeing what it does.
 
@@ -633,6 +665,10 @@ your sketch.
 ### 29 Jun 2023
 - Rudimentary support for being able to PRINT a list. This is actually full support for
 storing lists but only "PRINT" knows how to use them.
+
+### 30 Jun 2023
+- Track down bug that stopped sketches working on the esp32
+- add in ability use directives to replace values in .lgo files
 
 
 

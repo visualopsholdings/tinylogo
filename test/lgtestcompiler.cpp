@@ -23,6 +23,7 @@
 #include <iostream>
 #include <vector>
 #include <strstream>
+#include <string>
 
 using namespace std;
 
@@ -248,4 +249,88 @@ BOOST_AUTO_TEST_CASE( blankLines )
   BOOST_CHECK_EQUAL(logo.popint(), 200);
   DEBUG_DUMP(false);
 
+}
+
+BOOST_AUTO_TEST_CASE( getdirectives )
+{
+  cout << "=== getdirectives ===" << endl;
+  
+  string line = " FILE=xxx.lgo NAME=sketch BTNPIN=9 ";
+  map<string, string> directives;
+  LogoCompiler::getdirectives(line, &directives);
+  BOOST_CHECK_EQUAL(directives.size(), 3);
+  BOOST_CHECK_EQUAL(directives["FILE"], "xxx.lgo");  
+  BOOST_CHECK_EQUAL(directives["NAME"], "sketch");  
+  BOOST_CHECK_EQUAL(directives["BTNPIN"], "9");  
+  
+  line = "ENDFILE";
+  LogoCompiler::getdirectives(line, &directives);
+  BOOST_CHECK_EQUAL(directives.size(), 1);
+  BOOST_CHECK_EQUAL(directives["ENDFILE"], "");  
+  
+}
+
+BOOST_AUTO_TEST_CASE( getdirectivesNoSpace )
+{
+  cout << "=== getdirectivesNoSpace ===" << endl;
+  
+  string line = " NAME=sketch BTNPIN=9";
+  map<string, string> directives;
+  LogoCompiler::getdirectives(line, &directives);
+  BOOST_CHECK_EQUAL(directives.size(), 2);
+  BOOST_CHECK_EQUAL(directives["NAME"], "sketch");  
+  BOOST_CHECK_EQUAL(directives["BTNPIN"], "9");
+  
+}
+
+BOOST_AUTO_TEST_CASE( getdirectivesNewline )
+{
+  cout << "=== getdirectivesNewline ===" << endl;
+  
+  string line = " NAME=sketch BTNPIN=9\n";
+  map<string, string> directives;
+  LogoCompiler::getdirectives(line, &directives);
+  BOOST_CHECK_EQUAL(directives.size(), 2);
+  BOOST_CHECK_EQUAL(directives["NAME"], "sketch");  
+  BOOST_CHECK_EQUAL(directives["BTNPIN"], "9");
+  
+}
+
+BOOST_AUTO_TEST_CASE( replacedirectives )
+{
+  cout << "=== replacedirectives ===" << endl;
+  
+  string line = " $A $BBB $CCCC ";
+  map<string, string> directives;
+  directives["A"] = "1";
+  directives["BBB"] = "XXXX";
+  directives["CCCC"] = "%^&X";
+  LogoCompiler::replacedirectives(&line, directives);
+  BOOST_CHECK_EQUAL(line, " 1 XXXX %^&X ");  
+  
+}
+
+BOOST_AUTO_TEST_CASE( replacedirectivesMissing )
+{
+  cout << "=== replacedirectivesMissing ===" << endl;
+  
+  string line = " $A $BBB $CCCC ";
+  map<string, string> directives;
+  directives["A"] = "1";
+  directives["CCCC"] = "%^&X";
+  LogoCompiler::replacedirectives(&line, directives);
+  BOOST_CHECK_EQUAL(line, " 1 ?BBB %^&X ");  
+  
+}
+
+BOOST_AUTO_TEST_CASE( replacedirectivesNoSpace )
+{
+  cout << "=== replacedirectivesNoSpace ===" << endl;
+  
+  string line = "$BBB";
+  map<string, string> directives;
+  directives["BBB"] = "XXXX";
+  LogoCompiler::replacedirectives(&line, directives);
+  BOOST_CHECK_EQUAL(line, "XXXX");  
+  
 }

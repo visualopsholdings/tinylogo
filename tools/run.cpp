@@ -57,7 +57,8 @@ int main(int argc, char *argv[]) {
       RealTimeProvider time;
       Logo logo(&time);
       LogoCompiler compiler(&logo);
-      compiler.compile(file);
+      map<string, string> directives;
+      compiler.compile(file, directives);
       int err = logo.geterr();
       if (err) {
         cout << "got compile err " << err << endl;
