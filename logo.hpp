@@ -62,18 +62,33 @@
 //#define LOGO_DEBUG
 
 #ifdef ARDUINO
+
+#ifdef ESP32
+#define USE_LARGE_CODE
+#else
 // un comment this if you want to use the logo runtime directly with flash code. This allows
 // for MUCH greater stack and vars.
+// this isn't used when USE_LARGE_CODE is on
 #define USE_FLASH_CODE
 #endif
 
-// on some Arduinos this could be MUCH larger.
-// if you run out of space, take a look at using flash memory to store your strings 
-// and even code.
+#endif
 
 // it's really important with these numbers that after you compile your code it 
 // leaves about 200 bytes for local variables. Otherwise your sketch won't work.
 // 
+
+#ifdef USE_LARGE_CODE
+// Huge settings for something that can handle it.
+#define STRING_POOL_SIZE    1024 * 8
+#define MAX_CODE            1024 * 4        
+#define CODE_SIZE           MAX_CODE
+#define START_JCODE         1024 * 2
+#define MAX_STACK           1024 * 4
+#define MAX_VARS            1024 * 2
+
+#else
+
 #ifdef USE_FLASH_CODE
 #if defined(ARDUINO) && defined(__AVR__)
 // when we are allocating strings on the ARDUINO, this will be too small but
@@ -120,17 +135,11 @@
 #define CODE_SIZE           MAX_CODE  
 #endif
 
+#endif // USE_LARGE_CODE
+
 #define NUM_LEN             12        // these number of bytes
 #define SENTENCE_LEN        4         // & and 3 more digits
 #define STRING_LEN          32        // the length of a single string.
-
-// some settings that can be used to debug directly on an arduino.
-// #define STRING_POOL_SIZE    64        // these number of bytes
-// #define MAX_WORDS           8         // 6 bytes each
-// #define MAX_CODE            60        // 6 bytes each
-// #define START_JCODE         20        // the start of where the JCODE lies (the words)
-// #define MAX_STACK           8         // 6 bytes each
-// #define MAX_VARS            2         // 10 bytes each
 
 #include <string.h>
 #include <stdio.h>

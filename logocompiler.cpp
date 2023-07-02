@@ -506,6 +506,32 @@ int LogoCompiler::wordstringslist(char *buf, int len) const {
   
 }
 
+int LogoCompiler::inlinelgo(std::fstream &file, const std::map<std::string, std::string> &directives, std::ostream &str) {
+
+  // check for name directive
+  map<string, string>::const_iterator name = directives.find("NAME");
+  if (name == directives.end()) {
+    return LG_OUT_OF_STRINGS;
+  }
+  
+  str << "static const char program_" << name->second << "[] PROGMEM = " << endl;
+
+  file.clear();
+  file.seekg(0, ios::beg);
+  string line;
+  
+  while (getline(file, line)) {
+    replacedirectives(&line, directives);
+    replace_all(line, "\"", "\\\"");
+    str << "\"" << line << "\\n\"" << endl;
+  }
+  str << ";" << endl;
+  
+  return 0;
+  
+}
+
+
 int LogoCompiler::compile(fstream &file, const map<string, string> &directives) {
   file.clear();
   file.seekg(0, ios::beg);
@@ -581,7 +607,16 @@ int LogoCompiler::includelgo(const string &infn, const map<string, string> &dire
   }
   
   stringstream str;
-  int err = LogoCompiler::generatecode(file, directives, str);
+  int err;
+  
+  map<string, string>::const_iterator inl = directives.find("INLINE");
+  if (inl != directives.end() && inl->second == "true") {
+    err = LogoCompiler::inlinelgo(file, directives, str);
+  }
+  else {
+    err = LogoCompiler::generatecode(file, directives, str);
+  }
+  
   file.close();
   if (err) {
     return err;

@@ -133,7 +133,6 @@ static const short code_sketch[][INST_LENGTH] PROGMEM = {
 };
 //#LOGO ENDFILE
 
-//LogoSketch sketch(strings_sketch, (const PROGMEM short *)code_sketch);
 LogoSketch sketch((char *)strings_sketch, (const PROGMEM short *)code_sketch);
 
 // At the start

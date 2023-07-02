@@ -670,6 +670,10 @@ storing lists but only "PRINT" knows how to use them.
 - Track down bug that stopped sketches working on the esp32
 - add in ability use directives to replace values in .lgo files
 
+### 31 Jun 2023
+- Start work for allowing sketches to be inlined for large hardware
+
+
 
 
 

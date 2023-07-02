@@ -24,8 +24,8 @@
 #include <map>
 #endif
 
-#ifdef USE_FLASH_CODE
-#define MAX_WORDS           100       // 6 bytes each
+#ifdef USE_LARGE_CODE
+#define MAX_WORDS           1024       // 6 bytes each
 #else
 #define MAX_WORDS           16        // 6 bytes each
 #endif
@@ -74,6 +74,7 @@ public:
   void entab(short indent) const;
   void printwordstring(const LogoWord &word, std::ostream &str) const;
   static int generatecode(std::fstream &file, const std::map<std::string, std::string> &directives, std::ostream &str);
+  static int inlinelgo(std::fstream &file, const std::map<std::string, std::string> &directives, std::ostream &str);
   static int updateino(const std::string &infn, std::fstream &infile, std::fstream &outfile);
   static int includelgo(const std::string &infn, const std::map<std::string, std::string> &directives, std::fstream &outfile);
   int compile(std::fstream &file, const std::map<std::string, std::string> &directives);

@@ -19,31 +19,68 @@
 #define H_logosketch
 
 #include "logo.hpp"
+#include "logocompiler.hpp"
 #include "arduinotimeprovider.hpp"
 #include "arduinoflashstring.hpp"
 #include "arduinoflashcode.hpp"
 #include "ringbuffer.hpp"
 #include "cmd.hpp"
 
-class LogoSketch {
+class LogoSketchBase {
 
 public:
-  LogoSketch(char strings[] PROGMEM, const PROGMEM short *code);
+  LogoSketchBase();
   
-  void setup();
+  void setup(int baud=9600);
   void loop();
+
+  virtual void precompile() = 0;
+  virtual int dosetup(const char *cmd) = 0;
+  virtual int docommand(const char *cmd) = 0;
+  virtual Logo *logo() = 0;
   
-private:
+protected:
   ArduinoTimeProvider _time; // adds 12 bytes of dynamic memory
-  ArduinoFlashString _strings; // adds 18 bytes
-  ArduinoFlashCode _code; // 2 bytes
-  Logo _logo; // 700 bytes (stack, string pool and variables)
   RingBuffer _buffer; // 64 bytes
   Cmd _cmd; // 32 bytes
   char _cmdbuf[STRING_LEN]; // 32 bytes
 
   void showErr(int mode, int n);
+    
+};
 
+class LogoSketch : public LogoSketchBase {
+
+public:
+  LogoSketch(char strings[] PROGMEM, const PROGMEM short *code);
+  
+  // LogoSketchBase
+  virtual void precompile();
+  virtual int dosetup(const char *cmd);
+  virtual int docommand(const char *cmd);
+  virtual Logo *logo() { return &_logo; }
+
+private:
+  ArduinoFlashString _strings; // adds 18 bytes
+  ArduinoFlashCode _code; // 2 bytes
+  Logo _logo; // 700 bytes (stack, string pool and variables)
+};
+
+class LogoInlineSketch : public LogoSketchBase {
+
+public:
+  LogoInlineSketch(char program[] PROGMEM);
+  
+  // LogoSketchBase
+  virtual void precompile();
+  virtual int dosetup(const char *cmd);
+  virtual int docommand(const char *cmd);
+  virtual Logo *logo() { return &_logo; }
+
+private:
+  ArduinoFlashString _program; // adds 18 bytes
+  LogoCompiler _compiler;
+  Logo _logo; // 700 bytes (stack, string pool and variables)
 };
 
 #endif // H_logosketch

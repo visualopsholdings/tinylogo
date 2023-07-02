@@ -17,7 +17,7 @@ cmake_minimum_required(VERSION 3.5)
 
 project (tinylogo)
   find_package(Boost COMPONENTS program_options filesystem unit_test_framework REQUIRED)
-  add_definitions(-DBOOST_ALL_DYN_LINK -DUSE_FLASH_CODE) 
+  add_definitions(-DBOOST_ALL_DYN_LINK -DUSE_LARGE_CODE) 
 #  add_definitions(-DLOGO_DEBUG) 
   enable_testing()
 

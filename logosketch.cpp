@@ -15,27 +15,32 @@
 
 #include <Arduino.h>
 
-LogoSketch::LogoSketch(char strings[] PROGMEM, const PROGMEM short *code): 
-  _strings(strings), _code(code),
-  _logo(&_time, &_strings, &_code) {
+LogoSketchBase::LogoSketchBase() {
 }
 
-void LogoSketch::setup()  {
+void LogoSketchBase::setup(int baud)  {
 
-  Serial.begin(9600);
+  Serial.begin(baud);
   
-  int err = _logo.callword("SETUP");
+  precompile();
+  
+  int err = logo()->geterr();
+  if (err) {
+    showErr(0, err + 2);
+  }
+
+  err = dosetup("SETUP");
   if (!err) {
-    err = _logo.run();
+    err = logo()->run();
     if (err && err != LG_STOP) {
-      showErr(0, err);
+      showErr(1, err);
     }
-    _logo.resetcode();
+    logo()->resetcode();
   }
 
 }
 
-void LogoSketch::loop() {
+void LogoSketchBase::loop() {
 
   // consume the serial data into the buffer as it comes in.
   while (Serial.available()) {
@@ -50,28 +55,79 @@ void LogoSketch::loop() {
   
     // read it in
     _cmd.read(_cmdbuf, sizeof(_cmdbuf));
- 
-    // reset the code but keep all our words we have defined.
-    _logo.resetcode();
     
-    int err = _logo.callword(_cmdbuf);
+    // reset the code but keep all our words we have defined.
+    logo()->resetcode();
+    
+    // process a command.
+    int err = docommand(_cmdbuf);
     if (err) {
-      showErr(1, err);
+      showErr(2, err);
     }
+
   }
 
-  int err = _logo.step();
+  int err = logo()->step();
   if (err && err != LG_STOP) {
-    showErr(2, err);
+    showErr(3, err);
   }
   
 }
 
-void LogoSketch::showErr(int mode, int n) {
+void LogoSketchBase::showErr(int mode, int n) {
 
   Serial.print("e=");
   Serial.print(mode);
   Serial.print(",");
   Serial.println(n);
 
+}
+
+LogoSketch::LogoSketch(char strings[] PROGMEM, const PROGMEM short *code): 
+  _strings(strings), _code(code), _logo(&_time, &_strings, &_code) {
+
+}
+
+void LogoSketch::precompile() {
+}
+
+int LogoSketch::dosetup(const char *cmd) {
+
+  // we don't know how to compile for now when doing a 
+  return docommand(cmd);
+  
+}
+
+int LogoSketch::docommand(const char *cmd) {
+
+  return _logo.callword(cmd);
+  
+}
+
+LogoInlineSketch::LogoInlineSketch(char program[] PROGMEM):
+  _program(program), _logo(&_time), _compiler(&_logo) {
+  
+}
+
+void LogoInlineSketch::precompile() {
+
+  // Compile a little program into the LOGO interpreter :-)
+  _compiler.compile(&_program);
+
+}
+
+int LogoInlineSketch::dosetup(const char *cmd) {
+
+//  return _logo.callword(cmd);
+  return docommand(cmd);
+  
+}
+
+int LogoInlineSketch::docommand(const char *cmd) {
+
+  // compile whatever it is into the LOGO interpreter and if there's
+  // a compile error flash the LED
+  _compiler.compile(cmd);
+  return _logo.geterr();
+  
 }
