@@ -394,6 +394,47 @@ void LogoWords::aout(Logo &logo) {
   
 }
 
+void LogoWords::pinrgb(Logo &logo) {
+
+  int channel = logo.popint();
+  int pin = logo.popint();
+  
+  logo.setpin(channel, pin);
+  
+#ifdef ARDUINO
+#ifdef ESP32
+  ledcSetup(channel, 12000, 8); // 12 kHz PWM, 8-bit resolution
+  ledcAttachPin(pin, channel);
+#else
+  pinMode(pin, OUTPUT);
+#endif
+
+#else
+  cout << "rgb pin " << pin << " [" << channel << "]" << endl;
+#endif
+  
+}
+
+void LogoWords::rgbout(Logo &logo) {
+
+  int value = logo.popint();
+  int channel = logo.popint();
+  
+  int pin = logo.getpin(channel);
+  
+#ifdef ARDUINO
+#ifdef ESP32
+  ledcWrite(channel, value);
+#else
+  // 0 is OFF, 255 is FULL.
+  analogWrite(pin, 255 - value);
+#endif
+#else
+  cout << "rgbout " << pin << " [" << channel << "]" << "=" << value << endl;
+#endif
+  
+}
+
 void LogoWords::output(Logo &logo) {
 
   // just leaves whatever is on the stack on the stack.
@@ -460,7 +501,7 @@ void LogoWords::type(Logo &logo) {
 
 void LogoWords::machineinfo(Logo &logo) {
 
- #ifdef ARDUINO
+#ifdef ARDUINO
     Serial.print("TinyLogo version ");
     Serial.println(MACHINE_VERSION);
     Serial.print("Strings: ");

@@ -12,74 +12,76 @@
 #   https://github.com/visualopsholdings/tinylogo  
 #
 
-TO ID
-  PRINT "rgb
-END
+to ID
+  print "rgb
+end
 
 # change your pins here
-TO BPIN
-  2
-END
+to BPIN
+  $BLUE
+end
 
-TO RPIN
-  3
-END
+to RPIN
+  $RED
+end
 
-TO GPIN
-  4
-END
+to GPIN
+  $GREEN
+end
 
-TO SETUP
-  PINOUT RPIN
-  AOUT RPIN 255
-  PINOUT GPIN
-  AOUT GPIN 255
-  PINOUT BPIN
-  AOUT BPIN 255
-END
+# called right at the start
+to SETUP
+  pinrgb RPIN 1
+  REDR SCLR 0
+  pinrgb GPIN 2
+  GREENR SCLR 0
+  pinrgb BPIN 3
+  BLUER SCLR 0
+end
 
-TO REDR :V
-  AOUT RPIN :V
-END
+to REDR :V
+  rgbout 1 :V
+end
 
-TO GREENR :V
-  AOUT GPIN :V
-END
+to GREENR :V
+  rgbout 2 :V
+end
 
-TO BLUER :V
-  AOUT BPIN :V
-END
+to BLUER :V
+  rgbout 3 :V
+end
 
 # scale a color to be between 1 and 100
 to SCLR :C
-  ((100 - :C) / 100) * 255
+  (:C / 100) * 255
 end
 
 # arguments are reversed!
-TO SET :B :G :R
+to SET :B :G :R
   REDR SCLR :R
   GREENR SCLR :G
   BLUER SCLR :B
-END
+end
 
-TO AMBER
+to AMBER
  SET 100 75 0
-END
+end
 
-TO RED
+to RED
   SET 100 0 0
-END
+end
 
-TO GREEN
+to GREEN
   SET 0 100 0
-END
+end
 
-TO BLUE
+to BLUE
   SET 0 0 100
-END
+end
 
-TO OFF
+to OFF
   SET 0 0 0
-END
+end
 
+# SETUP
 AMBER

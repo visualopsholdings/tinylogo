@@ -305,7 +305,7 @@ BOOST_AUTO_TEST_CASE( replacedirectives )
   directives["A"] = "1";
   directives["BBB"] = "XXXX";
   directives["CCCC"] = "%^&X";
-  LogoCompiler::replacedirectives(&line, directives);
+  LogoCompiler::replacedirectives(&line, directives, false, 0);
   BOOST_CHECK_EQUAL(line, " 1 XXXX %^&X ");  
   
 }
@@ -318,7 +318,7 @@ BOOST_AUTO_TEST_CASE( replacedirectivesMissing )
   map<string, string> directives;
   directives["A"] = "1";
   directives["CCCC"] = "%^&X";
-  LogoCompiler::replacedirectives(&line, directives);
+  LogoCompiler::replacedirectives(&line, directives, false, 0);
   BOOST_CHECK_EQUAL(line, " 1 ?BBB %^&X ");  
   
 }
@@ -330,7 +330,19 @@ BOOST_AUTO_TEST_CASE( replacedirectivesNoSpace )
   string line = "$BBB";
   map<string, string> directives;
   directives["BBB"] = "XXXX";
-  LogoCompiler::replacedirectives(&line, directives);
+  LogoCompiler::replacedirectives(&line, directives, false, 0);
   BOOST_CHECK_EQUAL(line, "XXXX");  
+  
+}
+
+BOOST_AUTO_TEST_CASE( replacedirectivesAutoAssign )
+{
+  cout << "=== replacedirectivesAutoAssign ===" << endl;
+  
+  string line = "$BBB $XXXX";
+  map<string, string> directives;
+  int count = 0;
+  LogoCompiler::replacedirectives(&line, directives, true, &count);
+  BOOST_CHECK_EQUAL(line, "1 2");  
   
 }

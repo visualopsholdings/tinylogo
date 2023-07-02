@@ -378,9 +378,40 @@ pin := [wordname | number | var]
 var := :varname
 ```
 
+#### pinrgb
+
+Set's a PIN up to be an rgb (analog) output and assigns a channel. Takes the pin number off the stack, and
+the channel number off the stack.
+
+This handles PINs on all arduinos. There can be up to 8 channels.
+
+```
+pinrgb pin channel
+pin := [wordname | number | var]
+channel := [wordname | number | var]
+var := :varname
+```
+
+#### rgbout
+
+Output's a value to an analog output that is a channel of an RGB LED. Takes the channel number and value off the stack.
+
+The channel had to be assigned by "pinrgb" above.
+
+On an AVR arduino, we reverse the values to be more convenient. So 0 is off an 255 is full.
+```
+rgbout channel value
+channel := [wordname | number | var]
+value := [wordname | number | var]
+var := :varname
+```
+
 #### aout
 
 Output's a value to an analog output. Takes the pin number and value off the stack.
+
+This only works on those Arduinos that have hardware PWM. For others, or if your not
+sure, use pinrgb/rgbout instead of pinout/aout.
 
 ```
 aout pin value
@@ -610,7 +641,6 @@ https://forum.arduino.cc/t/how-to-properly-use-wire-onreceive/891195/12
 ### Lists
 
 ### W32
-  - Get analog write working for the w32 modules.
   - get wifi access and io working.
   
 ## Change Log
@@ -672,6 +702,9 @@ storing lists but only "PRINT" knows how to use them.
 
 ### 31 Jun 2023
 - Start work for allowing sketches to be inlined for large hardware
+
+### 2 Jul 2023
+- Get ESP32 RGB LED code working.
 
 
 

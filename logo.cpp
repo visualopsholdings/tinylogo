@@ -99,6 +99,10 @@ Logo::Logo(LogoTimeProvider *time, LogoString *strings, ArduinoFlashCode *code) 
 #ifndef ARDUINO
   _ostream = 0;
 #endif
+
+  for (int i=0; i<(sizeof(_channels) / sizeof(tByte)); i++) {
+    _channels[i] = 255; // invalid value;
+  }
 }
 
 Logo::~Logo() {

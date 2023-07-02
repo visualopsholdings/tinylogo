@@ -35,7 +35,9 @@
 // - btnrgbflash.lgo
 // - btnledflash.lgo
 //    for an ESP32, set BTNPIN to 27, otherwise you can use 9 for the Leonardo
-// - rgb.lgo
+// - rgb.lgo 
+//    for a normal AVR RED=3 GREEN=4 BLUE=2
+//    for an ESP32 RED=26 GREEN=25 BLUE=27
 // - trafficlights.lgo
 // - sos.lgo
 // - tiny.lgo

@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
       Logo logo(&time);
       LogoCompiler compiler(&logo);
       map<string, string> directives;
-      compiler.compile(file, directives);
+      compiler.compile(file, directives, true);
       int err = logo.geterr();
       if (err) {
         cout << "got compile err " << err << endl;

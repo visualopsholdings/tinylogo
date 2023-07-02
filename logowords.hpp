@@ -88,6 +88,10 @@ public:
 
   static void machineinfo(Logo &logo);
   
+  static void pinrgb(Logo &logo);
+
+  static void rgbout(Logo &logo);
+
 private:
 
   static bool pushliterals(Logo &logo, short rel);

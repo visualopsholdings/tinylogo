@@ -538,7 +538,7 @@ int LogoCompiler::inlinelgo(std::fstream &file, const std::map<std::string, std:
   string line;
   
   while (getline(file, line)) {
-    replacedirectives(&line, directives);
+    replacedirectives(&line, directives, false, 0);
     replace_all(line, "\"", "\\\"");
     str << "\"" << line << "\\n\"" << endl;
   }
@@ -549,13 +549,15 @@ int LogoCompiler::inlinelgo(std::fstream &file, const std::map<std::string, std:
 }
 
 
-int LogoCompiler::compile(fstream &file, const map<string, string> &directives) {
+int LogoCompiler::compile(fstream &file, const map<string, string> &directives, bool autoassign) {
   file.clear();
   file.seekg(0, ios::beg);
   string line;
+  
+  int n = 0;
   while (getline(file, line)) {
     line += "\n";
-    replacedirectives(&line, directives);
+    replacedirectives(&line, directives, autoassign, &n);
     compile(line.c_str());
     int err = _logo->geterr();
     if (err) {
@@ -664,7 +666,7 @@ void LogoCompiler::getdirectives(const string line, map<string, string> *directi
   
 }
 
-void LogoCompiler::replacedirectives(string *line, const map<string, string> &directives) {
+void LogoCompiler::replacedirectives(string *line, const map<string, string> &directives, bool autoassign, int *count) {
 
   while (1) {
     size_t dollar = line->find('$');
@@ -677,12 +679,26 @@ void LogoCompiler::replacedirectives(string *line, const map<string, string> &di
     string token = space == string::npos ? rest.substr(1) : rest.substr(1, space-1);
     trim(token);
     map<string, string>::const_iterator d = directives.find(token);
+    stringstream str;
+    str << line->substr(0, dollar);
     if (d == directives.end()) {
-      cout << "missing " << token << endl;
+      if (autoassign) {
+        int n = ++(*count);
+        cout << token << "=" << n << endl;
+        str << n;
+      }
+      else {
+        cout << "missing " << token << endl;
+        str << "?" << token;
+      }
     }
-    *line = line->substr(0, dollar) + (d == directives.end() ? "?" + token : d->second) + (space == string::npos ? "" : rest.substr(space));
+    else {
+      str << d->second;
+    }
+    str << (space == string::npos ? "" : rest.substr(space));
+    *line = str.str();
   }
-  
+
 }
 
 int LogoCompiler::updateino(const std::string &infn, std::fstream &infile, std::fstream &outfile) {

@@ -50,6 +50,8 @@ const char Logo::coreNames[] PROGMEM = {
   "PININUP\n"
   "TYPE\n"
   "MACHINEINFO\n"
+  "PINRGB\n"
+  "RGBOUT\n"
 };
 
 // this arity array matches the above.
@@ -87,6 +89,8 @@ const char Logo::coreArity[] PROGMEM = {
   1, // PININUP
   1, // TYPE
   0, // MACHINEINFO
+  2, // PINRGB
+  2, // RGBOUT
 };
 
 // these indexes match the other 2 arrays.
@@ -125,6 +129,8 @@ void Logo::callbuiltin(short index) {
     case 30: LogoWords::pininup(*this); break;
     case 31: LogoWords::type(*this); break;
     case 32: LogoWords::machineinfo(*this); break;
+    case 33: LogoWords::pinrgb(*this); break;
+    case 34: LogoWords::rgbout(*this); break;
     default:
       break;
   }

@@ -399,6 +399,14 @@ public:
   static short findcrstring(const LogoString *strings, const LogoString *stri, short strstart, short slen);
   static bool getfixedcr(const LogoString *strings, LogoStringResult *result, short index);
 
+  // manage the channel map.
+  void setpin(tByte channel, tByte pin) {
+    _channels[channel] = pin;
+  }
+  tByte getpin(tByte channel) {
+    return _channels[channel];
+  }
+  
 private:
   
   // the pool of all strings
@@ -434,6 +442,9 @@ private:
   
   // the schdeuler for WAIT
   LogoScheduler _schedule;
+  
+  // A channel map for leds
+  tByte _channels[8];
   
   // parser
   bool parsestring(short type, short op, short oplen, LogoStringResult *str);
