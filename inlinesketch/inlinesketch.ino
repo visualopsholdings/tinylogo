@@ -73,7 +73,7 @@ static const char program_sketch[] PROGMEM =
 "  OFF\n"
 "end\n"
 "\n"
-//"GO\n"
+"GO\n"
 ;
 //#LOGO ENDFILE
 

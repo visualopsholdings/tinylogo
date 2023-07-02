@@ -35,7 +35,7 @@ void LogoSketchBase::setup(int baud)  {
     if (err && err != LG_STOP) {
       showErr(1, err);
     }
-    logo()->resetcode();
+    logo()->restart();
   }
 
 }
@@ -118,8 +118,7 @@ void LogoInlineSketch::precompile() {
 
 int LogoInlineSketch::dosetup(const char *cmd) {
 
-//  return _logo.callword(cmd);
-  return docommand(cmd);
+  return _compiler.callword(cmd);
   
 }
 

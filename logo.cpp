@@ -607,18 +607,19 @@ int Logo::callword(const char *word) {
     }
   }
   
-  // true for a builtin.
+  // handle a builtin.
   short index = findbuiltin(&s, 0, s.length());
   if (index >= 0) {
     callbuiltin(index);
     return 0;
   }
-
+  
   // try for a word with this string.
   short n = findfixed(&s, 0, s.length());
   if (n < 0) {
     return LG_WORD_NOT_FOUND;
   }
+  
   int w = 0;
   for (short i=0; i<MAX_CODE; i++) {
     short type = instField(i, FIELD_OPTYPE);
@@ -636,7 +637,7 @@ int Logo::callword(const char *word) {
         while (instField(_pc, FIELD_OPTYPE) != OPTYPE_HALT) {
           _pc++;
         }
-        _pc--;
+        backup();
         call(op+1, 0);
         return 0;
       }
@@ -644,7 +645,6 @@ int Logo::callword(const char *word) {
     }
   }
   
-  // problem with the code, couldn't find the word.
   return LG_OUT_OF_CODE;
 }
 
@@ -1874,7 +1874,7 @@ void Logo::dumpcode(const LogoCompiler *compiler, bool all) const {
   for (short i=0; i<(all ? MAX_CODE : _nextcode); i++) {
     if (compiler) {
       compiler->markword(i);
-      compiler->dump(1, instField(i, FIELD_OPTYPE), instField(i, FIELD_OP), instField(i, FIELD_OPAND));
+      compiler->dump(2, instField(i, FIELD_OPTYPE), instField(i, FIELD_OP), instField(i, FIELD_OPAND));
     }
     else {
       cout << i;
@@ -1906,7 +1906,7 @@ void Logo::dumpcode(const LogoCompiler *compiler, bool all) const {
     for (short i=START_JCODE; i<_nextjcode; i++) {
       if (compiler) {
         compiler->markword(i);
-        compiler->dump(1, instField(i, FIELD_OPTYPE), instField(i, FIELD_OP), instField(i, FIELD_OPAND));
+        compiler->dump(2, instField(i, FIELD_OPTYPE), instField(i, FIELD_OP), instField(i, FIELD_OPAND));
       }
       else {
         cout << i;

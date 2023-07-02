@@ -103,8 +103,8 @@ BOOST_AUTO_TEST_CASE( sketch_setup )
   ArduinoFlashCode code((const PROGMEM short *)code_setup);
   ArduinoFlashString strings(strings_setup);
   Logo logo(0, &strings, &code);
-  LogoCompiler compiler(&logo);
-
+  LogoCompiler compiler(&logo); // for debug
+  
   DEBUG_DUMP(false);
   
   stringstream s;
@@ -121,6 +121,6 @@ BOOST_AUTO_TEST_CASE( sketch_setup )
   logo.setout(&s2);
   DEBUG_STEP_DUMP(4, false);
   BOOST_CHECK_EQUAL(logo.run(), 0);
-   BOOST_CHECK_EQUAL(s2.str(), "=== 0\n");
+  BOOST_CHECK_EQUAL(s2.str(), "=== 0\n");
  
 }

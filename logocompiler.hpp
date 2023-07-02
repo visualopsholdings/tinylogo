@@ -50,7 +50,8 @@ public:
     compile(&str);
   }
   void compile(LogoString *str);
-  
+  int callword(const char *word);
+
   // main execution
   void reset();
 
@@ -86,7 +87,6 @@ public:
   short scan(short *strstart, short *strsize, LogoString *str, short len, short start, bool newline);
   bool switchtoken(char prevc, char c, bool newline);
 
-  
 private:
   
   Logo *_logo;

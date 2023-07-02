@@ -55,6 +55,23 @@ void LogoCompiler::reset() {
   
 }
 
+int LogoCompiler::callword(const char *word) {
+
+  DEBUG_IN_ARGS(LogoCompiler, "callword", "%s", word);
+  
+  LogoSimpleString s(word);
+  for (short i=0; i<_wordcount; i++) {
+    if (_logo->stringcmp(&s, 0, s.length(), _words[i]._name, _words[i]._namelen)) {
+      _logo->backup();
+      _logo->call(_words[i]._jump+1, _words[i]._arity);
+      return 0;
+    }
+  }
+  
+  return LG_WORD_NOT_FOUND;
+
+}
+
 void LogoCompiler::compileword(tJump *next, LogoString *stri, short wordstart, short wordlen, short op) {
 
   DEBUG_IN_ARGS(LogoCompiler, "compileword", "%i%i%i", wordstart, wordlen, op);
@@ -762,7 +779,7 @@ void LogoCompiler::markword(tJump jump) const {
       if (_words[word]._jump == jump) {
         char name[LINE_LEN];
         result.ncpy(name, sizeof(name));
-        cout << name;
+        cout << "(" << (short)jump << ") " << name << endl;
       }
     }
   }

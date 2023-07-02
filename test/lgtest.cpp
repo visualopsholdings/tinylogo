@@ -623,9 +623,9 @@ BOOST_AUTO_TEST_CASE( staticCodeUse )
   
 }
 
-BOOST_AUTO_TEST_CASE( callword )
+BOOST_AUTO_TEST_CASE( callwordStatic )
 {
-  cout << "=== callword ===" << endl;
+  cout << "=== callwordStatic ===" << endl;
   
   ArduinoFlashCode code((const PROGMEM short *)code_staticCode);
   ArduinoFlashString strings(strings_staticCode);
@@ -638,13 +638,44 @@ BOOST_AUTO_TEST_CASE( callword )
   BOOST_CHECK_EQUAL(s.str(), "=== ON\n=== OFF\n");
   
   logo.resetcode();
-  logo.callword("TEST2");
+  BOOST_CHECK_EQUAL(logo.callword("TEST2"), 0);
   
   stringstream s2;
   logo.setout(&s2);
 
   BOOST_CHECK_EQUAL(logo.run(), 0);
   BOOST_CHECK_EQUAL(s2.str(), "=== OFF\n=== ON\n");
+  
+}
+
+BOOST_AUTO_TEST_CASE( callwordCompiled )
+{
+  cout << "=== callwordCompiled ===" << endl;
+  
+  Logo logo;
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("to AAAA; print \"AAAA; end");
+  compiler.compile("to BBBB; print \"BBBB; end");
+  compiler.compile("AAAA");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  BOOST_CHECK_EQUAL(compiler.callword("BBBB"), 0);
+  
+  stringstream s1;
+  logo.setout(&s1);
+
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(s1.str(), "=== BBBB\n");
+  
+  stringstream s2;
+  logo.setout(&s2);
+
+  logo.restart();
+  DEBUG_STEP_DUMP(3, false);
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(s2.str(), "=== AAAA\n");
   
 }
 
@@ -670,17 +701,16 @@ BOOST_AUTO_TEST_CASE( setvar )
   ArduinoFlashCode code((const PROGMEM short *)code_setvar);
   ArduinoFlashString strings(strings_setvar);
   Logo logo(0, &strings, &code);
-  LogoCompiler compiler(&logo);
 
   BOOST_CHECK_EQUAL(logo.run(), 0);
   BOOST_CHECK_EQUAL(logo.popint(), 0);
   
   logo.resetcode();
-  logo.callword("VAR=2");
+  BOOST_CHECK_EQUAL(logo.callword("VAR=2"), 0);
   BOOST_CHECK_EQUAL(logo.run(), 0);
 
   logo.resetcode();
-  logo.callword("TEST1");
+  BOOST_CHECK_EQUAL(logo.callword("TEST1"), 0);
   BOOST_CHECK_EQUAL(logo.run(), 0);
   BOOST_CHECK_EQUAL(logo.popint(), 2);
   

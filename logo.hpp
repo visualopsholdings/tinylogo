@@ -297,6 +297,8 @@ public:
   int callword(const char *word); // call a word by name if you know it.
   void halt();
   short pc() { return _pc; }
+  void backup() { if (_pc > 0) _pc--; }
+  bool call(short jump, tByte opand2);
   
   // interface to compiler
   void error(short error);
@@ -452,7 +454,6 @@ private:
   short endgroup();
   short startlist();
   short endlist();
-  bool call(short jump, tByte opand2);
   short instField(short pc, short field) const;
   double joindouble(short op, short opand) const;
   short pushvalue(short type, short op, short opand);
