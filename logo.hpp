@@ -61,6 +61,10 @@
 
 //#define LOGO_DEBUG
 
+// compiling with the WIFI code increases the size dramatically. IF you don't use it
+// comment this out.
+#define USE_WIFI
+
 #ifdef ARDUINO
 
 #ifdef ESP32
@@ -80,11 +84,11 @@
 
 #ifdef USE_LARGE_CODE
 // Huge settings for something that can handle it.
-#define STRING_POOL_SIZE    1024 * 8
+#define STRING_POOL_SIZE    1024 * 4
 #define MAX_CODE            1024 * 4        
 #define CODE_SIZE           MAX_CODE
-#define START_JCODE         1024 * 2
-#define MAX_STACK           1024 * 4
+#define START_JCODE         1024 * 3
+#define MAX_STACK           1024 * 2
 #define MAX_VARS            1024 * 2
 
 #else
@@ -328,10 +332,12 @@ public:
   void popstring(LogoStringResult *result);  
   void pushstring(tStrPool n, tStrPool len);  
   void pushstring(LogoString *str);
+  void pushlist(const List &list);
   bool isstacklist();
   bool isstackstring();
   bool isstackint();
   bool isstackdouble();
+  List newlist();
   List poplist();
   bool pop();
   short findvariable(LogoString *str, short start, short slen) const;

@@ -18,6 +18,9 @@
 #ifdef ARDUINO
 #include <HardwareSerial.h>
 #include <Arduino.h>
+#if defined(ESP32) && defined(USE_WIFI)
+#include <WiFi.h>
+#endif
 #else
 #include <iostream>
 using namespace std;
@@ -521,6 +524,99 @@ void LogoWords::machineinfo(Logo &logo) {
 #endif
  
 }
+
+void LogoWords::wifistation(Logo &logo) {
+
+#ifdef ARDUINO
+#if defined(ESP32) && defined(USE_WIFI)
+  WiFi.mode(WIFI_STA);
+  WiFi.disconnect();
+  delay(100);
+#else
+  Serial.println("Wifi not supported");
+#endif
+#else
+  logo.out() << "Wifi Station Mode" << endl;
+#endif // ARDUINO
+
+}
+
+void LogoWords::wifiscan(Logo &logo) {
+
+  List l = logo.newlist();
+  
+#ifdef ARDUINO
+#if defined(ESP32) && defined(USE_WIFI)
+  int n = WiFi.scanNetworks();
+  for (int i = 0; i < n; ++i) {
+    LogoSimpleString s(WiFi.SSID(i).c_str());
+    ListNodeVal val(LTYPE_STRING, logo.addstring(&s, 0, s.length()), s.length());
+    l.push(val);
+  }
+#else
+  LogoSimpleString s("Wifi not supported");
+  ListNodeVal val(LTYPE_STRING, logo.addstring(&s, 0, s.length()), s.length());
+  l.push(val);
+#endif
+#else
+  for (int i=0; i<4; i++) {
+    LogoSimpleString s("wifi");
+    ListNodeVal val(LTYPE_STRING, logo.addstring(&s, 0, s.length()), s.length());
+    l.push(val);
+  }
+#endif // ARDUINO
+  
+  logo.pushlist(l);
+  
+}
+
+void LogoWords::wificonnect(Logo &logo) {
+
+  LogoStringResult pwd;
+  logo.popstring(&pwd);
+  LogoStringResult ap;
+  logo.popstring(&ap);
+  
+  char aps[64];
+  ap.ncpy(aps, sizeof(aps));
+  char pwds[64];
+  pwd.ncpy(pwds, sizeof(pwds));
+  
+#ifdef ARDUINO
+#if defined(ESP32) && defined(USE_WIFI)
+  WiFi.begin(aps, pwds);
+  bool finished = false;
+  bool success = false;
+  while (!finished) {
+    int status = WiFi.status();
+    switch (status) {
+    case WL_CONNECTED:
+      finished = true;
+      success = true;
+      break;
+    case WL_IDLE_STATUS:
+      Serial.print('.');
+      delay(1000);
+      break;
+    case WL_CONNECT_FAILED:
+    case WL_CONNECTION_LOST:
+    case WL_DISCONNECTED:
+    case WL_NO_SHIELD:
+      finished = true;
+      break;
+    }
+  }
+  LogoSimpleString str(success ? WiFi.localIP().toString().c_str() : "failed");
+#else
+  LogoSimpleString str("Wifi not supported");
+#endif
+#else
+  LogoSimpleString str("192.168.0.1");
+#endif // ARDUINO
+
+  logo.pushstring(&str);
+}
+
 
 
 

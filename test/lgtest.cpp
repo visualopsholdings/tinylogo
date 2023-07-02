@@ -747,3 +747,61 @@ BOOST_AUTO_TEST_CASE( findfixed )
   
 }
 
+BOOST_AUTO_TEST_CASE( fullStrings )
+{
+  cout << "=== fullStrings ===" << endl;
+  
+  Logo logo;
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("print \"TP-LinkXXXX\"");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  stringstream s;
+  logo.setout(&s);
+
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(s.str(), "=== TP-LinkXXXX\n");
+  
+}
+
+BOOST_AUTO_TEST_CASE( fullStringsSpace )
+{
+  cout << "=== fullStringsSpace ===" << endl;
+  
+  Logo logo;
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("print \"A\\ string");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  stringstream s;
+  logo.setout(&s);
+
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(s.str(), "=== A\\ string\n");
+  
+}
+
+BOOST_AUTO_TEST_CASE( fullStringsNumber )
+{
+  cout << "=== fullStringsNumber ===" << endl;
+  
+  Logo logo;
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("print \"69488764\"");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  stringstream s;
+  logo.setout(&s);
+
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(s.str(), "=== 69488764\n");
+  
+}
+
+

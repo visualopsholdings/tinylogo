@@ -108,8 +108,8 @@ public:
   List(ListPool *pool);
   List(ListPool *pool, tNodeType head, tNodeType tail);
   
-  tNodeType head() { return _head; }
-  tNodeType tail() { return _tail; }
+  tNodeType head() const { return _head; }
+  tNodeType tail() const { return _tail; }
   
   void push(ListNodeVal val);
   void first(ListNodeVal *val) const;

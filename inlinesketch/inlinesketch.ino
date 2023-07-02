@@ -25,6 +25,8 @@
 // - trafficlights.lgo
 // - sos.lgo
 // - tiny.lgo
+// - wifiscan.lgo
+// - wifisend.lgo
 
 //#LOGO FILE=../logo/ledflash.lgo NAME=sketch BTNPIN=9 INLINE=true
 static const char program_sketch[] PROGMEM = 

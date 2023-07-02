@@ -122,7 +122,7 @@ void LogoCompiler::compileword(tJump *next, LogoString *stri, short wordstart, s
     return;
   }
 
- index = findword(stri, wordstart, wordlen);
+  index = findword(stri, wordstart, wordlen);
   if (index >= 0) {
    _logo->addop(next, OPTYPE_JUMP, _words[index]._jump, _words[index]._arity);
     DEBUG_RETURN(" word ", 0);
@@ -428,6 +428,28 @@ short LogoCompiler::scan(short *strstart, short *strsize, LogoString *str, short
     *strsize = 0;
     DEBUG_RETURN(" found end at start %i", -1);
     return -1;
+  }
+  
+  // span quotes.
+  if ((*str)[start] == '\"') {
+    DEBUG_OUT("a quote", 0);
+    // we leave the quote in to allow us to know that it can't be a number
+    // if it's a quoted number.
+    *strstart = start;
+    end = start + 1;
+    while (end < len && (*str)[end] != '\"' && !isspace((*str)[end])) {
+      // allow chars to be escaped.
+      if ((*str)[end] == '\\') {
+        end++;
+      }
+      end++;
+    }
+    *strsize = end-start;
+    if (end < len) {
+      end++;
+    }
+    DEBUG_RETURN(" in quotes %i%i", end, *strsize);
+    return end;
   }
   
   // find a place where we switch to a new type of token.

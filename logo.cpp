@@ -330,6 +330,14 @@ void Logo::pushstring(LogoString *stri) {
   
 }
 
+void Logo::pushlist(const List &list) {
+  
+  if (!push(OPTYPE_LIST, list.head(), list.tail())) {
+    error(LG_STACK_OVERFLOW);
+  }
+
+}
+
 void Logo::fail(short err) {
   
   DEBUG_IN_ARGS(Logo, "fail", "%i", err);
@@ -949,6 +957,13 @@ short Logo::endgroup() {
   _tos--;
 
   return 0;
+}
+
+List Logo::newlist() {
+
+  List l(&_lists);
+  return l;
+  
 }
 
 short Logo::startlist() {

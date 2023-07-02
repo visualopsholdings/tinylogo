@@ -438,6 +438,31 @@ Output the sizes used for TinyLogo and the version.
 machineinfo
 ```
 
+#### wifistation
+
+Set the arduino as up as a wifi station if Wifi is supported
+
+```
+wifistation
+```
+
+#### wifiscan
+
+Push a list of wifi access points available onto the stack.
+
+```
+print wifiscan
+```
+
+#### wificonnect
+
+Pop the access point name and password off the stack and connect, if successful
+push the IP address on the stack.
+
+```
+print wificonnect "MyAccessPoint" "password"
+```
+
 ### UCBLogo differences
 
 - On page 4, we don't implement the setter notation, SETFOO is just the name of a defined
