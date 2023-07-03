@@ -685,7 +685,7 @@ https://forum.arduino.cc/t/how-to-properly-use-wire-onreceive/891195/12
 ## Current development focus
 
 ### ESP32
-  - get wifi io working.
+  - get web sockets working
   - connect to raspberry pi and send and receive messages.
   
 ## Change Log
