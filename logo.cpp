@@ -55,7 +55,9 @@ Logo::Logo(LogoTimeProvider *time, LogoString *strings, ArduinoFlashCode *code) 
   _corearity(coreArity), 
   _nextstring(0), _fixedstrings(strings), _fixedcount(0), 
   _pc(0), _tos(0), _schedule(time),
-  _staticcode(code)
+  _staticcode(code),
+  _host(0),
+  _cert(0)
   {
   
   _varcount = 0;

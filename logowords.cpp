@@ -20,6 +20,8 @@
 #include <Arduino.h>
 #if defined(ESP32) && defined(USE_WIFI)
 #include <WiFi.h>
+#include <WiFiClientSecure.h>
+WiFiClientSecure gWifiClient;
 #endif
 #else
 #include <iostream>
@@ -287,12 +289,14 @@ void LogoWords::print(Logo &logo) {
         if (!first) {
 #ifdef ARDUINO
           Serial.print(' ');
+          Serial.flush();
 #else
           logo.out() << " ";
 #endif
         }
 #ifdef ARDUINO
         Serial.print(s);
+        Serial.flush();
 #else
         logo.out() << s;
 #endif
@@ -308,6 +312,7 @@ void LogoWords::print(Logo &logo) {
     result.ncpy(s, sizeof(s));
 #ifdef ARDUINO
     Serial.println(s);
+    Serial.flush();
 #else
     logo.out() << "=== " << s << endl;
 #endif
@@ -515,6 +520,7 @@ void LogoWords::machineinfo(Logo &logo) {
     Serial.println(MAX_STACK);
     Serial.print("Vars: ");
     Serial.println(MAX_VARS);
+    Serial.flush();
 #else
     logo.out() << "TinyLogo" << endl;
     logo.out() << "Strings: " << STRING_POOL_SIZE << endl;
@@ -534,6 +540,7 @@ void LogoWords::wifistation(Logo &logo) {
   delay(100);
 #else
   Serial.println("Wifi not supported");
+  Serial.flush();
 #endif
 #else
   logo.out() << "Wifi Station Mode" << endl;
@@ -596,15 +603,31 @@ void LogoWords::wificonnect(Logo &logo) {
       break;
     case WL_IDLE_STATUS:
       Serial.print('.');
-      delay(1000);
+      Serial.flush();
+      delay(100);
       break;
     case WL_CONNECT_FAILED:
+      Serial.println("Connect failed");
+      finished = true;
+      break;
     case WL_CONNECTION_LOST:
+      Serial.println("Connection lost");
+      break;
     case WL_DISCONNECTED:
+//      Serial.println("Disconnected");
+      break;
     case WL_NO_SHIELD:
+      Serial.println("No Wifi Shield");
       finished = true;
       break;
     }
+  }
+  if (success) {
+    if (!logo.cert()) {
+      LogoSimpleString str("Must call sslsetup.");
+      logo.pushstring(&str);
+    }
+    gWifiClient.setCACert(logo.cert());
   }
   LogoSimpleString str(success ? WiFi.localIP().toString().c_str() : "failed");
 #else
@@ -617,7 +640,58 @@ void LogoWords::wificonnect(Logo &logo) {
   logo.pushstring(&str);
 }
 
+void LogoWords::wifiget(Logo &logo) {
 
+  LogoStringResult request;
+  logo.popstring(&request);
+  
+  char buf[256];
+  request.ncpy(buf, sizeof(buf));
+  
+#ifdef ARDUINO
+#if defined(ESP32) && defined(USE_WIFI)
+  
+  if (!logo.host()) {
+    LogoSimpleString str("Must call sslsetup.");
+    logo.pushstring(&str);
+  }
+  if (gWifiClient.connect(logo.host(), 443) < 0) {
+    int err = gWifiClient.lastError(buf, sizeof(buf));
+    LogoSimpleString str(buf);
+    logo.pushstring(&str);
+    return;
+  }
 
+  gWifiClient.print("GET https://");
+  gWifiClient.print(logo.host());
+  gWifiClient.print(buf);
+  gWifiClient.println(" HTTP/1.0");
+  gWifiClient.print("Host: pi.visualops.com");
+  gWifiClient.println("Connection: close");
+  gWifiClient.println();
 
+  while (gWifiClient.connected()) {
+    String line = gWifiClient.readStringUntil('\n');
+    if (line == "\r") {
+      // deal with headers
+      break;
+    }
+  }
+
+  int pos = 0;
+  while (gWifiClient.available()) {
+    buf[pos++] = gWifiClient.read();
+  }
+  buf[pos] = 0;
+  LogoSimpleString str(buf);
+  gWifiClient.stop();
+#else
+  LogoSimpleString str("Wifi not supported");
+#endif
+#else
+  LogoSimpleString str("Wifi Sending");
+#endif // ARDUINO
+
+  logo.pushstring(&str);
+}
 

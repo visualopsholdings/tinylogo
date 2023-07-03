@@ -570,6 +570,22 @@ int LogoCompiler::inlinelgo(std::fstream &file, const std::map<std::string, std:
   
 }
 
+int LogoCompiler::inlinefile(std::fstream &file, std::ostream &str) {
+
+  file.clear();
+  file.seekg(0, ios::beg);
+  string line;
+  
+  while (getline(file, line)) {
+    line.erase(remove(line.begin(), line.end(), '\r'), line.end());
+    str << "\"" << line << "\\n\"" << endl;
+  }
+  
+  return 0;
+  
+}
+
+
 
 int LogoCompiler::compile(fstream &file, const map<string, string> &directives, bool autoassign) {
   file.clear();
@@ -652,7 +668,13 @@ int LogoCompiler::includelgo(const string &infn, const map<string, string> &dire
   
   map<string, string>::const_iterator inl = directives.find("INLINE");
   if (inl != directives.end() && inl->second == "true") {
-    err = LogoCompiler::inlinelgo(file, directives, str);
+    map<string, string>::const_iterator name = directives.find("NAME");
+    if (name == directives.end()) {
+      err = LogoCompiler::inlinefile(file, str);
+    }
+    else {
+      err = LogoCompiler::inlinelgo(file, directives, str);
+    }
   }
   else {
     err = LogoCompiler::generatecode(file, directives, str);
@@ -682,7 +704,14 @@ void LogoCompiler::getdirectives(const string line, map<string, string> *directi
     vector<string> nvp;
     split(nvp, *i, is_any_of("="));
     if (nvp.size() > 0) {
-      (*directives)[nvp[0]] = nvp.size() == 2 ? nvp[1] : "";
+      if (nvp.size() == 2) {
+        string val = nvp[1];
+        replace_all(val, "%20", " ");
+        (*directives)[nvp[0]] = val;
+      }
+      else {
+        (*directives)[nvp[0]] = "";
+      }
     }
   }
   
@@ -731,21 +760,21 @@ int LogoCompiler::updateino(const std::string &infn, std::fstream &infile, std::
   bool including = false;
   while (getline(infile, line)) {
     size_t pos = line.find(logo_directive);
-    if (pos != string::npos) {
+    if (pos == 0) {
       string rest = line.substr(pos + logo_directive.length());
       map<string, string> directives;
       getdirectives(rest, &directives);
       if (directives.find("FILE") != directives.end()) {
         string lfn = directives["FILE"];
-        fs::path lgopath(lfn);
+        fs::path incpath(lfn);
         fs::path inpath(infn);
-        if (!lgopath.is_absolute()) {
-          lgopath = inpath.parent_path() / lgopath;
+        if (!incpath.is_absolute()) {
+          incpath = inpath.parent_path() / incpath;
         }
         including = true;
         outfile << line << endl;
-        cout << "including .LGO " << lgopath.string() << endl;
-        int err = includelgo(lgopath.string(), directives, outfile);
+        cout << "including " << incpath.string() << endl;
+        int err = includelgo(incpath.string(), directives, outfile);
         if (err) {
           return err;
         }

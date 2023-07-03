@@ -413,6 +413,14 @@ public:
     return _channels[channel];
   }
   
+  // setup for SSL.
+  void sslsetup(const char *host, const char *cert) {
+    _host = host;
+    _cert = cert;
+  }
+  const char *cert() { return _cert; }
+  const char *host() { return _host; }
+  
 private:
   
   // the pool of all strings
@@ -451,6 +459,8 @@ private:
   
   // A channel map for leds
   tByte _channels[8];
+  const char *_host;
+  const char *_cert;
   
   // parser
   bool parsestring(short type, short op, short oplen, LogoStringResult *str);

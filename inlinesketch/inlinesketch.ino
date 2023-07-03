@@ -28,14 +28,14 @@
 // - wifiscan.lgo
 // - wifisend.lgo
 
-//#LOGO FILE=../logo/ledflash.lgo NAME=sketch BTNPIN=9 INLINE=true
+//#LOGO FILE=../logo/rgb.lgo NAME=sketch INLINE=true RED=26 GREEN=25 BLUE=27
 static const char program_sketch[] PROGMEM = 
-"#   ledflash.lgo\n"
+"#   rgb.lgo\n"
 "#\n"
 "#   Author: Paul Hamilton (paul@visualops.com)\n"
 "#   Date: 2-Jun-2023\n"
 "#\n"
-"#   Flash an LED, this is all internal, no external words needed.\n"
+"#   Allow colors to be set on an RGB LED\n"
 "#\n"
 "#   This work is licensed under the Creative Commons Attribution 4.0 International License. \n"
 "#   To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0/ or \n"
@@ -45,47 +45,95 @@ static const char program_sketch[] PROGMEM =
 "#\n"
 "\n"
 "to ID\n"
-"  print \"ledflash\n"
+"  print \"rgb\n"
 "end\n"
 "\n"
 "# change your pins here\n"
-"to LEDPIN\n"
-"  13\n"
+"to BPIN\n"
+"  27\n"
 "end\n"
 "\n"
+"to RPIN\n"
+"  26\n"
+"end\n"
+"\n"
+"to GPIN\n"
+"  25\n"
+"end\n"
+"\n"
+"# called right at the start\n"
 "to SETUP\n"
-"  pinout LEDPIN\n"
+"  pinrgb RPIN 1\n"
+"  REDR SCLR 0\n"
+"  pinrgb GPIN 2\n"
+"  GREENR SCLR 0\n"
+"  pinrgb BPIN 3\n"
+"  BLUER SCLR 0\n"
 "end\n"
 "\n"
-"to ON\n"
-"  dhigh LEDPIN\n"
+"to REDR :V\n"
+"  rgbout 1 :V\n"
+"end\n"
+"\n"
+"to GREENR :V\n"
+"  rgbout 2 :V\n"
+"end\n"
+"\n"
+"to BLUER :V\n"
+"  rgbout 3 :V\n"
+"end\n"
+"\n"
+"# scale a color to be between 1 and 100\n"
+"to SCLR :C\n"
+"  (:C / 100) * 255\n"
+"end\n"
+"\n"
+"# arguments are reversed!\n"
+"to SET :B :G :R\n"
+"  REDR SCLR :R\n"
+"  GREENR SCLR :G\n"
+"  BLUER SCLR :B\n"
+"end\n"
+"\n"
+"to AMBER\n"
+" SET 100 75 0\n"
+"end\n"
+"\n"
+"to RED\n"
+"  SET 100 0 0\n"
+"end\n"
+"\n"
+"to GREEN\n"
+"  SET 0 100 0\n"
+"end\n"
+"\n"
+"to BLUE\n"
+"  SET 0 0 100\n"
 "end\n"
 "\n"
 "to OFF\n"
-"  dlow LEDPIN\n"
+"  SET 0 0 0\n"
 "end\n"
 "\n"
-"to FLASH\n"
-"  ON wait 500 OFF wait 1000\n"
-"end\n"
-"\n"
-"to GO\n"
-"  forever FLASH\n"
-"end\n"
-"\n"
-"to STOP\n"
-"  OFF\n"
-"end\n"
-"\n"
-"GO\n"
+"# SETUP\n"
+"AMBER\n"
 ;
 //#LOGO ENDFILE
 
 LogoInlineSketch sketch((char *)program_sketch);
 
+// for HTTPS, uncomment all this and then run flashcode and it will pull that file
+// in as a variable.
+// const char *host_cert =
+// //#LOGO FILE=/Users/paul/Downloads/ISRG%20Root%20X1.cer INLINE=true
+// //#LOGO ENDFILE
+// ;
+
 // At the start
 void setup() {
   sketch.setup(115200);
+  // for HTTPS, uncomment this and set the hostname you will be calling.
+//  sketch.sslsetup("hostname", host_cert);
 }
 
 // Go around and around

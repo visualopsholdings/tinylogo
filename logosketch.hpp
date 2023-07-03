@@ -29,7 +29,7 @@
 class LogoSketchBase {
 
 public:
-  LogoSketchBase();
+  LogoSketchBase() {}
   
   void setup(int baud=9600);
   void loop();
@@ -38,13 +38,15 @@ public:
   virtual int dosetup(const char *cmd) = 0;
   virtual int docommand(const char *cmd) = 0;
   virtual Logo *logo() = 0;
+
+  void sslsetup(const char *host, const char *cert);
   
 protected:
   ArduinoTimeProvider _time; // adds 12 bytes of dynamic memory
   RingBuffer _buffer; // 64 bytes
   Cmd _cmd; // 32 bytes
   char _cmdbuf[STRING_LEN]; // 32 bytes
-
+  
   void showErr(int mode, int n);
     
 };

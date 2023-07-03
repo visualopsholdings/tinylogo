@@ -42,95 +42,58 @@
 // - sos.lgo
 // - tiny.lgo
 
-//#LOGO FILE=../logo/btnledflash.lgo NAME=sketch BTNPIN=9
+//#LOGO FILE=../logo/ledflash.lgo NAME=sketch RED=3 GREEN=4 BLUE=2
 static const char strings_sketch[] PROGMEM = {
 // words
 	"ID\n"
 	"LEDPIN\n"
-	"BTNPIN\n"
 	"SETUP\n"
 	"ON\n"
 	"OFF\n"
 	"FLASH\n"
-	"BUTTON\n"
-	"TESTSTATE\n"
-	"TESTBTN\n"
-	"RUN\n"
+	"GO\n"
+	"STOP\n"
 // variables
 // strings
-	"btnledflash\n"
-	"ON\n"
-	"OFF\n"
-	"OLDVALUE\n"
-	"VALUE\n"
+	"ledflash\n"
 };
 static const short code_sketch[][INST_LENGTH] PROGMEM = {
-	{ OPTYPE_JUMP, 52, 0 },		// 0
+	{ OPTYPE_JUMP, 23, 0 },		// 0
 	{ OPTYPE_HALT, 0, 0 },		// 1
 	{ OPTYPE_BUILTIN, 18, 0 },		// 2
-	{ OPTYPE_STRING, 11, 11 },		// 3
+	{ OPTYPE_STRING, 8, 8 },		// 3
 	{ OPTYPE_RETURN, 0, 0 },		// 4
 	{ OPTYPE_INT, 13, 0 },		// 5
 	{ OPTYPE_RETURN, 0, 0 },		// 6
-	{ OPTYPE_INT, 9, 0 },		// 7
-	{ OPTYPE_RETURN, 0, 0 },		// 8
-	{ OPTYPE_BUILTIN, 23, 0 },		// 9
-	{ OPTYPE_JUMP, 5, 0 },		// 10
-	{ OPTYPE_BUILTIN, 22, 0 },		// 11
-	{ OPTYPE_JUMP, 5, 0 },		// 12
-	{ OPTYPE_BUILTIN, 30, 0 },		// 13
-	{ OPTYPE_JUMP, 7, 0 },		// 14
+	{ OPTYPE_BUILTIN, 23, 0 },		// 7
+	{ OPTYPE_JUMP, 5, 0 },		// 8
+	{ OPTYPE_RETURN, 0, 0 },		// 9
+	{ OPTYPE_BUILTIN, 21, 0 },		// 10
+	{ OPTYPE_JUMP, 5, 0 },		// 11
+	{ OPTYPE_RETURN, 0, 0 },		// 12
+	{ OPTYPE_BUILTIN, 22, 0 },		// 13
+	{ OPTYPE_JUMP, 5, 0 },		// 14
 	{ OPTYPE_RETURN, 0, 0 },		// 15
-	{ OPTYPE_BUILTIN, 18, 0 },		// 16
-	{ OPTYPE_STRING, 4, 2 },		// 17
-	{ OPTYPE_BUILTIN, 21, 0 },		// 18
-	{ OPTYPE_JUMP, 5, 0 },		// 19
-	{ OPTYPE_RETURN, 0, 0 },		// 20
-	{ OPTYPE_BUILTIN, 18, 0 },		// 21
-	{ OPTYPE_STRING, 5, 3 },		// 22
-	{ OPTYPE_BUILTIN, 22, 0 },		// 23
-	{ OPTYPE_JUMP, 5, 0 },		// 24
+	{ OPTYPE_JUMP, 10, 0 },		// 16
+	{ OPTYPE_BUILTIN, 6, 0 },		// 17
+	{ OPTYPE_INT, 500, 0 },		// 18
+	{ OPTYPE_JUMP, 13, 0 },		// 19
+	{ OPTYPE_BUILTIN, 6, 0 },		// 20
+	{ OPTYPE_INT, 1000, 0 },		// 21
+	{ OPTYPE_RETURN, 0, 0 },		// 22
+	{ OPTYPE_BUILTIN, 2, 0 },		// 23
+	{ OPTYPE_JUMP, 16, 0 },		// 24
 	{ OPTYPE_RETURN, 0, 0 },		// 25
-	{ OPTYPE_JUMP, 16, 0 },		// 26
-	{ OPTYPE_BUILTIN, 6, 0 },		// 27
-	{ OPTYPE_INT, 1000, 0 },		// 28
-	{ OPTYPE_JUMP, 21, 0 },		// 29
-	{ OPTYPE_RETURN, 0, 0 },		// 30
-	{ OPTYPE_BUILTIN, 20, 0 },		// 31
-	{ OPTYPE_JUMP, 7, 0 },		// 32
-	{ OPTYPE_RETURN, 0, 0 },		// 33
-	{ OPTYPE_BUILTIN, 1, 0 },		// 34
-	{ OPTYPE_STRING, 14, 8 },		// 35
-	{ OPTYPE_REF, 15, 5 },		// 36
-	{ OPTYPE_BUILTIN, 5, 0 },		// 37
-	{ OPTYPE_REF, 15, 5 },		// 38
-	{ OPTYPE_BUILTIN, 7, 0 },		// 39
-	{ OPTYPE_INT, 1, 0 },		// 40
-	{ OPTYPE_JUMP, 26, 0 },		// 41
-	{ OPTYPE_RETURN, 0, 0 },		// 42
-	{ OPTYPE_BUILTIN, 1, 0 },		// 43
-	{ OPTYPE_STRING, 15, 5 },		// 44
-	{ OPTYPE_JUMP, 31, 0 },		// 45
-	{ OPTYPE_BUILTIN, 5, 0 },		// 46
-	{ OPTYPE_REF, 15, 5 },		// 47
-	{ OPTYPE_BUILTIN, 8, 0 },		// 48
-	{ OPTYPE_REF, 14, 8 },		// 49
-	{ OPTYPE_JUMP, 34, 0 },		// 50
-	{ OPTYPE_RETURN, 0, 0 },		// 51
-	{ OPTYPE_BUILTIN, 2, 0 },		// 52
-	{ OPTYPE_JUMP, 43, 0 },		// 53
-	{ OPTYPE_RETURN, 0, 0 },		// 54
+	{ OPTYPE_JUMP, 13, 0 },		// 26
+	{ OPTYPE_RETURN, 0, 0 },		// 27
 	{ SCOPTYPE_WORD, 2, 0 }, 
 	{ SCOPTYPE_WORD, 5, 0 }, 
 	{ SCOPTYPE_WORD, 7, 0 }, 
-	{ SCOPTYPE_WORD, 9, 0 }, 
+	{ SCOPTYPE_WORD, 10, 0 }, 
+	{ SCOPTYPE_WORD, 13, 0 }, 
 	{ SCOPTYPE_WORD, 16, 0 }, 
-	{ SCOPTYPE_WORD, 21, 0 }, 
+	{ SCOPTYPE_WORD, 23, 0 }, 
 	{ SCOPTYPE_WORD, 26, 0 }, 
-	{ SCOPTYPE_WORD, 31, 0 }, 
-	{ SCOPTYPE_WORD, 34, 0 }, 
-	{ SCOPTYPE_WORD, 43, 0 }, 
-	{ SCOPTYPE_WORD, 52, 0 }, 
 	{ SCOPTYPE_END, 0, 0 } 
 };
 //#LOGO ENDFILE

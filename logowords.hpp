@@ -60,6 +60,7 @@ public:
   static void wifistation(Logo &logo);
   static void wifiscan(Logo &logo);
   static void wificonnect(Logo &logo);
+  static void wifiget(Logo &logo);
 
 private:
 

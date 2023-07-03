@@ -15,9 +15,6 @@
 
 #include <Arduino.h>
 
-LogoSketchBase::LogoSketchBase() {
-}
-
 void LogoSketchBase::setup(int baud)  {
 
   Serial.begin(baud);
@@ -38,6 +35,10 @@ void LogoSketchBase::setup(int baud)  {
     logo()->restart();
   }
 
+}
+
+void LogoSketchBase::sslsetup(const char *host, const char *cert) {
+  logo()->sslsetup(host, cert);
 }
 
 void LogoSketchBase::loop() {

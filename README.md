@@ -463,6 +463,27 @@ push the IP address on the stack.
 print wificonnect "MyAccessPoint" "password"
 ```
 
+#### wifiget
+
+Send an HTTP "GET" to the server.
+
+For this to work, you need to do two things.
+
+1) Go to the site you want to call, and download it's root certificate and place
+it in a file according to this:
+
+https://randomnerdtutorials.com/esp32-https-requests/
+
+2) Pull this file into a variable using the "flashcode" tool and declare a char string
+variable with the contents. You can see an example of this in "inlinesketch.ino".
+
+3) use "setupssl" as you can see in inlinesketch.ino to define the host you are going to 
+send the "GET" too, and the host certificate variable above.
+
+```
+print wifiget "/rest/1.0/uibuild/convo"
+```
+
 ### UCBLogo differences
 
 - On page 4, we don't implement the setter notation, SETFOO is just the name of a defined
@@ -663,10 +684,9 @@ https://forum.arduino.cc/t/how-to-properly-use-wire-onreceive/891195/12
 
 ## Current development focus
 
-### Lists
-
-### W32
-  - get wifi access and io working.
+### ESP32
+  - get wifi io working.
+  - connect to raspberry pi and send and receive messages.
   
 ## Change Log
 
@@ -730,6 +750,9 @@ storing lists but only "PRINT" knows how to use them.
 
 ### 2 Jul 2023
 - Get ESP32 RGB LED code working.
+
+### 3 Jul 2023
+- Get Wifi (rudimentary) working. But it uses HTTPS :-)
 
 
 

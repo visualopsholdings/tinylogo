@@ -21,3 +21,4 @@ to SETUP
 end
 
 print wificonnect "MyAccessPoint" "password"
+print wifiget "/rest/1.0/uibuild/convo"

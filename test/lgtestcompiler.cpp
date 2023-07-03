@@ -296,6 +296,19 @@ BOOST_AUTO_TEST_CASE( getdirectivesNewline )
   
 }
 
+BOOST_AUTO_TEST_CASE( getdirectivesSpaces )
+{
+  cout << "=== getdirectivesSpaces ===" << endl;
+  
+  string line = " FILE=/File/Has%20Spaces.txt BTNPIN=9\n";
+  map<string, string> directives;
+  LogoCompiler::getdirectives(line, &directives);
+  BOOST_CHECK_EQUAL(directives.size(), 2);
+  BOOST_CHECK_EQUAL(directives["FILE"], "/File/Has Spaces.txt");  
+  BOOST_CHECK_EQUAL(directives["BTNPIN"], "9");
+  
+}
+
 BOOST_AUTO_TEST_CASE( replacedirectives )
 {
   cout << "=== replacedirectives ===" << endl;

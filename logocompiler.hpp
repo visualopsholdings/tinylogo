@@ -76,6 +76,7 @@ public:
   void printwordstring(const LogoWord &word, std::ostream &str) const;
   static int generatecode(std::fstream &file, const std::map<std::string, std::string> &directives, std::ostream &str);
   static int inlinelgo(std::fstream &file, const std::map<std::string, std::string> &directives, std::ostream &str);
+  static int inlinefile(std::fstream &file, std::ostream &str);
   static int updateino(const std::string &infn, std::fstream &infile, std::fstream &outfile);
   static int includelgo(const std::string &infn, const std::map<std::string, std::string> &directives, std::fstream &outfile);
   int compile(std::fstream &file, const std::map<std::string, std::string> &directives, bool autoassign=false);
