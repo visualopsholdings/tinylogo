@@ -55,9 +55,7 @@ Logo::Logo(LogoTimeProvider *time, LogoString *strings, ArduinoFlashCode *code) 
   _corearity(coreArity), 
   _nextstring(0), _fixedstrings(strings), _fixedcount(0), 
   _pc(0), _tos(0), _schedule(time),
-  _staticcode(code),
-  _host(0),
-  _cert(0)
+  _staticcode(code)
   {
   
   _varcount = 0;
@@ -1384,6 +1382,90 @@ void Logo::setintvar(short var, short n) {
   
 }
 
+short Logo::newstringvar(short str, short slen, short vstr, short vlen) {
+
+  if (str < 0 || vstr < 0) {
+    error(LG_OUT_OF_STRINGS);
+    return -1;
+  }
+  if (_varcount >= MAX_VARS) {
+    error(LG_TOO_MANY_VARS);
+    return -1;
+  }
+  short var = _varcount;
+  _varcount++;
+  _variables[var]._name = str;
+  _variables[var]._namelen = slen;
+  _variables[var]._type = OPTYPE_STRING;
+  _variables[var]._value = vstr;
+  _variables[var]._valueopand = vlen;
+  return var;
+}
+
+void Logo::setstringvar(short var, short vstr, short vlen) {
+
+  _variables[var]._type = OPTYPE_STRING;
+  _variables[var]._value = vstr;
+  _variables[var]._valueopand = vlen;
+
+}
+
+short Logo::newdoublevar(short str, short slen, double n) {
+
+  if (str < 0) {
+    error(LG_OUT_OF_STRINGS);
+    return -1;
+  }
+  if (_varcount >= MAX_VARS) {
+    error(LG_TOO_MANY_VARS);
+    return -1;
+  }
+  short var = _varcount;
+  _varcount++;
+  _variables[var]._name = str;
+  _variables[var]._namelen = slen;
+  _variables[var]._type = OPTYPE_DOUBLE;
+  splitdouble(n, & _variables[var]._value, &_variables[var]._valueopand);
+  return var;
+
+}
+
+void Logo::setdoublevar(short var, double n) {
+
+  _variables[var]._type = OPTYPE_INT;
+  splitdouble(n, & _variables[var]._value, &_variables[var]._valueopand);
+
+}
+
+short Logo::newlistvar(short str, short slen, const List &l) {
+
+  if (str < 0) {
+    error(LG_OUT_OF_STRINGS);
+    return -1;
+  }
+  if (_varcount >= MAX_VARS) {
+    error(LG_TOO_MANY_VARS);
+    return -1;
+  }
+  short var = _varcount;
+  _varcount++;
+  _variables[var]._name = str;
+  _variables[var]._namelen = slen;
+  _variables[var]._type = OPTYPE_LIST;
+  _variables[var]._value = l.head();
+  _variables[var]._valueopand = l.tail();
+  return var;
+
+}
+
+void Logo::setlistvar(short var, const List &l) {
+
+  _variables[var]._type = OPTYPE_LIST;
+  _variables[var]._value = l.head();
+  _variables[var]._valueopand = l.tail();
+
+}
+
 bool Logo::varisint(short var) {
   return _variables[var]._type == OPTYPE_INT;
 }
@@ -1990,5 +2072,71 @@ void Logo::dumpstack(const LogoCompiler *compiler, bool all) const {
     cout << endl;
   }
 #endif  
+}
+
+bool Logo::extractEvent(LogoString *s, LogoStringResult *name, LogoStringResult *data) {
+
+  int len = s->length();
+  if (len == 0) {
+    return false;
+  }
+  
+  int start = 0;
+  if ((*s)[start++] != '[') {
+    return false;
+  }
+  if ((*s)[start++] != '\"') {
+    return false;
+  }
+  
+  int end = start;
+  while (end < len && (*s)[end] != '\"') {
+    end++;
+  }
+  if (end >= len) {
+    return false;
+  }
+  
+  name->_fixed = s;
+  name->_fixedstart = start;
+  name->_fixedlen = end-start;
+  
+  end++;
+  if ((*s)[end++] != ',') {
+    return false;
+  }
+  if ((*s)[end] == '\"') {
+  
+    end++;
+    start = end;
+    while (end < len && (*s)[end] != '\"') {
+      end++;
+    }
+  
+    if (end >= len) {
+      return false;
+    }
+  
+    data->_fixed = s;
+    data->_fixedstart = start;
+    data->_fixedlen = end-start;
+  }
+  else if ((*s)[end] == '{') {
+  
+    start = end;
+    while (end < len && (*s)[end] != '}') {
+      end++;
+    }
+  
+    if (end >= len) {
+      return false;
+    }
+  
+    data->_fixed = s;
+    data->_fixedstart = start;
+    data->_fixedlen = end-start+1;
+  }
+  
+  return true;
 }
 

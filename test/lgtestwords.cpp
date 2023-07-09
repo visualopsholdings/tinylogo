@@ -27,9 +27,9 @@ using namespace std;
 
 #include "testtimeprovider.hpp"
 
-BOOST_AUTO_TEST_CASE( make )
+BOOST_AUTO_TEST_CASE( makeInt )
 {
-  cout << "=== make ===" << endl;
+  cout << "=== makeInt ===" << endl;
   
   Logo logo;
   LogoCompiler compiler(&logo);
@@ -46,6 +46,65 @@ BOOST_AUTO_TEST_CASE( make )
   
 }
 
+BOOST_AUTO_TEST_CASE( makeString )
+{
+  cout << "=== makeString ===" << endl;
+  
+  Logo logo;
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("MAKE \"VAR \"XXXX\"");
+  compiler.compile(":VAR");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  LogoStringResult str;
+  logo.popstring(&str);  
+  BOOST_CHECK_EQUAL(str.ncmp("XXXX"), 0);
+  BOOST_CHECK(logo.stackempty());
+  DEBUG_DUMP(false);
+  
+}
+
+BOOST_AUTO_TEST_CASE( makeDouble )
+{
+  cout << "=== makeDouble ===" << endl;
+  
+  Logo logo;
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("MAKE \"VAR 1.0");
+  compiler.compile(":VAR");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popdouble(), 1);
+  BOOST_CHECK(logo.stackempty());
+  DEBUG_DUMP(false);
+  
+}
+
+BOOST_AUTO_TEST_CASE( makeList )
+{
+  cout << "=== makeList ===" << endl;
+  
+  Logo logo;
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("MAKE \"VAR [1 2 3]");
+  compiler.compile(":VAR");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  List l = logo.poplist();
+  BOOST_CHECK_EQUAL(l.length(), 3);
+  BOOST_CHECK(logo.stackempty());
+  DEBUG_DUMP(false);
+  
+}
 BOOST_AUTO_TEST_CASE( makeChange )
 {
   cout << "=== makeChange ===" << endl;

@@ -15,6 +15,13 @@
 
 #include <Arduino.h>
 
+#if defined(ESP32) && defined(USE_WIFI)
+#include <SocketIOclient.h>
+extern SocketIOclient gWSClient;
+#endif
+
+RingBuffer gBuffer; // 64 bytes
+
 void LogoSketchBase::setup(int baud)  {
 
   Serial.begin(baud);
@@ -37,20 +44,16 @@ void LogoSketchBase::setup(int baud)  {
 
 }
 
-void LogoSketchBase::sslsetup(const char *host, const char *cert) {
-  logo()->sslsetup(host, cert);
-}
-
 void LogoSketchBase::loop() {
 
   // consume the serial data into the buffer as it comes in.
   while (Serial.available()) {
-    _buffer.write(Serial.read());
+    gBuffer.write(Serial.read());
   }
  
   // accept the buffer into the command parser
-  _cmd.accept(&_buffer);
- 
+  _cmd.accept(&gBuffer);
+
   // when there is a valid command
   if (_cmd.ready()) {
   
@@ -72,6 +75,9 @@ void LogoSketchBase::loop() {
   if (err && err != LG_STOP) {
     showErr(3, err);
   }
+  
+  // let the websockets client check for incoming messages
+  gWSClient.loop();
   
 }
 

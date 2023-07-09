@@ -57,10 +57,14 @@ public:
   static void machineinfo(Logo &logo);
   static void pinrgb(Logo &logo);
   static void rgbout(Logo &logo);
-  static void wifistation(Logo &logo);
   static void wifiscan(Logo &logo);
-  static void wificonnect(Logo &logo);
   static void wifiget(Logo &logo);
+  static void wifisockets(Logo &logo);
+  static void vopsopenmsg(Logo &logo);
+  static void wifilogintest(Logo &logo);
+  static void wifilogin(Logo &logo);
+  static void wifistation(Logo &logo);
+  static void wificonnect(Logo &logo);
 
 private:
 

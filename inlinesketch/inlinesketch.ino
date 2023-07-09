@@ -15,6 +15,7 @@
 
 // change this line to set the logo program you want to upload
 // Other files are
+// in ../logo/
 // - ledflash.lgo
 // - btnrgbflash.lgo
 // - btnledflash.lgo
@@ -26,7 +27,8 @@
 // - sos.lgo
 // - tiny.lgo
 // - wifiscan.lgo
-// - wifisend.lgo
+// - wifiget.lgo
+// - ../../../../esp32/wifitest.lgo
 
 //#LOGO FILE=../logo/rgb.lgo NAME=sketch INLINE=true RED=26 GREEN=25 BLUE=27
 static const char program_sketch[] PROGMEM = 
@@ -122,18 +124,9 @@ static const char program_sketch[] PROGMEM =
 
 LogoInlineSketch sketch((char *)program_sketch);
 
-// for HTTPS, uncomment all this and then run flashcode and it will pull that file
-// in as a variable.
-// const char *host_cert =
-// //#LOGO FILE=/Users/paul/Downloads/ISRG%20Root%20X1.cer INLINE=true
-// //#LOGO ENDFILE
-// ;
-
 // At the start
 void setup() {
   sketch.setup(115200);
-  // for HTTPS, uncomment this and set the hostname you will be calling.
-//  sketch.sslsetup("hostname", host_cert);
 }
 
 // Go around and around

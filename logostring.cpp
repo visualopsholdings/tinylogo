@@ -143,6 +143,9 @@ int LogoStringResult::ncmp(const char *to) {
   if (_fixed) {
     return _fixed->ncmp(to, _fixedstart, _fixedlen);
   }
+  if (_simple.length() != strlen(to)) {
+    return -1;
+  }
   return _simple.ncmp(to, 0, _simple.length());
 }
 
@@ -167,6 +170,15 @@ double LogoStringResult::tof() {
   }
   return _simple.tof(0, _simple.length());
 }
+
+void LogoStringResult::dump(const char *msg) const {
+  if (_fixed) {
+    _fixed->dump(msg, _fixedstart, _fixedlen);
+    return;
+  }
+  _simple.dump(msg, 0, _simple.length());
+}
+
 
 void LogoString::dump(const char *msg, short start, short len) const {
 #ifndef ARDUINO

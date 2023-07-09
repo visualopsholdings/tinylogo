@@ -52,10 +52,14 @@ const char Logo::coreNames[] PROGMEM = {
   "MACHINEINFO\n"
   "PINRGB\n"
   "RGBOUT\n"
-  "WIFISTATION\n"
   "WIFISCAN\n"
-  "WIFICONNECT\n"
   "WIFIGET\n"
+  "WIFISOCKETS\n"
+  "VOPSOPENMSG\n"
+  "WIFILOGINTEST\n"
+  "WIFILOGIN\n"
+  "WIFISTATION\n"
+  "WIFICONNECT\n"
 };
 
 // this arity array matches the above.
@@ -95,10 +99,14 @@ const char Logo::coreArity[] PROGMEM = {
   0, // MACHINEINFO
   2, // PINRGB
   2, // RGBOUT
-  0, // WIFISTATION
   0, // WIFISCAN
+  4, // WIFIGET
+  3, // WIFISOCKETS
+  2, // VOPSOPENMSG
+  3, // WIFILOGINTEST
+  4, // WIFILOGIN
+  0, // WIFISTATION
   2, // WIFICONNECT
-  1, // WIFIGET
 };
 
 // these indexes match the other 2 arrays.
@@ -139,10 +147,14 @@ void Logo::callbuiltin(short index) {
     case 32: LogoWords::machineinfo(*this); break;
     case 33: LogoWords::pinrgb(*this); break;
     case 34: LogoWords::rgbout(*this); break;
-    case 35: LogoWords::wifistation(*this); break;
-    case 36: LogoWords::wifiscan(*this); break;
-    case 37: LogoWords::wificonnect(*this); break;
-    case 38: LogoWords::wifiget(*this); break;
+    case 35: LogoWords::wifiscan(*this); break;
+    case 36: LogoWords::wifiget(*this); break;
+    case 37: LogoWords::wifisockets(*this); break;
+    case 38: LogoWords::vopsopenmsg(*this); break;
+    case 39: LogoWords::wifilogintest(*this); break;
+    case 40: LogoWords::wifilogin(*this); break;
+    case 41: LogoWords::wifistation(*this); break;
+    case 42: LogoWords::wificonnect(*this); break;
     default:
       break;
   }

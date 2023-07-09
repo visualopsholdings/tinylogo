@@ -87,6 +87,7 @@ public:
   void ncpy(char *to, int len);
   short toi();
   double tof();
+  void dump(const char *msg) const;
   
   LogoSimpleString _simple;
   const LogoString *_fixed;

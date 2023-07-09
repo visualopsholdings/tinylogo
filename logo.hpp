@@ -325,6 +325,11 @@ public:
   
   // dealing with the stack
   bool stackempty();
+  bool isstacklist();
+  bool isstackstring();
+  bool isstackint();
+  bool isstackdouble();
+
   short popint();
   void pushint(short n);
   double popdouble();
@@ -333,10 +338,6 @@ public:
   void pushstring(tStrPool n, tStrPool len);  
   void pushstring(LogoString *str);
   void pushlist(const List &list);
-  bool isstacklist();
-  bool isstackstring();
-  bool isstackint();
-  bool isstackdouble();
   List newlist();
   List poplist();
   bool pop();
@@ -348,6 +349,12 @@ public:
   short varintvalue(short var);
   bool isnum(LogoString *str, short wordstart, short wordlen);
   bool getlistval(const ListNodeVal &val, LogoStringResult *str);
+  short newstringvar(short str, short slen, short vstr, short vlen);
+  void setstringvar(short var, short vstr, short vlen);
+  short newdoublevar(short str, short slen, double n);
+  void setdoublevar(short var, double n);
+  short newlistvar(short str, short slen, const List &l);
+  void setlistvar(short var, const List &l);
   
   // logo words can be self modifying code but be careful!
   
@@ -413,14 +420,8 @@ public:
     return _channels[channel];
   }
   
-  // setup for SSL.
-  void sslsetup(const char *host, const char *cert) {
-    _host = host;
-    _cert = cert;
-  }
-  const char *cert() { return _cert; }
-  const char *host() { return _host; }
-  
+  static bool extractEvent(LogoString *s, LogoStringResult *name, LogoStringResult *data);
+
 private:
   
   // the pool of all strings
@@ -459,8 +460,6 @@ private:
   
   // A channel map for leds
   tByte _channels[8];
-  const char *_host;
-  const char *_cert;
   
   // parser
   bool parsestring(short type, short op, short oplen, LogoStringResult *str);
