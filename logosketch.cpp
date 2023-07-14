@@ -15,9 +15,11 @@
 
 #include <Arduino.h>
 
-#if defined(ESP32) && defined(USE_WIFI)
+#ifdef ESP32
+#ifdef USE_WIFI
 #include <SocketIOclient.h>
 extern SocketIOclient gWSClient;
+#endif
 #endif
 
 RingBuffer gBuffer; // 64 bytes
@@ -27,6 +29,8 @@ void LogoSketchBase::setup(int baud)  {
   Serial.begin(baud);
   
   precompile();
+  
+  logo()->_sketch = this;
   
   int err = logo()->geterr();
   if (err) {
@@ -50,7 +54,7 @@ void LogoSketchBase::loop() {
   while (Serial.available()) {
     gBuffer.write(Serial.read());
   }
- 
+
   // accept the buffer into the command parser
   _cmd.accept(&gBuffer);
 
@@ -76,9 +80,19 @@ void LogoSketchBase::loop() {
     showErr(3, err);
   }
   
+#ifdef ESP32
+
+#ifdef USE_WIFI
   // let the websockets client check for incoming messages
   gWSClient.loop();
+#endif
   
+#ifdef USE_BT
+  logo()->_ble.loop();
+#endif
+
+#endif // ESP32
+
 }
 
 void LogoSketchBase::showErr(int mode, int n) {
@@ -129,11 +143,17 @@ int LogoInlineSketch::dosetup(const char *cmd) {
   
 }
 
-int LogoInlineSketch::docommand(const char *cmd) {
+int LogoInlineSketch::docompile(const char *cmd) {
 
   // compile whatever it is into the LOGO interpreter and if there's
   // a compile error flash the LED
   _compiler.compile(cmd);
   return _logo.geterr();
+  
+}
+
+int LogoInlineSketch::docommand(const char *cmd) {
+
+  return docompile(cmd);
   
 }

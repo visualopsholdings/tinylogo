@@ -521,6 +521,42 @@ Creates a special piece of JSON that describes an "open stream" message for it's
 print vopsopenmsg "vopsdocid" "vopsuserid"
 ```
 
+#### btstart
+
+Starts up BLE (Bluetooth Low Energy) with the name and service ID specified.
+
+This creates 2 characteristics:
+
+Compile: c807fa87-21a3-47b2-a0f8-9cd1da3407b7
+
+Send this lines of Logo code and it will compile them into the words.
+
+Run: 9de01783-a173-4d85-a7f6-48c7a82c6a63
+
+Send this:
+
+RESETCODE
+
+reset the code, but NOT the words. Then when you compile, the actual code specified
+will be rady to run. Otherwise your compiled code will APPEND to the code in memory
+and most likely you will get unusual results.
+
+RESTART
+
+Run the program from the start
+
+
+So to send a program you would most likely:
+
+Run: RESETCODE
+For each line:
+  Compile:
+Run: RESTART
+
+```
+btstart "name" "ServiceUID"
+```
+
 ### UCBLogo differences
 
 - On page 4, we don't implement the setter notation, SETFOO is just the name of a defined
@@ -796,6 +832,10 @@ storing lists but only "PRINT" knows how to use them.
 - Get sockets, wifi access points, https requests working.
 - make can now create string, list, double and int variables.
 - remove the SSL code. Not needed now.
+
+### 14 Jul 2023
+- BLE support
+
 
 
 

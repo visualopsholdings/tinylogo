@@ -18,6 +18,7 @@
 #ifndef H_logosketch
 #define H_logosketch
 
+#include "logosketchbase.hpp"
 #include "logo.hpp"
 #include "logocompiler.hpp"
 #include "arduinotimeprovider.hpp"
@@ -25,28 +26,6 @@
 #include "arduinoflashcode.hpp"
 #include "ringbuffer.hpp"
 #include "cmd.hpp"
-
-class LogoSketchBase {
-
-public:
-  LogoSketchBase() {}
-  
-  void setup(int baud=9600);
-  void loop();
-
-  virtual void precompile() = 0;
-  virtual int dosetup(const char *cmd) = 0;
-  virtual int docommand(const char *cmd) = 0;
-  virtual Logo *logo() = 0;
-  
-protected:
-  ArduinoTimeProvider _time; // adds 12 bytes of dynamic memory
-  Cmd _cmd; // 32 bytes
-  char _cmdbuf[STRING_LEN]; // 32 bytes
-  
-  void showErr(int mode, int n);
-    
-};
 
 class LogoSketch : public LogoSketchBase {
 
@@ -57,6 +36,7 @@ public:
   virtual void precompile();
   virtual int dosetup(const char *cmd);
   virtual int docommand(const char *cmd);
+  virtual int docompile(const char *cmd) {}
   virtual Logo *logo() { return &_logo; }
 
 private:
@@ -74,6 +54,7 @@ public:
   virtual void precompile();
   virtual int dosetup(const char *cmd);
   virtual int docommand(const char *cmd);
+  virtual int docompile(const char *cmd);
   virtual Logo *logo() { return &_logo; }
 
 private:

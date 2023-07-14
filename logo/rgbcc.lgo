@@ -1,9 +1,9 @@
-#   rgb.lgo
+#   rgbcc.lgo
 #
 #   Author: Paul Hamilton (paul@visualops.com)
 #   Date: 2-Jun-2023
 #
-#   Allow colors to be set on an RGB LED (Common anode +)
+#   Allow colors to be set on an RGB LED (Common cathode -)
 #
 #   This work is licensed under the Creative Commons Attribution 4.0 International License. 
 #   To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0/ or 
@@ -13,17 +13,17 @@
 #
 
 to ID
-  print "rgb
+  print "rgbcc
 end
 
 # called right at the start
 to SETUP
   pinrgb $RED 1
-  rgbout 1 0
+  rgbout 1 255
   pinrgb $GREEN 2
-  rgbout 2 0
+  rgbout 2 255
   pinrgb $BLUE 3
-  rgbout 3 0
+  rgbout 3 255
 end
 
 to REDR :V
@@ -40,7 +40,7 @@ end
 
 # scale a color to be between 1 and 100
 to SCLR :C
-  255 - ((:C / 100) * 255)
+  (:C / 100) * 255
 end
 
 # arguments are reversed!

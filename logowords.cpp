@@ -18,7 +18,13 @@
 #ifdef ARDUINO
 #include <HardwareSerial.h>
 #include <Arduino.h>
-#if defined(ESP32) && defined(USE_WIFI)
+#ifdef ESP32
+
+char gBuff[256]; // a generic buffer
+#include "ringbuffer.hpp"
+extern RingBuffer gBuffer;
+
+#ifdef USE_WIFI
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <HTTPClient.h>
@@ -27,15 +33,16 @@ WiFiClientSecure gSecureClient;
 String gCookie;
 #include <SocketIOclient.h>
 SocketIOclient gWSClient;
-char gMsg[256];
-#include "ringbuffer.hpp"
-extern RingBuffer gBuffer;
-#endif
+char gMsg[256]; // the open socket message.
+#endif // USE_WIFI
+#endif // ESP32
+
 #else
+
 #include <iostream>
-using namespace std;
 #endif
 
+using namespace std;
 
 void LogoWords::err(Logo &logo) {
 
@@ -595,16 +602,16 @@ void LogoWords::wificonnect(Logo &logo) {
   LogoStringResult ap;
   logo.popstring(&ap);
   
-  char passbuf[128];
-  char ssidbuf[128];
-  
-  password.ncpy(passbuf, sizeof(passbuf));
-  ap.ncpy(ssidbuf, sizeof(ssidbuf));
-
 #ifdef ARDUINO
 #if defined(ESP32) && defined(USE_WIFI)
 
-  WiFi.begin(ssidbuf, passbuf);
+  // we put the SSID in gBuff, and need a password buffer.
+  char passbuf[128];
+    
+  password.ncpy(passbuf, sizeof(passbuf));
+  ap.ncpy(gBuff, sizeof(gBuff));
+
+  WiFi.begin(gBuff, passbuf);
   bool finished = false;
   bool success = false;
   int discon = 0;
@@ -651,7 +658,7 @@ void LogoWords::wificonnect(Logo &logo) {
     // every 20 disconects, try to connect again.
     if (discon > 4) {
       WiFi.disconnect();
-      WiFi.begin(ssidbuf, passbuf);
+      WiFi.begin(gBuff, passbuf);
       discon = 0;
     }
   };
@@ -710,8 +717,6 @@ void LogoWords::wifiget(Logo &logo) {
   LogoStringResult host;
   logo.popstring(&host);
   
-  char buf[256];
-
 #ifdef ARDUINO
 #if defined(ESP32) && defined(USE_WIFI)
   
@@ -723,46 +728,47 @@ void LogoWords::wifiget(Logo &logo) {
   
   HTTPClient http;
 
-  host.ncpy(buf, sizeof(buf));
+  host.ncpy(gBuff, sizeof(gBuff));
 
   if (port == 443 || port == 8443) {
 
-    if (gSecureClient.connect(buf, port) < 0) {
-      LogoSimpleString str(buf);
+    if (gSecureClient.connect(gBuff, port) < 0) {
+      gSecureClient.lastError(gBuff, sizeof(gBuff));
+      LogoSimpleString str(gBuff);
       logo.pushstring(&str);
       return;
     }
 
-    strcpy(buf, "https://");
-    int len = strlen(buf);
-    host.ncpy(buf + len, sizeof(buf) - len);
+    strcpy(gBuff, "https://");
+    int len = strlen(gBuff);
+    host.ncpy(gBuff + len, sizeof(gBuff) - len);
     if (port != 443) {
-      strcat(buf, ":");
-      int len = strlen(buf);
-      snprintf(buf + len, sizeof(buf) - len, "%d", port);
+      strcat(gBuff, ":");
+      int len = strlen(gBuff);
+      snprintf(gBuff + len, sizeof(gBuff) - len, "%d", port);
     }
-    len = strlen(buf);
-    request.ncpy(buf + len, sizeof(buf) - len);
+    len = strlen(gBuff);
+    request.ncpy(gBuff + len, sizeof(gBuff) - len);
 
-    if (!http.begin(gSecureClient, buf)) {
+    if (!http.begin(gSecureClient, gBuff)) {
       LogoSimpleString str("Failed to begin request");
       logo.pushstring(&str);
       return;
     }
   }
   else {
-    strcpy(buf, "http://");
-    int len = strlen(buf);
-    host.ncpy(buf + len, sizeof(buf) - len);
+    strcpy(gBuff, "http://");
+    int len = strlen(gBuff);
+    host.ncpy(gBuff + len, sizeof(gBuff) - len);
     if (port != 80) {
-      strcat(buf, ":");
-      int len = strlen(buf);
-      snprintf(buf + len, sizeof(buf) - len, "%d", port);
+      strcat(gBuff, ":");
+      int len = strlen(gBuff);
+      snprintf(gBuff + len, sizeof(gBuff) - len, "%d", port);
     }
-    len = strlen(buf);
-    request.ncpy(buf + len, sizeof(buf) - len);
+    len = strlen(gBuff);
+    request.ncpy(gBuff + len, sizeof(gBuff) - len);
     
-    if (!http.begin(buf)) {
+    if (!http.begin(gBuff)) {
       LogoSimpleString str("Failed to begin request");
       logo.pushstring(&str);
       return;
@@ -773,16 +779,18 @@ void LogoWords::wifiget(Logo &logo) {
   
   int code = http.GET();
   if (code <= 0) {
-    LogoSimpleString str("Not found");
+    Serial.print("HTTPClient: ");
+    Serial.println(code);
+    LogoSimpleString str("HTTP failed");
     logo.pushstring(&str);
     return;
   }
   
   if (code != HTTP_CODE_OK && code != 302) {
-    strcpy(buf, "HTTP Error ");
-    int len = strlen(buf);
-    snprintf(buf + len, sizeof(buf) - len, "%d", code);
-    LogoSimpleString str(buf);
+    strcpy(gBuff, "HTTP Error ");
+    int len = strlen(gBuff);
+    snprintf(gBuff + len, sizeof(gBuff) - len, "%d", code);
+    LogoSimpleString str(gBuff);
     logo.pushstring(&str);
     return;
   }
@@ -793,8 +801,8 @@ void LogoWords::wifiget(Logo &logo) {
   deserializeJson(doc, result.c_str());
   
   // return the field requested
-  field.ncpy(buf, sizeof(buf));
-  const char *val = doc[buf];
+  field.ncpy(gBuff, sizeof(gBuff));
+  const char *val = doc[gBuff];
   if (!val) {
     LogoSimpleString str("Field not found");
     logo.pushstring(&str);
@@ -856,26 +864,25 @@ void LogoWords::wifisockets(Logo &logo) {
   LogoStringResult host;
   logo.popstring(&host);
   
-  char buf[256];
-  host.ncpy(buf, sizeof(buf));
-
 #ifdef ARDUINO
 #if defined(ESP32) && defined(USE_WIFI)
+
+  host.ncpy(gBuff, sizeof(gBuff));
   openmsg.ncpy(gMsg, sizeof(gMsg));
 
 	if (port == 443 || port == 8443) {
-    gWSClient.beginSSL(buf, port);
+    gWSClient.beginSSL(gBuff, port);
 	}
 	else {
-    gWSClient.begin(buf, port);
+    gWSClient.begin(gBuff, port);
 	}
 
 	// event handler
 	gWSClient.onEvent(webSocketEvent);
 
-  strcpy(buf, "Cookie: ");
-  strcat(buf, gCookie.c_str());
-  gWSClient.setExtraHeaders(buf);
+  strcpy(gBuff, "Cookie: ");
+  strcat(gBuff, gCookie.c_str());
+  gWSClient.setExtraHeaders(gBuff);
 
 	// try ever 5000 again if connection has failed
   gWSClient.setReconnectInterval(5000);
@@ -883,7 +890,7 @@ void LogoWords::wifisockets(Logo &logo) {
   Serial.println("Wifi not supported");
 #endif
 #else
-  logo.out() << "Wifi Sockets " << buf << endl;
+  logo.out() << "Wifi Sockets " << endl;
 #endif // ARDUINO
 
 }
@@ -896,18 +903,25 @@ void LogoWords::vopsopenmsg(Logo &logo) {
   LogoStringResult userid;
   logo.popstring(&userid);
   
-  char buf[256];
-  strcpy(buf, "[ \"openDocuments\", { \"docs\": [ { \"id\": \"");
-  int len = strlen(buf);
-  docid.ncpy(buf + len, sizeof(buf) - len);
-  strcat(buf, "\", \"type\": \"stream\" } ], \"userid\": \"");
-  len = strlen(buf);
-  userid.ncpy(buf + len, sizeof(buf) - len);
-  strcat(buf, "\" } ]");
+#ifdef ARDUINO
+#if defined(ESP32) && defined(USE_WIFI)
+  strcpy(gBuff, "[ \"openDocuments\", { \"docs\": [ { \"id\": \"");
+  int len = strlen(gBuff);
+  docid.ncpy(gBuff + len, sizeof(gBuff) - len);
+  strcat(gBuff, "\", \"type\": \"stream\" } ], \"userid\": \"");
+  len = strlen(gBuff);
+  userid.ncpy(gBuff + len, sizeof(gBuff) - len);
+  strcat(gBuff, "\" } ]");
 
-  LogoSimpleString s(buf);
-  logo.pushstring(&s);
+  LogoSimpleString s(gBuff);
+#else
+  LogoSimpleString s("Wifi not supported");
+#endif
+#else
+  LogoSimpleString s("Make open message");
+#endif
   
+  logo.pushstring(&s);
 }
 
 void LogoWords::wifilogintest(Logo &logo) {
@@ -937,24 +951,23 @@ void LogoWords::wifilogintest(Logo &logo) {
   
   HTTPClient http;
 
-  char buf[256];
-  host.ncpy(buf, sizeof(buf));
+  host.ncpy(gBuff, sizeof(gBuff));
 
-  strcpy(buf, "http://");
-  int len = strlen(buf);
-  host.ncpy(buf + len, sizeof(buf) - len);
+  strcpy(gBuff, "http://");
+  int len = strlen(gBuff);
+  host.ncpy(gBuff + len, sizeof(gBuff) - len);
   if (port != 80) {
-    strcat(buf, ":");
-    int len = strlen(buf);
-    snprintf(buf + len, sizeof(buf) - len, "%d", port);
+    strcat(gBuff, ":");
+    int len = strlen(gBuff);
+    snprintf(gBuff + len, sizeof(gBuff) - len, "%d", port);
   }
-  strcat(buf, "/login/?username=");
-  len = strlen(buf);
-  username.ncpy(buf + len, sizeof(buf) - len);
+  strcat(gBuff, "/login/?username=");
+  len = strlen(gBuff);
+  username.ncpy(gBuff + len, sizeof(gBuff) - len);
   
-  Serial.println(buf);
+  Serial.println(gBuff);
   
-  if (!http.begin(buf)) {
+  if (!http.begin(gBuff)) {
     LogoSimpleString str("Failed to begin request");
     logo.pushstring(&str);
     return;
@@ -965,17 +978,19 @@ void LogoWords::wifilogintest(Logo &logo) {
   
   int code = http.GET();
   if (code <= 0) {
-    LogoSimpleString str("Not found");
+    Serial.print("HTTPClient: ");
+    Serial.println(code);
+    LogoSimpleString str("HTTP failed");
     logo.pushstring(&str);
     return;
   }
   
   // should be a redrect.
   if (code != 302) {
-    strcpy(buf, "HTTP Error ");
-    int len = strlen(buf);
-    snprintf(buf + len, sizeof(buf) - len, "%d", code);
-    LogoSimpleString str(buf);
+    strcpy(gBuff, "HTTP Error ");
+    int len = strlen(gBuff);
+    snprintf(gBuff + len, sizeof(gBuff) - len, "%d", code);
+    LogoSimpleString str(gBuff);
     logo.pushstring(&str);
     return;
   }
@@ -1014,12 +1029,11 @@ void LogoWords::wifilogin(Logo &logo) {
   LogoStringResult host;
   logo.popstring(&host);
   
-  char buf[256];
-  host.ncpy(buf, sizeof(buf));
-  
 #ifdef ARDUINO
 #if defined(ESP32) && defined(USE_WIFI)
 
+  host.ncpy(gBuff, sizeof(gBuff));
+  
   if (WiFi.status() != WL_CONNECTED) {
     LogoSimpleString str("Wifi not connected");
     logo.pushstring(&str);
@@ -1028,19 +1042,19 @@ void LogoWords::wifilogin(Logo &logo) {
   
   HTTPClient http;
 
-  if (gSecureClient.connect(buf, port) < 0) {
-    gSecureClient.lastError(buf, sizeof(buf));
-    LogoSimpleString str(buf);
+  if (gSecureClient.connect(gBuff, port) < 0) {
+    gSecureClient.lastError(gBuff, sizeof(gBuff));
+    LogoSimpleString str(gBuff);
     logo.pushstring(&str);
     return;
   }
 
-  strcpy(buf, "https://");
-  int len = strlen(buf);
-  host.ncpy(buf + len, sizeof(buf) - len);
-  strcat(buf, "/login");
+  strcpy(gBuff, "https://");
+  int len = strlen(gBuff);
+  host.ncpy(gBuff + len, sizeof(gBuff) - len);
+  strcat(gBuff, "/login");
 
-  if (!http.begin(gSecureClient, buf)) {
+  if (!http.begin(gSecureClient, gBuff)) {
     LogoSimpleString str("Failed to begin request");
     logo.pushstring(&str);
     return;
@@ -1051,27 +1065,29 @@ void LogoWords::wifilogin(Logo &logo) {
   
   http.addHeader("Content-Type", "application/json");   
 
-  strcpy(buf, "{ \"name\": \"");
-  len = strlen(buf);
-  username.ncpy(buf + len, sizeof(buf) - len);
-  strcat(buf, "\", \"password\": \"");
-  len = strlen(buf);
-  password.ncpy(buf + len, sizeof(buf) - len);
-  strcat(buf, "\", \"insecure\": false }");  
+  strcpy(gBuff, "{ \"name\": \"");
+  len = strlen(gBuff);
+  username.ncpy(gBuff + len, sizeof(gBuff) - len);
+  strcat(gBuff, "\", \"password\": \"");
+  len = strlen(gBuff);
+  password.ncpy(gBuff + len, sizeof(gBuff) - len);
+  strcat(gBuff, "\", \"insecure\": false }");  
   
-  int code = http.POST((uint8_t *)buf, strlen(buf));
+  int code = http.POST((uint8_t *)gBuff, strlen(gBuff));
   if (code <= 0) {
-    LogoSimpleString str("Not found");
+    Serial.print("HTTPClient: ");
+    Serial.println(code);
+    LogoSimpleString str("HTTP failed");
     logo.pushstring(&str);
     return;
   }
   
   // should be a redrect.
   if (code != 200) {
-    strcpy(buf, "HTTP Error ");
-    int len = strlen(buf);
-    snprintf(buf + len, sizeof(buf) - len, "%d", code);
-    LogoSimpleString str(buf);
+    strcpy(gBuff, "HTTP Error ");
+    int len = strlen(gBuff);
+    snprintf(gBuff + len, sizeof(gBuff) - len, "%d", code);
+    LogoSimpleString str(gBuff);
     logo.pushstring(&str);
     return;
   }
@@ -1095,6 +1111,36 @@ void LogoWords::wifilogin(Logo &logo) {
   
   logo.pushstring(&str);
 
+}
+
+void LogoWords::btstart(Logo &logo) {
+
+  LogoStringResult serviceuid;
+  logo.popstring(&serviceuid);
+  
+  LogoStringResult name;
+  logo.popstring(&name);
+  
+#ifdef ARDUINO
+#if defined(ESP32) && defined(USE_BT)
+
+  char sname[32];
+
+  name.ncpy(sname, sizeof(sname));
+  serviceuid.ncpy(gBuff, sizeof(gBuff));
+  
+  logo._ble.start(&logo, logo._sketch, sname, gBuff);
+  
+  Serial.print("Waiting a client connection ");
+  Serial.println(sname);
+
+#else
+  Serial.println("Wifi not supported");
+#endif
+#else
+  logo.out() << "Start Bluetooth" << endl;
+#endif
+  
 }
 
 

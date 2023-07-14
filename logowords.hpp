@@ -65,6 +65,7 @@ public:
   static void wifilogin(Logo &logo);
   static void wifistation(Logo &logo);
   static void wificonnect(Logo &logo);
+  static void btstart(Logo &logo);
 
 private:
 

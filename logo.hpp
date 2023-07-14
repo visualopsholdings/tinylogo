@@ -56,6 +56,7 @@
 
 #include "arduinoflashstring.hpp"
 #include "list.hpp"
+#include "logoble.hpp"
 
 #define MACHINE_VERSION   1
 
@@ -84,12 +85,19 @@
 
 #ifdef USE_LARGE_CODE
 // Huge settings for something that can handle it.
-#define STRING_POOL_SIZE    1024 * 4
-#define MAX_CODE            1024 * 4        
-#define CODE_SIZE           MAX_CODE
+#define STRING_POOL_SIZE    1024
+// but not too huge when we need bluetooth.
+#ifdef USE_BT
+#define MAX_CODE            1024 * 2
+#define START_JCODE         512
+#define MAX_STACK           512
+#else
+#define MAX_CODE            1024 * 4
 #define START_JCODE         1024 * 3
 #define MAX_STACK           1024 * 2
-#define MAX_VARS            1024 * 2
+#endif
+#define CODE_SIZE           MAX_CODE
+#define MAX_VARS            512
 
 #else
 
@@ -279,6 +287,8 @@ class ArduinoFlashCode;
 class LogoString;
 class LogoStringResult;
 
+class LogoSketchBase;
+
 class Logo {
 
 public:
@@ -419,6 +429,8 @@ public:
   tByte getpin(tByte channel) {
     return _channels[channel];
   }
+  LogoSketchBase *_sketch;
+  LogoBLE _ble;
   
   static bool extractEvent(LogoString *s, LogoStringResult *name, LogoStringResult *data);
 
