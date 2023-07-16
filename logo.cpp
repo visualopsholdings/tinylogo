@@ -569,6 +569,74 @@ bool Logo::call(short jump, tByte arity) {
   
 }
 
+void Logo::startTry() {
+
+  // find the catch and push it onto the stack
+  
+  int pc = _pc;
+  while (pc < (CODE_SIZE - 1) && _code[pc][FIELD_OPTYPE] != OPTYPE_CATCH) {
+    pc++;
+  }
+  
+  // if we don't find a catch just ignore the try
+  if (pc < (CODE_SIZE - 1)) {
+    push(SOPTYPE_TRY, pc);
+  }
+  
+}
+
+void Logo::doThrow() {
+
+  // pop the string off the stack as the exception
+  if (!pop()) {
+    error(LG_STACK_OVERFLOW);
+    return;
+  }
+  if (_stack[_tos][FIELD_OPTYPE] != OPTYPE_STRING) {
+    error(LG_NOT_STRING);
+    return;
+  }
+  _exception = _stack[_tos][FIELD_OP];
+  _exclength = _stack[_tos][FIELD_OPAND];
+
+  // wind back to the try on the stack
+  _tos--;
+  while (_tos > 0 && _stack[_tos-1][FIELD_OPTYPE] != SOPTYPE_TRY) {
+    _tos--;
+  }
+  
+  if (_tos == 0) {
+    error(LG_STACK_OVERFLOW);
+    return;
+  }
+  
+  _tos--;
+  
+  // jump to after the catch
+  _pc = _stack[_tos][FIELD_OP] + 1;
+  
+}
+
+void Logo::pushException() {
+
+  pushstring(_exception, _exclength);
+
+}
+
+void Logo::handleCatch() {
+
+  // we hit a catch without throwing, so just jump over it.
+  _pc++;
+
+  // wind back to the try on the stack
+  while (_tos > 0 && _stack[_tos-1][FIELD_OPTYPE] != SOPTYPE_TRY) {
+    _tos--;
+  }
+  if (_tos > 0) {
+    _tos--;
+  }
+}
+
 void Logo::halt() {
   while (_pc < (CODE_SIZE - 1)) {
     if (_code[_pc+1][FIELD_OPTYPE] == OPTYPE_HALT) {
@@ -777,6 +845,10 @@ short Logo::step() {
     
   case OPTYPE_ERR:
     err = instField(_pc, FIELD_OP);
+    break;
+    
+  case OPTYPE_CATCH:
+    handleCatch();
     break;
     
   default:
@@ -1854,6 +1926,9 @@ void Logo::dump(short indent, short type, short op, short opand) const {
     case OPTYPE_LEND:
       cout << "lend";
       break;
+    case OPTYPE_CATCH:
+      cout << "catch";
+      break;
     case SOPTYPE_ARITY:
       cout << "(stack) arity pc " << op << " to go " << opand;
       break;
@@ -1877,7 +1952,10 @@ void Logo::dump(short indent, short type, short op, short opand) const {
         cout << l.length();
       }
       break;
-     default:
+    case SOPTYPE_TRY:
+      cout << "(stack) try " << op;
+      break;
+    default:
       cout << "unknown optype " << type;
   }
 

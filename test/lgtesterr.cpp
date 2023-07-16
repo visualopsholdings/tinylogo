@@ -126,6 +126,8 @@ BOOST_AUTO_TEST_CASE( tooManyVariables )
     compiler.compile(str.str());
   }
   DEBUG_DUMP(false);
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+
   BOOST_CHECK_EQUAL(logo.run(), LG_TOO_MANY_VARS);
   
 }

@@ -90,27 +90,26 @@ void LogoCompiler::compileword(tJump *next, LogoString *stri, short wordstart, s
     return;
   }
   
-  if ((*stri)[wordstart] == '(') {
+  switch ((*stri)[wordstart]) {
+  case '(':
     _logo->addop(next, OPTYPE_GSTART);
     DEBUG_RETURN(" gstart ", 0);
     return;
-  }
-  
-  if ((*stri)[wordstart] == ')') {
+  case ')':
     _logo->addop(next, OPTYPE_GEND);
     DEBUG_RETURN(" gend ", 0);
     return;
-  }
-  
-  if ((*stri)[wordstart] == '[') {
+  case '[':
     _logo->addop(next, OPTYPE_LSTART);
     DEBUG_RETURN(" lstart ", 0);
     return;
-  }
-  
-  if ((*stri)[wordstart] == ']') {
+  case ']':
     _logo->addop(next, OPTYPE_LEND);
-    DEBUG_RETURN(" lend ", 0);
+    DEBUG_RETURN(" lstart ", 0);
+    return;
+  case '#':
+    _logo->addop(next, OPTYPE_CATCH);
+    DEBUG_RETURN(" catch ", 0);
     return;
   }
   

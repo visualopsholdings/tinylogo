@@ -1143,4 +1143,24 @@ void LogoWords::btstart(Logo &logo) {
   
 }
 
+void LogoWords::tryWord(Logo &logo) {
+
+  logo.startTry();
+  
+}
+
+void LogoWords::throwWord(Logo &logo) {
+
+  logo.doThrow();
+  
+}
+
+void LogoWords::exception(Logo &logo) {
+
+  logo.pushException();
+  
+}
+
+
+
 

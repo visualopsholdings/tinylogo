@@ -557,6 +557,46 @@ Run: RESTART
 btstart "name" "ServiceUID"
 ```
 
+#### ?/throw/#/exception
+
+These words are used when code can have errors and you would like to handle that.
+
+```
+to ONE
+  print 1
+end
+
+to TWO
+  print 2
+end
+
+to THREE
+  print 3
+end
+
+to FOUR
+  throw \"failed
+end
+
+to FIVE
+  print 5
+end
+
+to SIX
+  print 6
+end
+
+to SHOWERR
+  print exception
+end
+
+ONE TWO ? THREE FOUR FIVE # SHOWERR SIX
+```
+
+This code would print 1 2 3 failed 6
+
+If you are familiar with other languages, ? is like "try" and # is like "catch"
+
 ### UCBLogo differences
 
 - On page 4, we don't implement the setter notation, SETFOO is just the name of a defined
@@ -757,10 +797,7 @@ https://forum.arduino.cc/t/how-to-properly-use-wire-onreceive/891195/12
 
 ## Current development focus
 
-### Error handling
-
-### ESP32
-  - Get Bluetooth programming working.
+### Implement exception handling in BLE and WIFI work
   
 ## Change Log
 
@@ -838,6 +875,10 @@ storing lists but only "PRINT" knows how to use them.
 
 ### 15 Jul 2023
 - BLE load utility for loading code into a BLE ready ESP32
+
+### 16 Jul 2023
+- Implement exception handling
+
 
 
 

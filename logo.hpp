@@ -197,6 +197,7 @@
 #define OPTYPE_LSTART         13 // [
 #define OPTYPE_LEND           14 // ]
 #define OPTYPE_LIST           15 // FIELD_OP = the head of the list, FIELD_OPAND = tail
+#define OPTYPE_CATCH          16 // #
 
 // only on the stack
 #define SOP_START             100
@@ -206,6 +207,7 @@
 #define SOPTYPE_SKIP          SOP_START + 4 // skip the next instruction if on the stack under a return
 #define SOPTYPE_GSTART        SOP_START + 5 // we are grouping on the stack.
 #define SOPTYPE_OPENLIST      SOP_START + 6 // FIELD_OP = the head of the list, FIELD_OPAND = tail
+#define SOPTYPE_TRY           SOP_START + 7 // FIELD_OP = the pc of the catch
 
 // only in static code
 #define SCOP_START            200
@@ -313,6 +315,12 @@ public:
   short pc() { return _pc; }
   void backup() { if (_pc > 0) _pc--; }
   bool call(short jump, tByte opand2);
+  
+  // exception handling
+  void startTry();
+  void doThrow();
+  void pushException();
+  void handleCatch();
   
   // interface to compiler
   void error(short error);
@@ -472,6 +480,9 @@ private:
   
   // A channel map for leds
   tByte _channels[8];
+  
+  short _exception;
+  short _exclength;
   
   // parser
   bool parsestring(short type, short op, short oplen, LogoStringResult *str);

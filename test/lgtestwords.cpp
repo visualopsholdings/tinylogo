@@ -552,7 +552,6 @@ BOOST_AUTO_TEST_CASE( ifFalse )
 
   DEBUG_STEP_DUMP(10, false);
   BOOST_CHECK_EQUAL(logo.run(), 0);
-//  BOOST_CHECK_EQUAL(logo.popint(), 3);
   BOOST_CHECK(logo.stackempty());
 
 }
@@ -1060,3 +1059,110 @@ BOOST_AUTO_TEST_CASE( arithmeticColors )
   BOOST_CHECK(logo.stackempty());
 }
 
+BOOST_AUTO_TEST_CASE( tryThrowCatch )
+{
+  cout << "=== tryFailCatch ===" << endl;
+  
+  Logo logo;
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("to ONE; print 1; end;");
+  compiler.compile("to TWO; print 2; end;");
+  compiler.compile("to THREE; print 3; end;");
+  compiler.compile("to FOUR; throw \"failed; end;");
+  compiler.compile("to FIVE; print 5; end;");
+  compiler.compile("to SIX; print 6; end;");
+  compiler.compile("to SHOWERR; print exception; end;");
+  compiler.compile("ONE TWO ? THREE FOUR FIVE # SHOWERR SIX");
+  DEBUG_DUMP(false);
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+
+  stringstream s;
+  logo.setout(&s);
+
+  DEBUG_STEP_DUMP(14, false);
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(s.str(), "=== 1\n=== 2\n=== 3\n=== failed\n=== 6\n");
+
+}
+
+BOOST_AUTO_TEST_CASE( tryCatch )
+{
+  cout << "=== tryCatch ===" << endl;
+  
+  Logo logo;
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("to ONE; print 1; end;");
+  compiler.compile("to TWO; print 2; end;");
+  compiler.compile("to THREE; print 3; end;");
+  compiler.compile("to FOUR; print 4; end;");
+  compiler.compile("to FIVE; print 5; end;");
+  compiler.compile("to SIX; print 6; end;");
+  compiler.compile("to SHOWERR; print exception; end;");
+  compiler.compile("ONE TWO ? THREE FOUR FIVE # SHOWERR SIX");
+  DEBUG_DUMP(false);
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+
+  stringstream s;
+  logo.setout(&s);
+
+  DEBUG_STEP_DUMP(17, false);
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(s.str(), "=== 1\n=== 2\n=== 3\n=== 4\n=== 5\n=== 6\n");
+
+}
+
+BOOST_AUTO_TEST_CASE( justTry )
+{
+  cout << "=== justTry ===" << endl;
+  
+  Logo logo;
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("to ONE; print 1; end;");
+  compiler.compile("to TWO; print 2; end;");
+  compiler.compile("to THREE; print 3; end;");
+  compiler.compile("to FOUR; print 4; end;");
+  compiler.compile("to FIVE; print 5; end;");
+  compiler.compile("to SIX; print 6; end;");
+  compiler.compile("to SHOWERR; print exception; end;");
+  compiler.compile("ONE TWO ? THREE FOUR FIVE SIX");
+  DEBUG_DUMP(false);
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+
+  stringstream s;
+  logo.setout(&s);
+
+  DEBUG_STEP_DUMP(17, false);
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(s.str(), "=== 1\n=== 2\n=== 3\n=== 4\n=== 5\n=== 6\n");
+
+}
+
+BOOST_AUTO_TEST_CASE( justCatch )
+{
+  cout << "=== justCatch ===" << endl;
+  
+  Logo logo;
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("to ONE; print 1; end;");
+  compiler.compile("to TWO; print 2; end;");
+  compiler.compile("to THREE; print 3; end;");
+  compiler.compile("to FOUR; print 4; end;");
+  compiler.compile("to FIVE; print 5; end;");
+  compiler.compile("to SIX; print 6; end;");
+  compiler.compile("to SHOWERR; print exception; end;");
+  compiler.compile("ONE TWO THREE FOUR FIVE # SHOWERR SIX");
+  DEBUG_DUMP(false);
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+
+  stringstream s;
+  logo.setout(&s);
+
+  DEBUG_STEP_DUMP(25, false);
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(s.str(), "=== 1\n=== 2\n=== 3\n=== 4\n=== 5\n=== 6\n");
+
+}
