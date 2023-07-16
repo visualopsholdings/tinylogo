@@ -52,43 +52,44 @@ int main(int argc, char *argv[]) {
     file.open(vm["input-file"].as< string >(), ios::in);
     if (!file) {
 		  cout << "File not found" << endl;
+		  return 1;
     }
-    else {
-      RealTimeProvider time;
-      Logo logo(&time);
-      LogoCompiler compiler(&logo);
-      map<string, string> directives;
-      compiler.compile(file, directives, true);
-      int err = logo.geterr();
-      if (err) {
-        cout << "got compile err " << err << endl;
-        return err;
-      }
-      if (vm.count("dump")) {
+
+    RealTimeProvider time;
+    Logo logo(&time);
+    LogoCompiler compiler(&logo);
+    map<string, string> directives;
+    compiler.compile(file, directives, true);
+    int err = logo.geterr();
+    if (err) {
+      cout << "got compile err " << err << endl;
+      return err;
+    }
+    if (vm.count("dump")) {
+      compiler.dump(false);
+    }
+    if (vm.count("step-dump")) {
+      int n = vm["step-dump"].as< int >();
+      err = 0;
+      for (short i=0; i<n && err != LG_STOP; i++) {
+        cout << "step " << i << " -----------" << endl;
+        err = logo.step();
         compiler.dump(false);
       }
-      if (vm.count("step-dump")) {
-        int n = vm["step-dump"].as< int >();
-        err = 0;
-        for (short i=0; i<n && err != LG_STOP; i++) {
-          cout << "step " << i << " -----------" << endl;
-          err = logo.step();
-          compiler.dump(false);
-        }
-        if (err && err != LG_STOP) {
-          cout << "got step err " << err << endl;
-          return err;
-        }
+      if (err && err != LG_STOP) {
+        cout << "got step err " << err << endl;
+        return err;
       }
-      else {
-        err = logo.run();
-        if (err) {
-          cout << "got runerr " << err << endl;
-          return err;
-        }
-      }
-      file.close();
     }
+    else {
+      err = logo.run();
+      if (err) {
+        cout << "got runerr " << err << endl;
+        return err;
+      }
+    }
+    file.close();
+
     return 0;
   }
   

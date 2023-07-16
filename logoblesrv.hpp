@@ -13,27 +13,30 @@
   https://github.com/visualopsholdings/tinylogo
 */
 
-#ifndef H_logoble
-#define H_logoble
+#ifndef H_logoblesrv
+#define H_logoblesrv
 
 // the bluetooth stack on the ESP32 is just huge.
 #define USE_BT
 
+#ifdef ARDUINO
 #if defined(ESP32) && defined(USE_BT)
 class BLEServer;
 class BLECharacteristic;
+#endif
 #endif
 
 class Logo;
 class LogoSketchBase;
 
-class LogoBLE {
+class LogoBLEServer {
 
 public:
 
   void start(Logo *logo, LogoSketchBase *sketch, const char *sname, const char *suid);
   void loop();
 
+#ifdef ARDUINO
 #if defined(ESP32) && defined(USE_BT)
   BLEServer* _btserver = 0;
   BLECharacteristic* _btcompilechar = 0;
@@ -41,7 +44,8 @@ public:
   bool _btconnected = false;
   bool _btoldconnected = false;
 #endif
+#endif
 
 };
 
-#endif // H_logoble
+#endif // H_logoblesrv

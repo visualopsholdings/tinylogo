@@ -24,7 +24,7 @@
 using namespace std;
 #endif
 
-void LogoBLE::loop() {
+void LogoBLEServer::loop() {
 
 #if defined(ESP32) && defined(USE_BT)
   // disconnecting
@@ -110,7 +110,7 @@ private:
 #define COMPILE_UUID  "c807fa87-21a3-47b2-a0f8-9cd1da3407b7"
 #define RUN_UUID      "9de01783-a173-4d85-a7f6-48c7a82c6a63"
 
-void LogoBLE::start(Logo *logo, LogoSketchBase *sketch, const char *sname, const char *suid) {
+void LogoBLEServer::start(Logo *logo, LogoSketchBase *sketch, const char *sname, const char *suid) {
 
 #if defined(ESP32) && defined(USE_BT)
   // Create the BLE Device

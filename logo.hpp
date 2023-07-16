@@ -56,7 +56,7 @@
 
 #include "arduinoflashstring.hpp"
 #include "list.hpp"
-#include "logoble.hpp"
+#include "logoblesrv.hpp"
 
 #define MACHINE_VERSION   1
 
@@ -430,7 +430,7 @@ public:
     return _channels[channel];
   }
   LogoSketchBase *_sketch;
-  LogoBLE _ble;
+  LogoBLEServer _ble;
   
   static bool extractEvent(LogoString *s, LogoStringResult *name, LogoStringResult *data);
 

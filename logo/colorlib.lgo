@@ -1,0 +1,57 @@
+#   colorlib.lgo
+#
+#   Author: Paul Hamilton (paul@visualops.com)
+#   Date: 15-Jun-2023
+#
+#   Words to do color.
+#
+#   This work is licensed under the Creative Commons Attribution 4.0 International License. 
+#   To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0/ or 
+#   send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+#
+#   https://github.com/visualopsholdings/tinylogo  
+#
+
+to REDR :V
+  rgbout 1 :V
+end
+
+to GREENR :V
+  rgbout 2 :V
+end
+
+to BLUER :V
+  rgbout 3 :V
+end
+
+# scale a color to be between 1 and 100
+to SCLR :C
+  255 - ((:C / 100) * 255)
+end
+
+# arguments are reversed!
+to SET :B :G :R
+  REDR SCLR :R
+  GREENR SCLR :G
+  BLUER SCLR :B
+end
+
+to AMBER
+ SET 100 75 0
+end
+
+to RED
+  SET 100 0 0
+end
+
+to GREEN
+  SET 0 100 0
+end
+
+to BLUE
+  SET 0 0 100
+end
+
+to OFF
+  SET 0 0 0
+end

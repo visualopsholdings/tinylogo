@@ -836,6 +836,10 @@ storing lists but only "PRINT" knows how to use them.
 ### 14 Jul 2023
 - BLE support
 
+### 15 Jul 2023
+- BLE load utility for loading code into a BLE ready ESP32
+
+
 
 
 

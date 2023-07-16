@@ -15,8 +15,12 @@ cmake_minimum_required(VERSION 3.5)
 
 #set(CMAKE_BUILD_TYPE Debug)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 project (tinylogo)
   find_package(Boost COMPONENTS program_options filesystem unit_test_framework REQUIRED)
+  find_package(simpleble REQUIRED CONFIG)
   add_definitions(-DBOOST_ALL_DYN_LINK -DUSE_LARGE_CODE) 
 #  add_definitions(-DLOGO_DEBUG) 
   enable_testing()
@@ -29,3 +33,9 @@ add_executable(flashcode flashcode.cpp realtimeprovider.cpp)
 
 add_executable(run run.cpp realtimeprovider.cpp)
   target_link_libraries(run Logo ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY})
+
+add_executable(bleload bleload.cpp ../logobleclnt.cpp)
+  target_link_libraries(bleload simpleble::simpleble ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY})
+
+add_executable(blecommand blecommand.cpp ../logobleclnt.cpp)
+  target_link_libraries(blecommand simpleble::simpleble ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY})
