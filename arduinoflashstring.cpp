@@ -31,6 +31,15 @@ void ArduinoFlashString::ncpy(char *to, size_t offset, size_t len) const {
 
   strncpy_P(to, _str + offset, len);
   to[len] = 0;
+
+}
+
+void ArduinoFlashString::ncpyesc(char *to, size_t offset, size_t len) const {
+
+  for (int i=0; i<len; i++) {
+    to[i] = (_str + offset)[i] == '+' ? ' ' : (_str + offset)[i];
+  }
+  to[len] = 0;
   
 }
 

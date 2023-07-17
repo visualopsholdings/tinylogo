@@ -30,6 +30,7 @@ public:
   size_t length() const;
   char operator[](int index) const;
   void ncpy(char *to, size_t offset, size_t len) const;
+  void ncpyesc(char *to, size_t offset, size_t len) const;
   int ncmp(const char *to, size_t offset, size_t len) const;
   int ncasecmp(const char *to, size_t offset, size_t len) const;
 

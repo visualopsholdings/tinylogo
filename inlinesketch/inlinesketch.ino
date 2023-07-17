@@ -27,7 +27,7 @@
 // - sos.lgo
 // - tiny.lgo
 // - wifiscan.lgo
-// - wifiget.lgo
+// - exceptions.lgo
 // - ../../../../esp32/wifitest.lgo
 // - ../../../../esp32/vopsnotify.lgo
 
@@ -63,11 +63,11 @@ static const char program_sketch[] PROGMEM =
 "to SETUP\n"
 "  #setup the pins and channels\n"
 "  pinrgb 26 1\n"
-"  rgbout 1 255\n"
+"  rgbout 1 256\n"
 "  pinrgb 25 2\n"
-"  rgbout 2 255\n"
+"  rgbout 2 256\n"
 "  pinrgb 27 3\n"
-"  rgbout 3 255\n"
+"  rgbout 3 256\n"
 "  btstart \"vopsnotify\" \"1030945b-2c2d-4627-84a2-d2383259be94\"\n"
 "  # set the LED to blue\n"
 "  rgbout 3 0\n"
@@ -87,7 +87,7 @@ static const char program_sketch[] PROGMEM =
 "\n"
 "# scale a color to be between 1 and 100\n"
 "to SCLR :C\n"
-"  255 - ((:C / 100) * 255)\n"
+"  256 - ((:C / 100) * 256)\n"
 "end\n"
 "\n"
 "# arguments are reversed!\n"
@@ -121,6 +121,11 @@ static const char program_sketch[] PROGMEM =
 "  AMBER wait 500 OFF wait 1000\n"
 "end\n"
 "\n"
+"to SHOWERR\n"
+"  print &\n"
+"  RED\n"
+"end\n"
+"\n"
 "to USERID\n"
 "  wifiget :HOST :PORT \"/rest/1.0/users/me\" \"_id\"\n"
 "end\n"
@@ -133,21 +138,24 @@ static const char program_sketch[] PROGMEM =
 "  AMBER\n"
 "  wifistation\n"
 "  print wificonnect :SSID :PWD\n"
-"  RED\n"
 "end\n"
 "\n"
 "to LOGIN\n"
-"  STARTWIFI\n"
-"  print wifilogin :HOST :PORT \"\" :VID\n"
-"  wifisockets :HOST :PORT MSG\n"
-"  OFF\n"
+"  { \n"
+"    STARTWIFI\n"
+"    print wifilogin :HOST :PORT \"\" :VID\n"
+"    wifisockets :HOST :PORT MSG\n"
+"    OFF\n"
+"  } SHOWERR\n"
 "end\n"
 "\n"
 "to LOGINTEST\n"
-"  STARTWIFI\n"
-"  print wifilogintest :HOST :PORT \"tracy\"\n"
-"  wifisockets :HOST :PORT MSG\n"
-"  OFF\n"
+"  { \n"
+"    STARTWIFI\n"
+"    print wifilogintest :HOST :PORT \"tracy\"\n"
+"    wifisockets :HOST :PORT MSG\n"
+"    OFF\n"
+"  } SHOWERR\n"
 "end\n"
 ;
 //#LOGO ENDFILE

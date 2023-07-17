@@ -101,3 +101,17 @@ BOOST_AUTO_TEST_CASE( fixedStrings )
 
 }
 
+BOOST_AUTO_TEST_CASE( escapeSpaces )
+{
+  cout << "=== escapeSpaces ===" << endl;
+  
+  LogoStringResult result;
+  const char *s = "asa+bccc++ddddd";
+  result._simple.set(s, strlen(s));
+  char buf[32];
+  result.ncpyesc(buf, sizeof(buf));
+  BOOST_CHECK_EQUAL(buf, "asa bccc  ddddd");
+
+}
+
+

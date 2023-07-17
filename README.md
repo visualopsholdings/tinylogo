@@ -557,9 +557,30 @@ Run: RESTART
 btstart "name" "ServiceUID"
 ```
 
-#### ?/throw/#/exception
+### Excpetions
 
-These words are used when code can have errors and you would like to handle that.
+Exceptions are builtin to the engine and use operators.
+
+Remember that all whitespace is ignored, so you can make your exception blocks look
+nice like this:
+
+{
+  GOOD1
+  GOOD2
+  BAD
+  GOOD3
+} HANDLEIT
+
+So in this case, GOOD1, GOOD2 would do something and then whatever succeeds in BAD and
+then we jump down to HANDLEIT and do that.
+
+To fail, simply use a period and why you failed
+
+. "Something bad happened"
+
+Then later on you can get that message with & like this
+
+print &
 
 ```
 to ONE
@@ -575,7 +596,7 @@ to THREE
 end
 
 to FOUR
-  throw \"failed
+  . \"failed
 end
 
 to FIVE
@@ -587,10 +608,15 @@ to SIX
 end
 
 to SHOWERR
-  print exception
+  print &
 end
 
-ONE TWO ? THREE FOUR FIVE # SHOWERR SIX
+ONE 
+TWO 
+{ 
+  THREE FOUR FIVE 
+} SHOWERR 
+SIX
 ```
 
 This code would print 1 2 3 failed 6

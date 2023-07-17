@@ -608,15 +608,21 @@ void LogoWords::wificonnect(Logo &logo) {
   // we put the SSID in gBuff, and need a password buffer.
   char passbuf[128];
     
-  password.ncpy(passbuf, sizeof(passbuf));
-  ap.ncpy(gBuff, sizeof(gBuff));
+  password.ncpyesc(passbuf, sizeof(passbuf));
+  ap.ncpyesc(gBuff, sizeof(gBuff));
 
+  Serial.print("Wifi: Connecting [");
+  Serial.print(gBuff);
+  Serial.print("] [");
+  Serial.print(passbuf);
+  Serial.println("]");
+  
   WiFi.begin(gBuff, passbuf);
   bool finished = false;
   bool success = false;
   int discon = 0;
   int i=0;
-  while (!finished) {
+  while (!finished && i<100) {
     int status = WiFi.status();
     switch (status) {
     case WL_CONNECTED:
@@ -631,47 +637,53 @@ void LogoWords::wificonnect(Logo &logo) {
       discon++;
       break;
     case WL_CONNECT_FAILED:
-      Serial.println("Connect failed");
+      logo.throwException("Connect failed");
       finished = true;
       break;
     case WL_CONNECTION_LOST:
-      Serial.println("Connection lost");
+      logo.throwException("Connection lost");
       finished = true;
       break;
     case WL_NO_SHIELD:
-      Serial.println("No Wifi Shield");
+      logo.throwException("No Wifi Shield");
       finished = true;
       break;
     case WL_NO_SSID_AVAIL:
-      Serial.println("No SSID available");
+      logo.throwException("No SSID available");
       finished = true;
       break;
     default:
       Serial.print("Unknown status ");
       Serial.println(status);
     }
-    delay(100);
+    delay(400);
     i++;
     if ((i % 80) == 0) {
       Serial.println();
     }
     // every 20 disconects, try to connect again.
-    if (discon > 4) {
+    if (discon > 20) {
+      Serial.print('+');
       WiFi.disconnect();
       WiFi.begin(gBuff, passbuf);
       discon = 0;
     }
   };
-  
-  LogoSimpleString str(success ? WiFi.localIP().toString().c_str() : "Couldn't connect");
+  if (!success) {
+    if (!finished) {
+      logo.throwException("Connection timed out");
+    }
+    return;
+  }
+  LogoSimpleString str(WiFi.localIP().toString().c_str());
+  logo.pushstring(&str);
 #else
-  LogoSimpleString str("Wifi not supported");
+  logo.throwException("Wifi not supported");
 #endif
 #else
   LogoSimpleString str("0.0.0.0");
-#endif
-
   logo.pushstring(&str);
+#endif
 
 }
 
@@ -687,10 +699,9 @@ void LogoWords::wifiscan(Logo &logo) {
     ListNodeVal val(LTYPE_STRING, logo.addstring(&s, 0, s.length()), s.length());
     l.push(val);
   }
+  logo.pushlist(l);
 #else
-  LogoSimpleString s("Wifi not supported");
-  ListNodeVal val(LTYPE_STRING, logo.addstring(&s, 0, s.length()), s.length());
-  l.push(val);
+  logo.throwException("Wifi not supported");
 #endif
 #else
   for (int i=0; i<4; i++) {
@@ -698,9 +709,8 @@ void LogoWords::wifiscan(Logo &logo) {
     ListNodeVal val(LTYPE_STRING, logo.addstring(&s, 0, s.length()), s.length());
     l.push(val);
   }
-#endif // ARDUINO
-  
   logo.pushlist(l);
+#endif // ARDUINO
   
 }
 
@@ -721,8 +731,7 @@ void LogoWords::wifiget(Logo &logo) {
 #if defined(ESP32) && defined(USE_WIFI)
   
   if (WiFi.status() != WL_CONNECTED) {
-    LogoSimpleString str("Wifi not connected");
-    logo.pushstring(&str);
+    logo.throwException("Wifi not connected");
     return;
   }
   
@@ -734,8 +743,7 @@ void LogoWords::wifiget(Logo &logo) {
 
     if (gSecureClient.connect(gBuff, port) < 0) {
       gSecureClient.lastError(gBuff, sizeof(gBuff));
-      LogoSimpleString str(gBuff);
-      logo.pushstring(&str);
+      logo.throwException(gBuff);
       return;
     }
 
@@ -751,8 +759,7 @@ void LogoWords::wifiget(Logo &logo) {
     request.ncpy(gBuff + len, sizeof(gBuff) - len);
 
     if (!http.begin(gSecureClient, gBuff)) {
-      LogoSimpleString str("Failed to begin request");
-      logo.pushstring(&str);
+      logo.throwException("Failed to begin request");
       return;
     }
   }
@@ -769,8 +776,7 @@ void LogoWords::wifiget(Logo &logo) {
     request.ncpy(gBuff + len, sizeof(gBuff) - len);
     
     if (!http.begin(gBuff)) {
-      LogoSimpleString str("Failed to begin request");
-      logo.pushstring(&str);
+      logo.throwException("Failed to begin request");
       return;
     }
   }
@@ -781,8 +787,7 @@ void LogoWords::wifiget(Logo &logo) {
   if (code <= 0) {
     Serial.print("HTTPClient: ");
     Serial.println(code);
-    LogoSimpleString str("HTTP failed");
-    logo.pushstring(&str);
+    logo.throwException("HTTP failed");
     return;
   }
   
@@ -790,8 +795,7 @@ void LogoWords::wifiget(Logo &logo) {
     strcpy(gBuff, "HTTP Error ");
     int len = strlen(gBuff);
     snprintf(gBuff + len, sizeof(gBuff) - len, "%d", code);
-    LogoSimpleString str(gBuff);
-    logo.pushstring(&str);
+    logo.throwException(gBuff);
     return;
   }
   
@@ -804,21 +808,20 @@ void LogoWords::wifiget(Logo &logo) {
   field.ncpy(gBuff, sizeof(gBuff));
   const char *val = doc[gBuff];
   if (!val) {
-    LogoSimpleString str("Field not found");
-    logo.pushstring(&str);
+    logo.throwException("Field not found");
     return;
   }
 
   LogoSimpleString str(val);
-  
+  logo.pushstring(&str);  
 #else
-  LogoSimpleString str("Wifi not supported");
+  logo.throwException("Wifi not supported");
 #endif
 #else
   LogoSimpleString str("Wifi Sending");
+  logo.pushstring(&str);
 #endif // ARDUINO
 
-  logo.pushstring(&str);
 }
 
 #ifdef ARDUINO
@@ -887,7 +890,7 @@ void LogoWords::wifisockets(Logo &logo) {
 	// try ever 5000 again if connection has failed
   gWSClient.setReconnectInterval(5000);
 #else
-  Serial.println("Wifi not supported");
+  logo.throwException("Wifi not supported");
 #endif
 #else
   logo.out() << "Wifi Sockets " << endl;
@@ -914,14 +917,15 @@ void LogoWords::vopsopenmsg(Logo &logo) {
   strcat(gBuff, "\" } ]");
 
   LogoSimpleString s(gBuff);
+  logo.pushstring(&s);
 #else
-  LogoSimpleString s("Wifi not supported");
+  logo.throwException("Wifi not supported");
 #endif
 #else
   LogoSimpleString s("Make open message");
+  logo.pushstring(&s);
 #endif
   
-  logo.pushstring(&s);
 }
 
 void LogoWords::wifilogintest(Logo &logo) {
@@ -938,14 +942,12 @@ void LogoWords::wifilogintest(Logo &logo) {
 #if defined(ESP32) && defined(USE_WIFI)
 
   if (WiFi.status() != WL_CONNECTED) {
-    LogoSimpleString str("Wifi not connected");
-    logo.pushstring(&str);
-    return;
+    logo.throwException("Wifi not connected");
+     return;
   }
   
   if (port == 443 || port == 8443) {
-    LogoSimpleString str("Test login is not secure.");
-    logo.pushstring(&str);
+    logo.throwException("Test login is not secure.");
     return;
   }
   
@@ -968,8 +970,7 @@ void LogoWords::wifilogintest(Logo &logo) {
   Serial.println(gBuff);
   
   if (!http.begin(gBuff)) {
-    LogoSimpleString str("Failed to begin request");
-    logo.pushstring(&str);
+    logo.throwException("Failed to begin request");
     return;
   }
   
@@ -980,8 +981,7 @@ void LogoWords::wifilogintest(Logo &logo) {
   if (code <= 0) {
     Serial.print("HTTPClient: ");
     Serial.println(code);
-    LogoSimpleString str("HTTP failed");
-    logo.pushstring(&str);
+    logo.throwException("HTTP failed");
     return;
   }
   
@@ -990,30 +990,28 @@ void LogoWords::wifilogintest(Logo &logo) {
     strcpy(gBuff, "HTTP Error ");
     int len = strlen(gBuff);
     snprintf(gBuff + len, sizeof(gBuff) - len, "%d", code);
-    LogoSimpleString str(gBuff);
-    logo.pushstring(&str);
+    logo.throwException(gBuff);
     return;
   }
   
   // really just want the cookie from the header
   if (!http.hasHeader("Set-Cookie")) {
-    LogoSimpleString str("Cookie missing");
-    logo.pushstring(&str);
+    logo.throwException("Cookie missing");
     return;
   }
 
   gCookie = http.header("Set-Cookie");
 
   LogoSimpleString str(gCookie.c_str());
+  logo.pushstring(&str);
 #else
-  LogoSimpleString str("Wifi not supported");
+  logo.throwException("Wifi not supported");
 #endif
 #else
   LogoSimpleString str("cookie");
+  logo.pushstring(&str);
 #endif
   
-  logo.pushstring(&str);
-
 }
 
 void LogoWords::wifilogin(Logo &logo) {
@@ -1035,8 +1033,7 @@ void LogoWords::wifilogin(Logo &logo) {
   host.ncpy(gBuff, sizeof(gBuff));
   
   if (WiFi.status() != WL_CONNECTED) {
-    LogoSimpleString str("Wifi not connected");
-    logo.pushstring(&str);
+    logo.throwException("Wifi not connected");
     return;
   }
   
@@ -1044,8 +1041,7 @@ void LogoWords::wifilogin(Logo &logo) {
 
   if (gSecureClient.connect(gBuff, port) < 0) {
     gSecureClient.lastError(gBuff, sizeof(gBuff));
-    LogoSimpleString str(gBuff);
-    logo.pushstring(&str);
+    logo.throwException(gBuff);
     return;
   }
 
@@ -1055,8 +1051,7 @@ void LogoWords::wifilogin(Logo &logo) {
   strcat(gBuff, "/login");
 
   if (!http.begin(gSecureClient, gBuff)) {
-    LogoSimpleString str("Failed to begin request");
-    logo.pushstring(&str);
+    logo.throwException("Failed to begin request");
     return;
   }
 
@@ -1077,8 +1072,7 @@ void LogoWords::wifilogin(Logo &logo) {
   if (code <= 0) {
     Serial.print("HTTPClient: ");
     Serial.println(code);
-    LogoSimpleString str("HTTP failed");
-    logo.pushstring(&str);
+    logo.throwException("HTTP failed");
     return;
   }
   
@@ -1087,30 +1081,28 @@ void LogoWords::wifilogin(Logo &logo) {
     strcpy(gBuff, "HTTP Error ");
     int len = strlen(gBuff);
     snprintf(gBuff + len, sizeof(gBuff) - len, "%d", code);
-    LogoSimpleString str(gBuff);
-    logo.pushstring(&str);
+    logo.throwException(gBuff);
     return;
   }
   
   // really just want the cookie from the header
   if (!http.hasHeader("Set-Cookie")) {
-    LogoSimpleString str("Cookie missing");
-    logo.pushstring(&str);
+    logo.throwException("Cookie missing");
     return;
   }
 
   gCookie = http.header("Set-Cookie");
   
   LogoSimpleString str(gCookie.c_str());
+  logo.pushstring(&str);
 #else
-  LogoSimpleString str("Wifi not supported");
+  logo.throwException("Wifi not supported");
 #endif
 #else
   LogoSimpleString str("cookie");
+  logo.pushstring(&str);
 #endif
   
-  logo.pushstring(&str);
-
 }
 
 void LogoWords::btstart(Logo &logo) {
@@ -1131,21 +1123,15 @@ void LogoWords::btstart(Logo &logo) {
   
   logo._ble.start(&logo, logo._sketch, sname, gBuff);
   
-  Serial.print("Waiting a client connection ");
+  Serial.print("BLE: Waiting for a client connection: ");
   Serial.println(sname);
 
 #else
-  Serial.println("Wifi not supported");
+  logo.throwException("BLE not supported");
 #endif
 #else
   logo.out() << "Start Bluetooth" << endl;
 #endif
-  
-}
-
-void LogoWords::tryWord(Logo &logo) {
-
-  logo.startTry();
   
 }
 
@@ -1154,13 +1140,3 @@ void LogoWords::throwWord(Logo &logo) {
   logo.doThrow();
   
 }
-
-void LogoWords::exception(Logo &logo) {
-
-  logo.pushException();
-  
-}
-
-
-
-

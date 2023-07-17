@@ -24,7 +24,7 @@
 class LogoSketchBase {
 
 public:
-  LogoSketchBase() {}
+  LogoSketchBase() : _failed(false) {}
   
   void setup(int baud=9600);
   void loop();
@@ -40,6 +40,7 @@ protected:
   ArduinoTimeProvider _time; // adds 12 bytes of dynamic memory
   Cmd _cmd; // 32 bytes
   char _cmdbuf[STRING_LEN]; // 32 bytes
+  bool _failed;
   
   void showErr(int mode, int n);
 

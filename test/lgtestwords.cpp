@@ -1069,11 +1069,11 @@ BOOST_AUTO_TEST_CASE( tryThrowCatch )
   compiler.compile("to ONE; print 1; end;");
   compiler.compile("to TWO; print 2; end;");
   compiler.compile("to THREE; print 3; end;");
-  compiler.compile("to FOUR; throw \"failed; end;");
+  compiler.compile("to FOUR; . \"failed; end;");
   compiler.compile("to FIVE; print 5; end;");
   compiler.compile("to SIX; print 6; end;");
-  compiler.compile("to SHOWERR; print exception; end;");
-  compiler.compile("ONE TWO ? THREE FOUR FIVE # SHOWERR SIX");
+  compiler.compile("to SHOWERR; print &; end;");
+  compiler.compile("ONE TWO { THREE FOUR FIVE } SHOWERR SIX");
   DEBUG_DUMP(false);
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
 
@@ -1100,7 +1100,7 @@ BOOST_AUTO_TEST_CASE( tryCatch )
   compiler.compile("to FIVE; print 5; end;");
   compiler.compile("to SIX; print 6; end;");
   compiler.compile("to SHOWERR; print exception; end;");
-  compiler.compile("ONE TWO ? THREE FOUR FIVE # SHOWERR SIX");
+  compiler.compile("ONE TWO { THREE FOUR FIVE } SHOWERR SIX");
   DEBUG_DUMP(false);
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
 
@@ -1127,7 +1127,7 @@ BOOST_AUTO_TEST_CASE( justTry )
   compiler.compile("to FIVE; print 5; end;");
   compiler.compile("to SIX; print 6; end;");
   compiler.compile("to SHOWERR; print exception; end;");
-  compiler.compile("ONE TWO ? THREE FOUR FIVE SIX");
+  compiler.compile("ONE TWO { THREE FOUR FIVE SIX");
   DEBUG_DUMP(false);
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
 
@@ -1154,7 +1154,7 @@ BOOST_AUTO_TEST_CASE( justCatch )
   compiler.compile("to FIVE; print 5; end;");
   compiler.compile("to SIX; print 6; end;");
   compiler.compile("to SHOWERR; print exception; end;");
-  compiler.compile("ONE TWO THREE FOUR FIVE # SHOWERR SIX");
+  compiler.compile("ONE TWO THREE FOUR FIVE } SHOWERR SIX");
   DEBUG_DUMP(false);
   BOOST_CHECK_EQUAL(logo.geterr(), 0);
 
@@ -1164,5 +1164,65 @@ BOOST_AUTO_TEST_CASE( justCatch )
   DEBUG_STEP_DUMP(25, false);
   BOOST_CHECK_EQUAL(logo.run(), 0);
   BOOST_CHECK_EQUAL(s.str(), "=== 1\n=== 2\n=== 3\n=== 4\n=== 5\n=== 6\n");
+
+}
+
+BOOST_AUTO_TEST_CASE( tryThrowCatchNested )
+{
+  cout << "=== tryThrowCatchNested ===" << endl;
+  
+  Logo logo;
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("to ONE; print 1; end;");
+  compiler.compile("to TWO; print 2; end;");
+  compiler.compile("to THREE; print 3; end;");
+  compiler.compile("to FOUR; . \"failed; end;");
+  compiler.compile("to FIVE; FOUR print 5; end;");
+  compiler.compile("to SIX; print 6; end;");
+  compiler.compile("to SHOWERR; print &; end;");
+  compiler.compile("ONE TWO { THREE FOUR } SHOWERR SIX");
+//  DEBUG_DUMP(false);
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+
+  stringstream s;
+  logo.setout(&s);
+
+  DEBUG_STEP_DUMP(17, false);
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(s.str(), "=== 1\n=== 2\n=== 3\n=== failed\n=== 6\n");
+
+}
+
+BOOST_AUTO_TEST_CASE( tryThrowCatchNested2 )
+{
+  cout << "=== tryThrowCatchNested2 ===" << endl;
+  
+  Logo logo;
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("to ONE");
+  compiler.compile("  . \"failed");
+  compiler.compile("end");
+  compiler.compile("to SHOWERR");
+  compiler.compile("  print &");
+  compiler.compile("end");
+  compiler.compile("to TWO");
+  compiler.compile("  print 2");
+  compiler.compile("  {");
+  compiler.compile("    ONE");
+  compiler.compile("  } SHOWERR");
+  compiler.compile("end");
+  compiler.compile("TWO");
+
+  DEBUG_DUMP(false);
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+
+  stringstream s;
+  logo.setout(&s);
+
+  DEBUG_STEP_DUMP(16, false);
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(s.str(), "=== 2\n=== failed\n");
 
 }

@@ -1,9 +1,9 @@
-#   wifisend.lgo
+#   exceptions.lgo
 #
 #   Author: Paul Hamilton (paul@visualops.com)
 #   Date: 2-Jul-2023
 #
-#   Send some data to a wifi access point.
+#   Handle thrown exceptions
 #
 #   This work is licensed under the Creative Commons Attribution 4.0 International License. 
 #   To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0/ or 
@@ -13,12 +13,36 @@
 #
 
 to ID
-  print "wifisend
+  print "exceptions
 end
 
+# called right at the start
 to SETUP
-  wifistation
 end
 
-print wificonnect "MyAccessPoint" "password"
-print wifiget "/rest/1.0/uibuild/convo"
+to ONE
+  . "failed
+end
+
+to TWO
+  print 2
+  ONE
+end
+
+to SHOWERR
+  print &
+end
+
+to THREE
+  print 3
+  {
+    TWO
+  } SHOWERR
+end
+
+to FOUR
+  print 4
+  THREE
+end
+
+FOUR

@@ -66,9 +66,7 @@ public:
   static void wifistation(Logo &logo);
   static void wificonnect(Logo &logo);
   static void btstart(Logo &logo);
-  static void tryWord(Logo &logo);
   static void throwWord(Logo &logo);
-  static void exception(Logo &logo);
 
 private:
 

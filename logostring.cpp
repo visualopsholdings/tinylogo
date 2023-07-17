@@ -17,7 +17,9 @@
 #include <ctype.h>
 #include <math.h>
 
-#ifndef ARDUINO
+#ifdef ARDUINO
+#include <Arduino.h>
+#else
 #include <iostream>
 using namespace std;
 #endif
@@ -97,6 +99,16 @@ void LogoSimpleString::ncpy(char *to, size_t offset, size_t len) const {
   to[len] = 0;
 }
 
+void LogoSimpleString::ncpyesc(char *to, size_t offset, size_t len) const {
+
+  const char *src = _code + offset;
+  for (int i=0; i<len; i++) {
+    to[i] = src[i] == '+' ? ' ' : src[i];
+  }
+  to[len] = 0;
+  
+}
+
 int LogoSimpleString::ncmp(const char *to, size_t offset, size_t len) const { 
   return strncmp(to, _code + offset, len);
 }
@@ -157,6 +169,14 @@ void LogoStringResult::ncpy(char *to, int len) {
   _simple.ncpy(to, 0, min(len, _simple.length()));
 }
 
+void LogoStringResult::ncpyesc(char *to, int len) {
+  if (_fixed) {
+    _fixed->ncpyesc(to, _fixedstart, min(len, _fixedlen));
+    return;
+  }
+  _simple.ncpyesc(to, 0, min(len, _simple.length()));
+}
+
 short LogoStringResult::toi() {
   if (_fixed) {
     return _fixed->toi(_fixedstart, _fixedlen);
@@ -181,7 +201,13 @@ void LogoStringResult::dump(const char *msg) const {
 
 
 void LogoString::dump(const char *msg, short start, short len) const {
-#ifndef ARDUINO
+#ifdef ARDUINO
+  Serial.print(msg);
+  for (int i=0, j=start; i<len; i++, j++) {
+    Serial.print((*this)[j]);
+  }
+  Serial.println();
+#else
   cout << msg << " {";
   for (int i=0, j=start; i<len; i++, j++) {
     cout << (*this)[j];
@@ -189,4 +215,3 @@ void LogoString::dump(const char *msg, short start, short len) const {
   cout << "}" << endl;
 #endif
 }
-

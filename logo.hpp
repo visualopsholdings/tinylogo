@@ -180,6 +180,7 @@
 #define LG_NOT_CALLABLE       12
 #define LG_FIXED_NO_NEWLINE   13
 #define LG_ARITY_NOT_IMPL     14
+#define LG_EXCEPTION          15
 
 #define OPTYPE_NOOP           0 //
 #define OPTYPE_RETURN         1 //
@@ -197,7 +198,9 @@
 #define OPTYPE_LSTART         13 // [
 #define OPTYPE_LEND           14 // ]
 #define OPTYPE_LIST           15 // FIELD_OP = the head of the list, FIELD_OPAND = tail
-#define OPTYPE_CATCH          16 // #
+#define OPTYPE_TRY            16 // {
+#define OPTYPE_CATCH          17 // }
+#define OPTYPE_EXCEPTION      18 // &
 
 // only on the stack
 #define SOP_START             100
@@ -317,10 +320,9 @@ public:
   bool call(short jump, tByte opand2);
   
   // exception handling
-  void startTry();
   void doThrow();
-  void pushException();
-  void handleCatch();
+  void throwException(const char *s);
+  void printException();
   
   // interface to compiler
   void error(short error);
@@ -506,6 +508,10 @@ private:
   short instField(short pc, short field) const;
   double joindouble(short op, short opand) const;
   short pushvalue(short type, short op, short opand);
+  void finishThrow(short str, short len);
+  void startTry();
+  void pushException();
+  void handleCatch();
    
 };
 

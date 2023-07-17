@@ -107,9 +107,17 @@ void LogoCompiler::compileword(tJump *next, LogoString *stri, short wordstart, s
     _logo->addop(next, OPTYPE_LEND);
     DEBUG_RETURN(" lstart ", 0);
     return;
-  case '#':
+  case '{':
+    _logo->addop(next, OPTYPE_TRY);
+    DEBUG_RETURN(" try ", 0);
+    return;
+  case '}':
     _logo->addop(next, OPTYPE_CATCH);
     DEBUG_RETURN(" catch ", 0);
+    return;
+  case '&':
+    _logo->addop(next, OPTYPE_EXCEPTION);
+    DEBUG_RETURN(" exception ", 0);
     return;
   }
   

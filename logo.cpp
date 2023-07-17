@@ -585,6 +585,34 @@ void Logo::startTry() {
   
 }
 
+void Logo::finishThrow(short str, short len) {
+
+  _exception = str;
+  _exclength = len;
+
+  if (_tos == 0) {
+    return;
+  }
+  
+  // wind back to the try on the stack
+  _tos--;
+  while (_tos > 0 && _stack[_tos-1][FIELD_OPTYPE] != SOPTYPE_TRY) {
+    _tos--;
+  }
+  
+  if (_tos == 0) {
+    // ok to not find a try, just halt.
+    fail(LG_EXCEPTION);
+    return;
+  }
+  
+  _tos--;
+  
+  // jump to after the catch
+  _pc = _stack[_tos][FIELD_OP] + 1;
+
+}
+
 void Logo::doThrow() {
 
   // pop the string off the stack as the exception
@@ -596,30 +624,31 @@ void Logo::doThrow() {
     error(LG_NOT_STRING);
     return;
   }
-  _exception = _stack[_tos][FIELD_OP];
-  _exclength = _stack[_tos][FIELD_OPAND];
-
-  // wind back to the try on the stack
-  _tos--;
-  while (_tos > 0 && _stack[_tos-1][FIELD_OPTYPE] != SOPTYPE_TRY) {
-    _tos--;
-  }
   
-  if (_tos == 0) {
-    error(LG_STACK_OVERFLOW);
-    return;
-  }
-  
-  _tos--;
-  
-  // jump to after the catch
-  _pc = _stack[_tos][FIELD_OP] + 1;
+  finishThrow(_stack[_tos][FIELD_OP], _stack[_tos][FIELD_OPAND]);
   
 }
 
 void Logo::pushException() {
 
   pushstring(_exception, _exclength);
+
+}
+
+#ifdef ARDUINO
+void Logo::printException() {
+  
+  LogoStringResult result;
+  getstring(&result, _exception, _exclength);
+  result.dump("exception: ");
+  
+}
+#endif
+
+void Logo::throwException(const char *s) {
+
+  LogoSimpleString str(s);
+  finishThrow(addstring(&str, 0, str.length()), str.length());
 
 }
 
@@ -748,6 +777,12 @@ short Logo::step() {
 
 //  DEBUG_IN(Logo, "step");
   
+  // quickly get to the end.
+  if (_tos == 0 && instField(_pc, FIELD_OPTYPE) == OPTYPE_NOOP) {
+    _pc++;
+    return 0;
+  }
+  
   if (!_schedule.next()) {
     return 0;
   }
@@ -756,12 +791,18 @@ short Logo::step() {
     return 0;
   }
   
+  short type = instField(_pc, FIELD_OPTYPE);
+  
+  // quickly skip noops.
+  if (type == OPTYPE_NOOP) {
+    _pc++;
+    return 0;
+  }
+  
   // just in case arity ACTUALLY called a builtin.
   if (!_schedule.next()) {
     return 0;
   }
-  
-  short type = instField(_pc, FIELD_OPTYPE);
   
   // make sure stack ops don't make it onto here.
   if (type >= SOP_START) {
@@ -776,9 +817,9 @@ short Logo::step() {
   case OPTYPE_HALT:
     return LG_STOP;
     
-  case OPTYPE_NOOP:
-    break;
-    
+//   case OPTYPE_NOOP:
+//     break;
+//     
   case OPTYPE_GSTART:
     err = startgroup();
     break;
@@ -847,8 +888,16 @@ short Logo::step() {
     err = instField(_pc, FIELD_OP);
     break;
     
+  case OPTYPE_TRY:
+    startTry();
+    break;
+    
   case OPTYPE_CATCH:
     handleCatch();
+    break;
+    
+  case OPTYPE_EXCEPTION:
+    pushException();
     break;
     
   default:
@@ -915,6 +964,11 @@ bool Logo::doarity() {
 
   DEBUG_IN(Logo, "doarity");
 
+  if (_tos == 0) {
+    DEBUG_RETURN(" empty stack", 0);
+    return false;
+  }
+  
   short ar = _tos-1;
   while (ar >= 0 && 
     _stack[ar][FIELD_OPTYPE] != SOPTYPE_RETADDR && 
@@ -1926,8 +1980,14 @@ void Logo::dump(short indent, short type, short op, short opand) const {
     case OPTYPE_LEND:
       cout << "lend";
       break;
+    case OPTYPE_TRY:
+      cout << "try";
+      break;
     case OPTYPE_CATCH:
       cout << "catch";
+      break;
+    case OPTYPE_EXCEPTION:
+      cout << "exception";
       break;
     case SOPTYPE_ARITY:
       cout << "(stack) arity pc " << op << " to go " << opand;

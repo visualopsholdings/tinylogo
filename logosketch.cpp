@@ -26,6 +26,7 @@ RingBuffer gBuffer; // 64 bytes
 
 void LogoSketchBase::setup(int baud)  {
 
+  _failed = true;
   Serial.begin(baud);
   
   precompile();
@@ -42,14 +43,21 @@ void LogoSketchBase::setup(int baud)  {
     err = logo()->run();
     if (err && err != LG_STOP) {
       showErr(1, err);
+      return;
     }
     logo()->restart();
+    _failed = false;
   }
 
 }
 
 void LogoSketchBase::loop() {
 
+  // only if setup was successful.
+  if (_failed) {
+    return;
+  }
+  
   // consume the serial data into the buffer as it comes in.
   while (Serial.available()) {
     gBuffer.write(Serial.read());
@@ -97,10 +105,16 @@ void LogoSketchBase::loop() {
 
 void LogoSketchBase::showErr(int mode, int n) {
 
-  Serial.print("e=");
-  Serial.print(mode);
-  Serial.print(",");
-  Serial.println(n);
+  if (n == LG_EXCEPTION) {
+    logo()->printException();
+    _failed = true;
+  }
+  else {
+    Serial.print("e=");
+    Serial.print(mode);
+    Serial.print(",");
+    Serial.println(n);
+  }
 
 }
 

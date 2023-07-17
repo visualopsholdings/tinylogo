@@ -27,6 +27,7 @@ public:
   virtual size_t length() const = 0;
   virtual char operator[](int index) const = 0;
   virtual void ncpy(char *to, size_t offset, size_t len) const = 0;
+  virtual void ncpyesc(char *to, size_t offset, size_t len) const = 0;
   virtual int ncmp(const char *to, size_t offset, size_t len) const = 0;
   virtual int ncasecmp(const char *to, size_t offset, size_t len) const = 0;
  
@@ -62,7 +63,8 @@ public:
     return _code[index]; 
   }
   
-  void ncpy(char *to, size_t offset, size_t len) const ;
+  void ncpy(char *to, size_t offset, size_t len) const;
+  void ncpyesc(char *to, size_t offset, size_t len) const;
   int ncmp(const char *to, size_t offset, size_t len) const;
   int ncasecmp(const char *to, size_t offset, size_t len) const;
     
@@ -85,6 +87,7 @@ public:
   size_t length() const;
   int ncmp(const char *to);
   void ncpy(char *to, int len);
+  void ncpyesc(char *to, int len);
   short toi();
   double tof();
   void dump(const char *msg) const;
