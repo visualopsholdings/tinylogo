@@ -823,7 +823,8 @@ https://forum.arduino.cc/t/how-to-properly-use-wire-onreceive/891195/12
 
 ## Current development focus
 
-### Implement exception handling in BLE and WIFI work
+### Get a home assitant demo working
+### Get it all working with Matter
   
 ## Change Log
 
@@ -905,7 +906,8 @@ storing lists but only "PRINT" knows how to use them.
 ### 16 Jul 2023
 - Implement exception handling
 
-
+### 20 Jul 2023
+  - Work towards getting a button to work properly with the esp32
 
 
 

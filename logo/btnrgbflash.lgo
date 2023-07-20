@@ -16,37 +16,67 @@ to ID
   print "btnrgbflash
 end
 
-# change your pins here
-to LEDPIN
-  2
-end
-
-to BTNPIN
-  7
-end
-
+# called right at the start
 to SETUP
-  pinout LEDPIN
-  aout LEDPIN 255
-  pinin BTNPIN
+  pininup $BTNPIN
+  pinrgb $RED 1
+  rgbout 1 256
+  pinrgb $GREEN 2
+  rgbout 2 256
+  pinrgb $BLUE 3
+  rgbout 3 256
 end
 
-to ON
-  print "ON
-  aout LEDPIN 0
+to REDR :V
+  rgbout 1 :V
+end
+
+to GREENR :V
+  rgbout 2 :V
+end
+
+to BLUER :V
+  rgbout 3 :V
+end
+
+# scale a color to be between 1 and 100
+to SCLR :C
+  256 - ((:C / 100) * 256)
+end
+
+# arguments are reversed!
+to SET :B :G :R
+  REDR SCLR :R
+  GREENR SCLR :G
+  BLUER SCLR :B
+end
+
+to AMBER
+ SET 100 75 0
+end
+
+to RED
+  SET 100 0 0
+end
+
+to GREEN
+  SET 0 100 0
+end
+
+to BLUE
+  SET 0 0 100
 end
 
 to OFF
-  print "OFF
-  aout LEDPIN 255
-end
-
-to BUTTON
-  dread BTNPIN
+  SET 0 0 0
 end
 
 to FLASH
-  ON wait 1000 OFF
+  RED wait 1000 OFF
+end
+
+to BUTTON
+  dread $BTNPIN
 end
 
 to TESTPRESS
