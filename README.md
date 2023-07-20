@@ -557,7 +557,7 @@ Run: RESTART
 btstart "name" "ServiceUID"
 ```
 
-### Excpetions
+### Exceptions
 
 Exceptions are builtin to the engine and use operators.
 
@@ -621,7 +621,7 @@ SIX
 
 This code would print 1 2 3 failed 6
 
-If you are familiar with other languages, ? is like "try" and # is like "catch"
+If you are familiar with other languages, { is like "try" and } is like "catch"
 
 ### UCBLogo differences
 
