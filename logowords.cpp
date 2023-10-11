@@ -16,8 +16,9 @@
 #include "logostring.hpp"
 
 #ifdef ARDUINO
-#include <HardwareSerial.h>
 #include <Arduino.h>
+#include <HardwareSerial.h>
+
 #ifdef ESP32
 
 char gBuff[256]; // a generic buffer
@@ -28,19 +29,23 @@ extern RingBuffer gBuffer;
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <HTTPClient.h>
-#include <ArduinoJson.h>
 WiFiClientSecure gSecureClient;
 String gCookie;
 #include <SocketIOclient.h>
 SocketIOclient gWSClient;
 char gMsg[256]; // the open socket message.
 #endif // USE_WIFI
+
 #endif // ESP32
 
 #else
 
 #include <iostream>
+#include <string>
+
 #endif
+
+#include <ArduinoJson.h>
 
 using namespace std;
 
@@ -824,6 +829,32 @@ void LogoWords::wifiget(Logo &logo) {
 
 }
 
+bool LogoWords::extractEventName(LogoSimpleString *s, char *name, int namelen) {
+
+  DynamicJsonDocument doc(256);
+  deserializeJson(doc, s->c_str());
+
+  if (!doc.is<JsonArray>()) {
+    return false;
+  }
+  JsonArray arr = doc.as<JsonArray>();
+  if (arr.size() < 2) {
+    return false;
+  }
+  if (!arr[0].is<const char *>()) {
+    return false;
+  }
+  
+  const char *n = arr[0].as<const char *>();
+  int len = strlen(n);
+  if (namelen < len) {
+    return false;
+  }
+  strcpy(name, n);
+    
+  return true;
+}
+
 #ifdef ARDUINO
 #if defined(ESP32) && defined(USE_WIFI)
 void webSocketEvent(socketIOmessageType_t type, uint8_t * payload, size_t length) {
@@ -840,11 +871,10 @@ void webSocketEvent(socketIOmessageType_t type, uint8_t * payload, size_t length
       
     case sIOtype_EVENT:
       {
-        LogoStringResult name;
-        LogoStringResult data;
+        char s[32];
         LogoSimpleString evt((const char*)payload, length);
-        if (Logo::extractEvent(&evt, &name, &data)) {
-          if (name.ncmp("update") == 0) {
+        if (LogoWords::extractEventName(&evt, s, sizeof(s))) {
+          if (strcmp(s, "update") == 0) {
             gBuffer.write("FLASH\n");
           }
         }
@@ -1140,3 +1170,10 @@ void LogoWords::throwWord(Logo &logo) {
   logo.doThrow();
   
 }
+
+void LogoWords::intWord(Logo &logo) {
+
+  logo.pushint((int)logo.popdouble());
+  
+}
+

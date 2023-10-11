@@ -255,12 +255,12 @@ literal := [number | string | var]
 
 Opposite of =
 
-#### WAIT (not working yet so not in current build)
+#### wait
 
 Wait for milliseconds before executing the next word. The syntax is:
 
 ```
-WAIT num wordname
+wait num wordname
 num := [number | var]
 var := :varname
 ```
@@ -280,6 +280,16 @@ To yield 4.75 (it will give you 0.375), Just write:
 
 ```
 (3 / 4) + 4
+```
+
+#### int
+
+Pop a double off the stack and push the integer (truncated) version back on
+
+```
+int word
+word := [wordname | number | string | list | var]
+var := :varname
 ```
 
 #### Lists
@@ -305,7 +315,7 @@ lists.
 
 #### Logic
 
->, >=, <, <=  and ! all work like you wold think.
+>, >=, <, <=  and ! all work like you would think.
 
 #### print
 
@@ -787,14 +797,7 @@ your sketch might look like on in your .ino and then do
 $ make && ./LGTestSketch
 ```
 
-And it will just run your test in your Dev environment! Just stub out all your builtin words
-like "ledOn()" etc to output a string.
-
-For an M1 or M2 mac, use this command for cmake
-
-```
-$ cmake -DCMAKE_OSX_ARCHITECTURES="arm64" ..
-```
+And it will just run your test in your Dev environment!
 
 To turn on all the debugging for the various things, each header has something like:
 
@@ -823,8 +826,7 @@ https://forum.arduino.cc/t/how-to-properly-use-wire-onreceive/891195/12
 
 ## Current development focus
 
-### Get a home assitant demo working
-### Get it all working with Matter
+### LEDBOT
   
 ## Change Log
 
@@ -908,6 +910,9 @@ storing lists but only "PRINT" knows how to use them.
 
 ### 20 Jul 2023
   - Work towards getting a button to work properly with the esp32
+
+### 11 Oct 2023
+  - Start work on LEDBOT, the first actual real use doing LED animation
 
 
 

@@ -13,13 +13,20 @@
 
 cmake_minimum_required(VERSION 3.5)
 
-#set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE Debug)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 project (logotest)
   find_package(Boost COMPONENTS unit_test_framework filesystem REQUIRED)
   add_definitions(-DBOOST_ALL_DYN_LINK) 
 #  add_definitions(-DLOGO_DEBUG) 
   enable_testing()
+
+if (APPLE)
+  include_directories(/usr/local/include)
+endif ()
 
 add_library (Logo STATIC ../logo.cpp ../logocompiler.cpp ../logostring.cpp ../arduinoflashcode.cpp ../logowords.cpp ../list.cpp)
   target_link_libraries(Logo ${Boost_FILESYSTEM_LIBRARY})

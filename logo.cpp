@@ -27,7 +27,7 @@ void Logo::outstate() const {
   cout << endl;
 }
 #endif // ARDUINO
-#define DELAY_TIME  100
+#define DELAY_TIME  5
 #else
 #include "nodebug.hpp"
 #define DELAY_TIME  1 // must be non zero!
@@ -2211,71 +2211,5 @@ void Logo::dumpstack(const LogoCompiler *compiler, bool all) const {
     cout << endl;
   }
 #endif  
-}
-
-bool Logo::extractEvent(LogoString *s, LogoStringResult *name, LogoStringResult *data) {
-
-  int len = s->length();
-  if (len == 0) {
-    return false;
-  }
-  
-  int start = 0;
-  if ((*s)[start++] != '[') {
-    return false;
-  }
-  if ((*s)[start++] != '\"') {
-    return false;
-  }
-  
-  int end = start;
-  while (end < len && (*s)[end] != '\"') {
-    end++;
-  }
-  if (end >= len) {
-    return false;
-  }
-  
-  name->_fixed = s;
-  name->_fixedstart = start;
-  name->_fixedlen = end-start;
-  
-  end++;
-  if ((*s)[end++] != ',') {
-    return false;
-  }
-  if ((*s)[end] == '\"') {
-  
-    end++;
-    start = end;
-    while (end < len && (*s)[end] != '\"') {
-      end++;
-    }
-  
-    if (end >= len) {
-      return false;
-    }
-  
-    data->_fixed = s;
-    data->_fixedstart = start;
-    data->_fixedlen = end-start;
-  }
-  else if ((*s)[end] == '{') {
-  
-    start = end;
-    while (end < len && (*s)[end] != '}') {
-      end++;
-    }
-  
-    if (end >= len) {
-      return false;
-    }
-  
-    data->_fixed = s;
-    data->_fixedstart = start;
-    data->_fixedlen = end-start+1;
-  }
-  
-  return true;
 }
 

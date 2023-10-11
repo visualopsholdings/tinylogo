@@ -1,0 +1,82 @@
+#   ledbot.lgo
+#
+#   Author: Paul Hamilton (paul@visualops.com)
+#   Date: 11-Oct-2023
+#
+#   Control the LEDBOT hardware interface
+#
+#   This work is licensed under the Creative Commons Attribution 4.0 International License. 
+#   To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0/ or 
+#   send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+#
+#   https://github.com/visualopsholdings/tinylogo  
+#
+
+to ID
+  print "ledbot
+end
+
+to SETUP
+  pinrgb 10 1
+  rgbout 1 255
+end
+
+to ON
+  rgbout 1 0
+end
+
+to OFF
+  rgbout 1 255
+end
+
+to OUTSTEP
+  # minimum pause is 5 ms (inside the main loop)
+  wait (:PAUSE-5)
+  make "VAL (:VAL+:STEP)
+  rgbout 1 :VAL
+end
+
+to DOFADEOUT :TIME
+  make "VAL 0
+  make "STEP 5
+  make "COUNT int (255/:STEP)
+  make "PAUSE int (:TIME/:COUNT)
+  rgbout 1 0
+  repeat :COUNT OUTSTEP
+  rgbout 1 255
+end
+
+to INSTEP
+  # minimum pause is 5 ms (inside the main loop)
+  wait (:PAUSE-5)
+  make "VAL (:VAL-:STEP)
+  rgbout 1 :VAL
+end
+
+to DOFADEIN :TIME
+  make "VAL 255
+  make "STEP 5
+  make "COUNT int (255/:STEP)
+  make "PAUSE int (:TIME/:COUNT)
+  rgbout 1 255
+  repeat :COUNT INSTEP
+  rgbout 1 0
+end
+
+to LONGFADEIN
+  DOFADEIN 3000
+end
+
+to LONGFADEOUT
+  DOFADEOUT 3000
+end
+
+to FADEIN
+  DOFADEIN 500
+end
+
+to FADEOUT
+  DOFADEOUT 500
+end
+
+

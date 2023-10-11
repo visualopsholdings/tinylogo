@@ -68,6 +68,8 @@ public:
   int ncmp(const char *to, size_t offset, size_t len) const;
   int ncasecmp(const char *to, size_t offset, size_t len) const;
     
+  const char *c_str() { return _code; }
+  
 private:
   const char *_code;
   short _len;

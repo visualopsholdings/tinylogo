@@ -153,13 +153,16 @@
 #define SENTENCE_LEN        4         // & and 3 more digits
 #define STRING_LEN          32        // the length of a single string.
 
+#ifdef ARDUINO
+// for the ESP32 code base, this always has to be at the top!
+#include <Arduino.h>
+#else
+#include <ostream>
+#endif
+
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
-
-#ifndef ARDUINO
-#include <ostream>
-#endif
 
 #ifndef min
 #define min(a,b)            (((a) < (b)) ? (a) : (b))
@@ -442,8 +445,6 @@ public:
   LogoSketchBase *_sketch;
   LogoBLEServer _ble;
   
-  static bool extractEvent(LogoString *s, LogoStringResult *name, LogoStringResult *data);
-
 private:
   
   // the pool of all strings

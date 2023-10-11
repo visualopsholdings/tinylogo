@@ -1226,3 +1226,24 @@ BOOST_AUTO_TEST_CASE( tryThrowCatchNested2 )
   BOOST_CHECK_EQUAL(s.str(), "=== 2\n=== failed\n");
 
 }
+
+BOOST_AUTO_TEST_CASE( intWord )
+{
+  cout << "=== intWord ===" << endl;
+  
+  Logo logo;
+  LogoCompiler compiler(&logo);
+
+  compiler.compile("int (17/5)");
+  BOOST_CHECK_EQUAL(logo.geterr(), 0);
+  DEBUG_DUMP(false);
+
+  stringstream s;
+  logo.setout(&s);
+
+  BOOST_CHECK_EQUAL(logo.run(), 0);
+  BOOST_CHECK_EQUAL(logo.popint(), 3);
+  BOOST_CHECK(logo.stackempty());
+  DEBUG_DUMP(false);
+
+}

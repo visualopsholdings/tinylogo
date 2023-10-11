@@ -18,6 +18,10 @@ cmake_minimum_required(VERSION 3.5)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+if (APPLE)
+  include_directories(/usr/local/include)
+endif ()
+
 project (tinylogo)
   find_package(Boost COMPONENTS program_options filesystem unit_test_framework REQUIRED)
   find_package(simpleble REQUIRED CONFIG)

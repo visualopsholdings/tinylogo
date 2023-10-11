@@ -17,6 +17,7 @@
 #include <boost/test/auto_unit_test.hpp>
 
 #include "../logo.hpp"
+#include "../logowords.hpp"
 
 using namespace std;
 
@@ -25,25 +26,19 @@ BOOST_AUTO_TEST_CASE( extractStringEvent )
   cout << "=== extractStringEvent ===" << endl;
   
   LogoSimpleString evt("[\"id\",\"aaaaa\"]");
-  LogoStringResult name;
-  LogoStringResult data;
-  
-  BOOST_CHECK(Logo::extractEvent(&evt, &name, &data));
-  BOOST_CHECK_EQUAL(name.ncmp("id"), 0);
-  BOOST_CHECK_EQUAL(data.ncmp("aaaaa"), 0);
-  
+  char s[32];  
+  BOOST_CHECK(LogoWords::extractEventName(&evt, s, sizeof(s)));
+  BOOST_CHECK_EQUAL(s, "id");
+   
 }
 
 BOOST_AUTO_TEST_CASE( extractObjEvent )
 {
   cout << "=== extractObjEvent ===" << endl;
   
-  LogoSimpleString evt("[\"id\",{ \"type\": \"aaaa\" }]");
-  LogoStringResult name;
-  LogoStringResult data;
-  
-  BOOST_CHECK(Logo::extractEvent(&evt, &name, &data));
-  BOOST_CHECK_EQUAL(name.ncmp("id"), 0);
-  BOOST_CHECK_EQUAL(data.ncmp("{ \"type\": \"aaaa\" }"), 0);
+  LogoSimpleString evt("[\"id\",{ \"type\": \"aaaa\" }]");  
+  char s[32];  
+  BOOST_CHECK(LogoWords::extractEventName(&evt, s, sizeof(s)));
+  BOOST_CHECK_EQUAL(s, "id");
   
 }

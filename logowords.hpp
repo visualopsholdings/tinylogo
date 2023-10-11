@@ -17,6 +17,8 @@
 #define H_logowords
 
 class Logo;
+class LogoSimpleString;
+class LogoStringResult;
 
 class LogoWords {
 
@@ -67,6 +69,9 @@ public:
   static void wificonnect(Logo &logo);
   static void btstart(Logo &logo);
   static void throwWord(Logo &logo);
+  static void intWord(Logo &logo);
+
+  static bool extractEventName(LogoSimpleString *s, char *name, int len);
 
 private:
 

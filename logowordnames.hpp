@@ -62,6 +62,7 @@ const char Logo::coreNames[] PROGMEM = {
   "WIFICONNECT\n"
   "BTSTART\n"
   ".\n"
+  "INT\n"
 };
 
 // this arity array matches the above.
@@ -111,6 +112,7 @@ const char Logo::coreArity[] PROGMEM = {
   2, // WIFICONNECT
   2, // BTSTART
   1, // .
+  1, // INT
 };
 
 // these indexes match the other 2 arrays.
@@ -161,6 +163,7 @@ void Logo::callbuiltin(short index) {
     case 42: LogoWords::wificonnect(*this); break;
     case 43: LogoWords::btstart(*this); break;
     case 44: LogoWords::throwWord(*this); break;
+    case 45: LogoWords::intWord(*this); break;
     default:
       break;
   }
