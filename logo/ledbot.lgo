@@ -17,6 +17,7 @@ to ID
 end
 
 to SETUP
+  make "TIME 500
   pinrgb 10 1
   rgbout 1 255
 end
@@ -36,7 +37,7 @@ to OUTSTEP
   rgbout 1 :VAL
 end
 
-to DOFADEOUT :TIME
+to FADEOUT
   make "VAL 0
   make "STEP 5
   make "COUNT int (255/:STEP)
@@ -53,7 +54,7 @@ to INSTEP
   rgbout 1 :VAL
 end
 
-to DOFADEIN :TIME
+to FADEIN
   make "VAL 255
   make "STEP 5
   make "COUNT int (255/:STEP)
@@ -62,21 +63,4 @@ to DOFADEIN :TIME
   repeat :COUNT INSTEP
   rgbout 1 0
 end
-
-to LONGFADEIN
-  DOFADEIN 3000
-end
-
-to LONGFADEOUT
-  DOFADEOUT 3000
-end
-
-to FADEIN
-  DOFADEIN 500
-end
-
-to FADEOUT
-  DOFADEOUT 500
-end
-
 
