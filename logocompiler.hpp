@@ -80,6 +80,7 @@ public:
   static int updateino(const std::string &infn, std::fstream &infile, std::fstream &outfile);
   static int includelgo(const std::string &infn, const std::map<std::string, std::string> &directives, std::fstream &outfile);
   int compile(std::fstream &file, const std::map<std::string, std::string> &directives, bool autoassign=false);
+  int compilefn(const std::string &name, const std::map<std::string, std::string> &directives, bool autoassign=false);
   static void getdirectives(const std::string line, std::map<std::string, std::string> *directives);
   static void replacedirectives(std::string *line, const std::map<std::string, std::string> &directives, bool autoassign, int *count);
 #endif

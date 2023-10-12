@@ -45,7 +45,9 @@ char gMsg[256]; // the open socket message.
 
 #endif
 
+#ifdef USE_JSON
 #include <ArduinoJson.h>
+#endif
 
 using namespace std;
 
@@ -381,7 +383,7 @@ void LogoWords::dread(Logo &logo) {
 #ifdef ARDUINO
   logo.pushint(digitalRead(pin));
 #else
-  cout << "d read pin " << pin << endl;
+  logo.out() << "d read pin " << pin << endl;
   logo.pushint(0);
 #endif
   
@@ -393,7 +395,7 @@ void LogoWords::dhigh(Logo &logo) {
 #ifdef ARDUINO
   digitalWrite(pin, HIGH);
 #else
-  cout << "d write high " << pin << endl;
+  logo.out() << "d write high " << pin << endl;
 #endif
   
 }
@@ -404,7 +406,7 @@ void LogoWords::dlow(Logo &logo) {
 #ifdef ARDUINO
   digitalWrite(pin, LOW);
 #else
-  cout << "d write low " << pin << endl;
+  logo.out() << "d write low " << pin << endl;
 #endif
   
 }
@@ -415,7 +417,7 @@ void LogoWords::pinout(Logo &logo) {
 #ifdef ARDUINO
   pinMode(pin, OUTPUT);
 #else
-  cout << "pin out " << pin << endl;
+  logo.out() << "pin out " << pin << endl;
 #endif
   
 }
@@ -426,7 +428,7 @@ void LogoWords::pinin(Logo &logo) {
 #ifdef ARDUINO
   pinMode(pin, INPUT);
 #else
-  cout << "pin in " << pin << endl;
+  logo.out() << "pin in " << pin << endl;
 #endif
   
 }
@@ -437,7 +439,7 @@ void LogoWords::pininup(Logo &logo) {
 #ifdef ARDUINO
   pinMode(pin, INPUT_PULLUP);
 #else
-  cout << "pin in with pullup " << pin << endl;
+  logo.out() << "pin in with pullup " << pin << endl;
 #endif
   
 }
@@ -453,7 +455,7 @@ void LogoWords::aout(Logo &logo) {
   // need to implement this on the w32 etc.
 #endif
 #else
-  cout << "aout " << pin << "=" << value << endl;
+  logo.out() << "aout " << pin << "=" << value << endl;
 #endif
   
 }
@@ -474,7 +476,7 @@ void LogoWords::pinrgb(Logo &logo) {
 #endif
 
 #else
-  cout << "rgb pin " << pin << " [" << channel << "]" << endl;
+  logo.out() << "rgb pin " << pin << " [" << channel << "]" << endl;
 #endif
   
 }
@@ -494,7 +496,7 @@ void LogoWords::rgbout(Logo &logo) {
   analogWrite(pin, 255 - value);
 #endif
 #else
-  cout << "rgbout " << pin << " [" << channel << "]" << "=" << value << endl;
+  logo.out() << "rgbout " << pin << " [" << channel << "]" << "=" << value << endl;
 #endif
   
 }
@@ -831,6 +833,7 @@ void LogoWords::wifiget(Logo &logo) {
 
 bool LogoWords::extractEventName(LogoSimpleString *s, char *name, int namelen) {
 
+#ifdef USE_JSON
   DynamicJsonDocument doc(256);
   deserializeJson(doc, s->c_str());
 
@@ -853,6 +856,9 @@ bool LogoWords::extractEventName(LogoSimpleString *s, char *name, int namelen) {
   strcpy(name, n);
     
   return true;
+#else
+  return false;
+#endif
 }
 
 #ifdef ARDUINO

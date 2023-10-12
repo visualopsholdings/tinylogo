@@ -592,9 +592,21 @@ int LogoCompiler::inlinefile(std::fstream &file, std::ostream &str) {
   
 }
 
+int LogoCompiler::compilefn(const std::string &name, const std::map<std::string, std::string> &directives, bool autoassign) {
 
+  fstream file;
+  file.open(name, ios::in);
+  if (!file) {
+    return LG_FILE_NOT_FOUND;
+  }
+  int ret = compile(file, directives, autoassign);
+  file.close();
+  return ret;
+  
+}
 
 int LogoCompiler::compile(fstream &file, const map<string, string> &directives, bool autoassign) {
+
   file.clear();
   file.seekg(0, ios::beg);
   string line;
@@ -610,6 +622,7 @@ int LogoCompiler::compile(fstream &file, const map<string, string> &directives, 
     }
   }
   return 0;
+  
 }
 
 int LogoCompiler::generatecode(fstream &file, const map<string, string> &directives, ostream &str) {

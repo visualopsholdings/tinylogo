@@ -4,7 +4,7 @@
   Author: Paul Hamilton (paul@visualops.com)
   Date: 2-Jun-2023
   
-  Write variables used to hold code and strings in flash memory.
+  Run a logo porgram.
   
   This work is licensed under the Creative Commons Attribution 4.0 International License. 
   To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0/ or 

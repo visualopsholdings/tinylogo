@@ -66,6 +66,8 @@
 // comment this out.
 #define USE_WIFI
 
+#define USE_JSON
+
 #ifdef ARDUINO
 
 #ifdef ESP32
@@ -184,6 +186,7 @@
 #define LG_FIXED_NO_NEWLINE   13
 #define LG_ARITY_NOT_IMPL     14
 #define LG_EXCEPTION          15
+#define LG_FILE_NOT_FOUND     16
 
 #define OPTYPE_NOOP           0 //
 #define OPTYPE_RETURN         1 //
