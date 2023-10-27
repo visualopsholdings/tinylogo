@@ -70,6 +70,8 @@
 
 #ifdef ARDUINO
 
+#define USE_MIDI
+
 #ifdef ESP32
 #define USE_LARGE_CODE
 #else

@@ -63,6 +63,8 @@ const char Logo::coreNames[] PROGMEM = {
   "BTSTART\n"
   ".\n"
   "INT\n"
+  "MIDINOTEON\n"
+  "MIDINOTEOFF\n"
 };
 
 // this arity array matches the above.
@@ -113,6 +115,8 @@ const char Logo::coreArity[] PROGMEM = {
   2, // BTSTART
   1, // .
   1, // INT
+  3, // MIDINOTEON
+  3, // MIDINOTEOFF
 };
 
 // these indexes match the other 2 arrays.
@@ -164,6 +168,8 @@ void Logo::callbuiltin(short index) {
     case 43: LogoWords::btstart(*this); break;
     case 44: LogoWords::throwWord(*this); break;
     case 45: LogoWords::intWord(*this); break;
+    case 46: LogoWords::midinoteon(*this); break;
+    case 47: LogoWords::midinoteoff(*this); break;
     default:
       break;
   }

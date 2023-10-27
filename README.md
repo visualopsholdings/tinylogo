@@ -567,6 +567,27 @@ Run: RESTART
 btstart "name" "ServiceUID"
 ```
 
+#### midinoteon
+
+Send a MIDI note on when the peripheral can do MIDI (turn on USE_MIDI when you build)
+
+```
+midinoteon  0 48 127
+```
+
+Send's a note on, MIDI channel 1, Middle C (48) and 127 velocity
+
+
+#### midinoteoff
+
+Send a MIDI note off when the peripheral can do MIDI (turn on USE_MIDI when you build)
+
+```
+midinoteoff  0 48
+```
+
+Send's a note off, MIDI channel 1, Middle C (48)
+
 ### Exceptions
 
 Exceptions are builtin to the engine and use operators.
@@ -914,6 +935,8 @@ storing lists but only "PRINT" knows how to use them.
 ### 11 Oct 2023
   - Start work on LEDBOT, the first actual real use doing LED animation
 
+### 27 Oct 2023
+  - Add MIDI support, just note on and note off for now.
 
 
 

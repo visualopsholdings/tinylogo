@@ -70,6 +70,8 @@ public:
   static void btstart(Logo &logo);
   static void throwWord(Logo &logo);
   static void intWord(Logo &logo);
+  static void midinoteon(Logo &logo);
+  static void midinoteoff(Logo &logo);
 
   static bool extractEventName(LogoSimpleString *s, char *name, int len);
 

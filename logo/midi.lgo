@@ -1,0 +1,39 @@
+#   midi.lgo
+#
+#   Author: Paul Hamilton (paul@visualops.com)
+#   Date: 27-Oct-2023
+#
+#   Play some notes with MIDI
+#
+#   This work is licensed under the Creative Commons Attribution 4.0 International License. 
+#   To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0/ or 
+#   send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+#
+#   https://github.com/visualopsholdings/tinylogo  
+#
+
+to ID
+  PRINT "midi
+end
+
+to SETUP
+  # can't be empty
+  pinout 13
+end
+
+to F
+  midinoteon 0 48 127
+  wait 500
+  midinoteoff 0 48
+end
+
+to PLAY
+  F
+  wait 1000
+end
+
+to RUN
+  forever PLAY
+end
+
+RUN
