@@ -50,7 +50,9 @@ char gMsg[256]; // the open socket message.
 #endif
 
 #ifdef USE_MIDI
+#ifdef USE_USBHOSTMIDI
 #include "MIDIUSB.h"
+#endif
 #endif
 
 using namespace std;
@@ -1193,9 +1195,15 @@ void LogoWords::midinoteon(Logo &logo) {
   int pitch = logo.popint();
   int channel = logo.popint();
 #ifdef USE_MIDI
+#ifdef USE_USBHOSTMIDI
   midiEventPacket_t noteOn = {0x09, 0x90 | channel, pitch, velocity};
   MidiUSB.sendMIDI(noteOn);
   MidiUSB.flush();
+#else
+  Serial.write(0x90 | channel);
+  Serial.write(pitch);
+  Serial.write(velocity);
+#endif
 #else
 #ifdef ARDUINO
   Serial.println("MIDI Note ON");
@@ -1211,9 +1219,15 @@ void LogoWords::midinoteoff(Logo &logo) {
   int pitch = logo.popint();
   int channel = logo.popint();
 #ifdef USE_MIDI
+#ifdef USE_USBHOSTMIDI
   midiEventPacket_t noteOff = {0x08, 0x80 | channel, pitch, 0};
   MidiUSB.sendMIDI(noteOff);
   MidiUSB.flush();
+#else
+  Serial.write(0x80 | channel);
+  Serial.write(pitch);
+  Serial.write(0);
+#endif
 #else
 #ifdef ARDUINO
   Serial.println("MIDI Note OFF");

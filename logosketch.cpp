@@ -27,8 +27,14 @@ RingBuffer gBuffer; // 64 bytes
 void LogoSketchBase::setup(int baud)  {
 
   _failed = true;
-  Serial.begin(baud);
   
+#if defined(USE_MIDI) && !defined(USE_USBHOSTMIDI)
+  #pragma message ( "ignoring baud rate to use 31250 for midi" )
+  Serial.begin(31250);
+#else
+  Serial.begin(baud);
+#endif
+
   precompile();
   
   logo()->_sketch = this;
