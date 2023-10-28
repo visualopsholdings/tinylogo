@@ -70,7 +70,7 @@
 
 #ifdef ARDUINO
 
-#define USE_MIDI
+//#define USE_MIDI
 //#define USE_USBHOSTMIDI // default is to use a MIDI shield
 
 #ifdef ESP32

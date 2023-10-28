@@ -1200,9 +1200,10 @@ void LogoWords::midinoteon(Logo &logo) {
   MidiUSB.sendMIDI(noteOn);
   MidiUSB.flush();
 #else
-  Serial.write(0x90 | channel);
-  Serial.write(pitch);
-  Serial.write(velocity);
+  // big endian
+  Serial.write(0x90 | ((unsigned char)channel));
+  Serial.write((unsigned char)pitch);
+  Serial.write((unsigned char)velocity);
 #endif
 #else
 #ifdef ARDUINO
@@ -1224,8 +1225,9 @@ void LogoWords::midinoteoff(Logo &logo) {
   MidiUSB.sendMIDI(noteOff);
   MidiUSB.flush();
 #else
-  Serial.write(0x80 | channel);
-  Serial.write(pitch);
+  // big endian
+  Serial.write(0x80 | ((unsigned char)channel));
+  Serial.write((unsigned char)pitch);
   Serial.write(0);
 #endif
 #else
